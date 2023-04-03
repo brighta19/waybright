@@ -1,5 +1,6 @@
 # https://dart.dev/guides/libraries/private-files
 # Created by `dart pub`
+.vscode/
 .dart_tool/
 lib/waybright_bindings.dart
 lib/waybright.so
