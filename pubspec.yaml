@@ -28,3 +28,6 @@ ffigen:
   structs:
     rename:
       '(.*)': 'struct_$1'
+  enums:
+    rename:
+      '(.*)': 'enum_$1'

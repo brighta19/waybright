@@ -51,29 +51,39 @@ import 'package:waybright/waybright_bindings.dart';
 //   DisplayMode(this.resolution, this.rate);
 // }
 
-// class Display {
-//   int width;
-//   int height;
-//   DisplayRenderingContext context = DisplayRenderingContext();
+class Monitor {
+  // int width;
+  // int height;
+  // DisplayRenderingContext context = DisplayRenderingContext();
 
-//   Display(this.width, this.height);
+  // Monitor(this.width, this.height);
 
-//   void on(String event, Function callback) {}
+  // void on(String event, Function callback) {}
 
-//   DisplayRenderingContext getRenderingContext() {
-//     return context;
-//   }
+  // DisplayRenderingContext getRenderingContext() {
+  //   return context;
+  // }
 
-//   List<DisplayMode> getAvailableModes() {
-//     return [];
-//   }
+  // List<DisplayMode> getAvailableModes() {
+  //   return [];
+  // }
 
-//   setMode(DisplayMode mode) {}
-// }
+  // setMode(DisplayMode mode) {}
+}
 
 class Waybright {
-  final WaybrightLibrary wblib =
+  static final WaybrightLibrary wblib =
       WaybrightLibrary(DynamicLibrary.open("lib/waybright.so"));
+
+  static Map<String, Function> handlers = {};
+
+  static void handlerMonitorAdd() {
+    handlers.forEach((event, handler) {
+      if (event == "monitor-add") {
+        handler();
+      }
+    });
+  }
 
   late Pointer<struct_waybright> wbPtr;
 
@@ -84,6 +94,12 @@ class Waybright {
       wblib.waybright_destroy(wbPtr);
       throw "Creating waybright instance failed.";
     }
+
+    wblib.waybright_set_handler(
+      wbPtr,
+      enum_events.events_monitor_add,
+      Pointer.fromFunction(handlerMonitorAdd),
+    );
   }
 
   Future<Socket> listen({
@@ -102,11 +118,13 @@ class Waybright {
     }
   }
 
-  void on(String event, Function callback) {}
+  void setHandler(String event, void Function() handler) {
+    handlers[event] = handler;
+  }
 
   // void useProtocol(Protocol protocol) {}
 
-  // List<Display> getAvailableDisplays() {
+  // List<Monitor> getAvailableMonitors() {
   //   return [];
   // }
 }
@@ -114,9 +132,9 @@ class Waybright {
 class Socket {
   final WaybrightLibrary wblib;
   Pointer<struct_waybright> wlPtr;
-  String socketName;
+  String name;
 
-  Socket(this.wblib, this.wlPtr, this.socketName);
+  Socket(this.wblib, this.wlPtr, this.name);
 
   /// This function is synchronous (blocking)
   run() {

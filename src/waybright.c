@@ -64,6 +64,13 @@ int waybright_init(struct waybright* wb) {
     return 0;
 }
 
+void waybright_set_handler(struct waybright* wb, int type, void(handler)()) {
+    if (type == events_monitor_add) {
+        wb->listeners.monitor_add.notify = handler;
+        wl_signal_add(&wb->wlr_backend->events.new_output, &wb->listeners.monitor_add);
+    }
+}
+
 int waybright_open_socket(struct waybright* wb, const char* socket_name) {
     if (socket_name) {
         if (wl_display_add_socket(wb->wl_display, socket_name) != 0) {

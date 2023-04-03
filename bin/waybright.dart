@@ -19,25 +19,25 @@ void main(List<String> arguments) {
   // // display setup
   // Display? currentDisplay;
 
-  // waybright.on("display-add", (Display display) {
-  //   print("A display has been added");
+  waybright.setHandler("monitor-add", () {
+    print("A monitor has been added");
 
-  //   if (currentDisplay == null) {
-  //     currentDisplay = display;
+    //   if (currentDisplay == null) {
+    //     currentDisplay = display;
 
-  //     var modes = display.getAvailableModes();
-  //     display.setMode(modes[0]);
+    //     var modes = display.getAvailableModes();
+    //     display.setMode(modes[0]);
 
-  //     var ctx = display.getRenderingContext();
+    //     var ctx = display.getRenderingContext();
 
-  //     display.on("frame-request", () {
-  //       ctx.clearRect(0, 0, display.width, display.height);
-  //     });
-  //   }
-  // });
+    //     display.on("frame-request", () {
+    //       ctx.clearRect(0, 0, display.width, display.height);
+    //     });
+    //   }
+  });
 
-  // waybright.on("display-remove", (Display display) {
-  //   print("A display has been removed");
+  // waybright.setHandler("monitor-remove", () {
+  // print("A monitor has been removed");
 
   //   var displays = waybright.getAvailableDisplays();
   //   if (displays.isEmpty) {
@@ -46,10 +46,8 @@ void main(List<String> arguments) {
   // });
 
   // server setup
-  var socketName = "wayland-0";
-  print("Socket will open on $socketName");
-
-  waybright.listen(socketName: socketName).then((socket) {
+  waybright.listen().then((socket) {
+    print("Socket opened on ${socket.name}");
     socket.run();
   }).onError((error, stackTrace) {
     print("Failed to run server");
