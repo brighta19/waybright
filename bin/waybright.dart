@@ -46,8 +46,10 @@ void main(List<String> arguments) {
   // });
 
   // server setup
-  waybright.listen().then((socket) {
-    print("Socket open on on ${socket.socketName}");
+  var socketName = "wayland-0";
+  print("Socket will open on $socketName");
+
+  waybright.listen(socketName: socketName).then((socket) {
     socket.run();
   }).onError((error, stackTrace) {
     print("Failed to run server");

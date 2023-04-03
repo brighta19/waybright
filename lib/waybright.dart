@@ -1,5 +1,4 @@
 import 'dart:ffi';
-
 import 'package:ffi/ffi.dart';
 import 'package:waybright/waybright_bindings.dart';
 
@@ -76,24 +75,24 @@ class Waybright {
   final WaybrightLibrary wblib =
       WaybrightLibrary(DynamicLibrary.open("lib/waybright.so"));
 
-  late Pointer<waybright> wbPtr;
+  late Pointer<struct_waybright> wbPtr;
 
   Waybright() {
     wbPtr = wblib.waybright_create();
 
     if (wblib.waybright_init(wbPtr) != 0) {
+      wblib.waybright_destroy(wbPtr);
       throw "Creating waybright instance failed.";
     }
   }
 
-  Future<Socket> listen({String? socketName}) async {
-    int statusCode;
-    if (socketName == null) {
-      statusCode = wblib.waybright_open_socket(wbPtr);
-    } else {
-      Pointer<Char> namePtr = socketName.toNativeUtf8().cast();
-      statusCode = wblib.waybright_open_socket_with_name(wbPtr, namePtr);
-    }
+  Future<Socket> listen({
+    String? socketName,
+    bool setEnvironmentVariable = true,
+  }) async {
+    Pointer<Char> namePtr =
+        socketName == null ? nullptr : socketName.toNativeUtf8().cast();
+    int statusCode = wblib.waybright_open_socket(wbPtr, namePtr);
 
     if (statusCode == 0) {
       String socketName = wbPtr.ref.socket_name.cast<Utf8>().toDartString();
@@ -114,11 +113,12 @@ class Waybright {
 
 class Socket {
   final WaybrightLibrary wblib;
-  Pointer<waybright> wlPtr;
+  Pointer<struct_waybright> wlPtr;
   String socketName;
 
   Socket(this.wblib, this.wlPtr, this.socketName);
 
+  /// This function is synchronous (blocking)
   run() {
     wblib.waybright_run(wlPtr);
   }
