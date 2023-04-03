@@ -2,74 +2,74 @@ import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:waybright/waybright_bindings.dart';
 
-enum WindowType { topLevel, popUp }
+// enum WindowType { topLevel, popUp }
 
-class Window {
-  WindowType type;
+// class Window {
+//   WindowType type;
 
-  Window(this.type);
-}
+//   Window(this.type);
+// }
 
-class WindowStack {
-  addToFront(Window window) {}
-  moveToFront() {}
-  remove(Window window) {}
+// class WindowStack {
+//   addToFront(Window window) {}
+//   moveToFront() {}
+//   remove(Window window) {}
 
-  // [Symbol.iterator]() {}
-  get reverse {}
-}
+//   // [Symbol.iterator]() {}
+//   get reverse {}
+// }
 
-abstract class Protocol {
-  static int nextId = 0;
+// abstract class Protocol {
+//   static int nextId = 0;
 
-  int id = nextId++;
+//   int id = nextId++;
 
-  on(String event, Function callback);
-  emit() {}
-}
+//   on(String event, Function callback);
+//   emit() {}
+// }
 
-class XDGShellProtocol extends Protocol {
-  @override
-  on(String event, Function callback) {}
-}
+// class XDGShellProtocol extends Protocol {
+//   @override
+//   on(String event, Function callback) {}
+// }
 
-class DisplayRenderingContext {
-  clearRect(int x, int y, int width, int height) {}
-}
+// class DisplayRenderingContext {
+//   clearRect(int x, int y, int width, int height) {}
+// }
 
-class DisplayResolution {
-  int width;
-  int height;
+// class DisplayResolution {
+//   int width;
+//   int height;
 
-  DisplayResolution(this.width, this.height);
-}
+//   DisplayResolution(this.width, this.height);
+// }
 
-class DisplayMode {
-  DisplayResolution resolution;
-  int rate;
+// class DisplayMode {
+//   DisplayResolution resolution;
+//   int rate;
 
-  DisplayMode(this.resolution, this.rate);
-}
+//   DisplayMode(this.resolution, this.rate);
+// }
 
-class Display {
-  int width;
-  int height;
-  DisplayRenderingContext context = DisplayRenderingContext();
+// class Display {
+//   int width;
+//   int height;
+//   DisplayRenderingContext context = DisplayRenderingContext();
 
-  Display(this.width, this.height);
+//   Display(this.width, this.height);
 
-  void on(String event, Function callback) {}
+//   void on(String event, Function callback) {}
 
-  DisplayRenderingContext getRenderingContext() {
-    return context;
-  }
+//   DisplayRenderingContext getRenderingContext() {
+//     return context;
+//   }
 
-  List<DisplayMode> getAvailableModes() {
-    return [];
-  }
+//   List<DisplayMode> getAvailableModes() {
+//     return [];
+//   }
 
-  setMode(DisplayMode mode) {}
-}
+//   setMode(DisplayMode mode) {}
+// }
 
 class Waybright {
   final WaybrightLibrary wblib =
@@ -104,11 +104,11 @@ class Waybright {
 
   void on(String event, Function callback) {}
 
-  void useProtocol(Protocol protocol) {}
+  // void useProtocol(Protocol protocol) {}
 
-  List<Display> getAvailableDisplays() {
-    return [];
-  }
+  // List<Display> getAvailableDisplays() {
+  //   return [];
+  // }
 }
 
 class Socket {
