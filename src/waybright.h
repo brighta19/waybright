@@ -1,10 +1,14 @@
 #include <wayland-server-core.h>
 #include <wlr/backend.h>
+#include <wlr/render/allocator.h>
+#include <wlr/render/wlr_renderer.h>
 #include <malloc.h>
 
 struct waybright {
     struct wl_display* wl_display;
     struct wlr_backend* wlr_backend;
+    struct wlr_renderer* wlr_renderer;
+    struct wlr_allocator* wlr_allocator;
     const char* socket_name;
 };
 

@@ -1,12 +1,7 @@
 #include <stdlib.h>
-#include <wlr/backend.h>
-
 // #include <wlr/types/wlr_compositor.h>
 // #include <wlr/types/wlr_output.h>
-// #include <wlr/render/allocator.h>
-// #include <wlr/render/wlr_renderer.h>
 // #include <wlr/render/wlr_texture.h>
-
 #include "./waybright.h"
 
 struct waybright* waybright_create() {
@@ -16,6 +11,8 @@ struct waybright* waybright_create() {
 void waybright_destroy(struct waybright* wb) {
     if (!wb) return;
 
+    wlr_allocator_destroy(wb->wlr_allocator);
+    wlr_renderer_destroy(wb->wlr_renderer);
     wlr_backend_destroy(wb->wlr_backend);
     wl_display_destroy_clients(wb->wl_display);
     wl_display_destroy(wb->wl_display);
@@ -31,9 +28,18 @@ int waybright_init(struct waybright* wb) {
     if (!wb->wl_display)
         return 1;
 
-    // Initialize wlroots backend
     wb->wlr_backend = wlr_backend_autocreate(wb->wl_display);
     if (!wb->wlr_backend)
+        return 1;
+
+    wb->wlr_renderer = wlr_renderer_autocreate(wb->wlr_backend);
+    if (!wb->wlr_renderer)
+        return 1;
+
+    wlr_renderer_init_wl_display(wb->wlr_renderer, wb->wl_display);
+
+    wb->wlr_allocator = wlr_allocator_autocreate(wb->wlr_backend, wb->wlr_renderer);
+    if (!wb->wlr_allocator)
         return 1;
 
     // wl_list_init(&wb->displays);
@@ -42,13 +48,6 @@ int waybright_init(struct waybright* wb) {
     // wb->listeners.display_add.notify = on_display_add;
     // wl_signal_add(&wb->backend->events.new_output, &wb->listeners.display_add);
 
-    // // Initialize renderer
-    // wb->renderer = rimeru_renderer_create();
-    // rimeru_renderer_init(wb->renderer, wb);
-
-    // // Initialize allocator
-    // wb->allocator = wlr_allocator_autocreate(wb->backend, wb->renderer->wlr_renderer);
-    // assert(wb->allocator);
 
     // // Initialize compositor
     // wb->compositor = wlr_compositor_create(wb->display, wb->renderer->wlr_renderer);
