@@ -19,21 +19,21 @@ in `lib/`, and example unit test in `test/`.
 - wayland-protocols (I'm using *v1.27*)
 - wlroots (I'm using *v0.15.1*)
 - whatever those three libraries require
+- make
+- dart
 
 ## Building
 ```sh
 make
-dart run ffigen
-dart compile exe bin/waybright.dart
 ```
 
 ## Running
 ```sh
-./bin/waybright.exe
+./build/waybright
 ```
 
 ## Developing
 ```sh
-make && dart run ffigen # to compile src/wayland.c and build the dart bindings
-dart run # to compile and execute in one
+make build-deps # to compile src/wayland.c and build the dart bindings
+dart run # to compile and execute temporarily in one command
 ```

@@ -4,4 +4,4 @@
 .dart_tool/
 lib/waybright_bindings.dart
 lib/waybright.so
-bin/*.exe
+build/
