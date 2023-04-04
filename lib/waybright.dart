@@ -44,19 +44,35 @@ import 'package:waybright/waybright_bindings.dart';
 //   DisplayResolution(this.width, this.height);
 // }
 
-// class DisplayMode {
-//   DisplayResolution resolution;
-//   int rate;
+class MonitorMode {
+  final int width;
+  final int height;
+  final int refreshRate;
+  final bool preferred;
 
-//   DisplayMode(this.resolution, this.rate);
-// }
+  Pointer<struct_wlr_output_mode>? _outputModePtr;
+
+  MonitorMode(this.width, this.height, this.refreshRate, this.preferred);
+
+  @override
+  String toString() {
+    return "(${width}x$height @ ${refreshRate}mHz${preferred ? ", preferred" : ""})";
+  }
+}
 
 class Monitor {
-  // int width;
-  // int height;
+  final String name;
+  final int width;
+  final int height;
+
+  final Pointer<struct_wlr_output> _outputPtr;
+  final List<MonitorMode> _modes = [];
+  bool _iteratedThroughModes = false;
+  MonitorMode? _preferredMode;
+
   // DisplayRenderingContext context = DisplayRenderingContext();
 
-  // Monitor(this.width, this.height);
+  Monitor(this._outputPtr, this.name, this.width, this.height);
 
   // void on(String event, Function callback) {}
 
@@ -64,42 +80,99 @@ class Monitor {
   //   return context;
   // }
 
-  // List<DisplayMode> getAvailableModes() {
-  //   return [];
-  // }
+  List<MonitorMode> get modes {
+    if (_iteratedThroughModes) return _modes;
 
-  // setMode(DisplayMode mode) {}
+    Pointer<struct_wl_list> head = _outputPtr.ref.modes.next;
+    Pointer<struct_wl_list> link = head;
+    Pointer<struct_wlr_output_mode> item;
+    while (link.ref.next != head) {
+      item = Waybright._wblib.wl_list_wlr_output_mode_item(link);
+      var mode = MonitorMode(
+        item.ref.width,
+        item.ref.height,
+        item.ref.refresh,
+        item.ref.preferred,
+      );
+      mode._outputModePtr = item;
+
+      // While i find modes, find the preferred mode
+      if (item.ref.preferred) {
+        _preferredMode = mode;
+      }
+
+      _modes.add(mode);
+
+      link = link.ref.next;
+    }
+
+    if (_preferredMode == null && _modes.isNotEmpty) {
+      _preferredMode = _modes[0];
+    }
+
+    _iteratedThroughModes = true;
+    return _modes;
+  }
+
+  MonitorMode? getPreferredMode() {
+    if (_iteratedThroughModes) return _preferredMode;
+    modes;
+    return _preferredMode;
+  }
+
+  void setMode(MonitorMode mode) {
+    mode._outputModePtr ??= malloc();
+    Waybright._wblib.wlr_output_set_mode(_outputPtr, mode._outputModePtr!);
+  }
+
+  void setPreferredMode() {
+    var mode = getPreferredMode();
+    if (mode != null) {
+      setMode(mode);
+    }
+  }
 }
 
 class Waybright {
-  static final WaybrightLibrary wblib =
+  static final WaybrightLibrary _wblib =
       WaybrightLibrary(DynamicLibrary.open("lib/waybright.so"));
 
-  static Map<String, Function> handlers = {};
+  static final _eventTable = {
+    'monitor-add': enum_events.events_monitor_add,
+  };
 
-  static void handlerMonitorAdd() {
-    handlers.forEach((event, handler) {
-      if (event == "monitor-add") {
-        handler();
-      }
-    });
+  static final Map<int, Function> _handlers = {};
+
+  static void _handler(int type, Pointer<Void> data) {
+    var handler = _handlers[type];
+    if (handler == null) return;
+
+    if (type == enum_events.events_monitor_add) {
+      Pointer<struct_wlr_output> wlrOutput = data.cast();
+      var monitor = Monitor(
+        wlrOutput,
+        wlrOutput.ref.name.cast<Utf8>().toDartString(),
+        wlrOutput.ref.width,
+        wlrOutput.ref.height,
+      );
+
+      handler(monitor);
+    }
+
+    _handlers.forEach((event, handler) {});
   }
 
-  late Pointer<struct_waybright> wbPtr;
+  late final Pointer<struct_waybright> _wbPtr;
 
   Waybright() {
-    wbPtr = wblib.waybright_create();
+    _wbPtr = _wblib.waybright_create();
 
-    if (wblib.waybright_init(wbPtr) != 0) {
-      wblib.waybright_destroy(wbPtr);
+    if (_wblib.waybright_init(_wbPtr) != 0) {
+      _wblib.waybright_destroy(_wbPtr);
       throw "Creating waybright instance failed.";
     }
 
-    wblib.waybright_set_handler(
-      wbPtr,
-      enum_events.events_monitor_add,
-      Pointer.fromFunction(handlerMonitorAdd),
-    );
+    _wblib.waybright_set_handler(_wbPtr, Pointer.fromFunction(_handler));
   }
 
   Future<Socket> listen({
@@ -108,18 +181,21 @@ class Waybright {
   }) async {
     Pointer<Char> namePtr =
         socketName == null ? nullptr : socketName.toNativeUtf8().cast();
-    int statusCode = wblib.waybright_open_socket(wbPtr, namePtr);
+    int statusCode = _wblib.waybright_open_socket(_wbPtr, namePtr);
 
     if (statusCode == 0) {
-      String socketName = wbPtr.ref.socket_name.cast<Utf8>().toDartString();
-      return Socket(wblib, wbPtr, socketName);
+      String socketName = _wbPtr.ref.socket_name.cast<Utf8>().toDartString();
+      return Socket(_wbPtr, socketName);
     } else {
       throw "Couldn't open socket.";
     }
   }
 
-  void setHandler(String event, void Function() handler) {
-    handlers[event] = handler;
+  void setHandler(String event, Function handler) {
+    var type = _eventTable[event];
+    if (type != null) {
+      _handlers[type] = handler;
+    }
   }
 
   // void useProtocol(Protocol protocol) {}
@@ -130,14 +206,13 @@ class Waybright {
 }
 
 class Socket {
-  final WaybrightLibrary wblib;
-  Pointer<struct_waybright> wlPtr;
-  String name;
+  final Pointer<struct_waybright> _wlPtr;
+  final String name;
 
-  Socket(this.wblib, this.wlPtr, this.name);
+  Socket(this._wlPtr, this.name);
 
   /// This function is synchronous (blocking)
-  run() {
-    wblib.waybright_run(wlPtr);
+  void run() {
+    Waybright._wblib.waybright_run(_wlPtr);
   }
 }

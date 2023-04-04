@@ -19,14 +19,14 @@ void main(List<String> arguments) {
   // // display setup
   // Display? currentDisplay;
 
-  waybright.setHandler("monitor-add", () {
-    print("A monitor has been added");
+  waybright.setHandler("monitor-add", (Monitor monitor) {
+    print("The monitor '${monitor.name}' has been added!");
 
     //   if (currentDisplay == null) {
     //     currentDisplay = display;
 
-    //     var modes = display.getAvailableModes();
-    //     display.setMode(modes[0]);
+    print(monitor.modes);
+    monitor.setPreferredMode();
 
     //     var ctx = display.getRenderingContext();
 

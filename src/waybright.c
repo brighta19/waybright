@@ -1,8 +1,11 @@
 #include <stdlib.h>
 // #include <wlr/types/wlr_compositor.h>
-// #include <wlr/types/wlr_output.h>
 // #include <wlr/render/wlr_texture.h>
 #include "./waybright.h"
+
+struct wlr_output_mode* wl_list_wlr_output_mode_item(struct wl_list *ptr) {
+    return wl_container_of(ptr, (struct wlr_output_mode*)NULL, link);
+}
 
 struct waybright* waybright_create() {
     return calloc(sizeof(struct waybright), 1);
@@ -18,6 +21,13 @@ void waybright_destroy(struct waybright* wb) {
     wl_display_destroy(wb->wl_display);
 
     free(wb);
+}
+
+void handler_monitor_add(struct wl_listener *listener, void *data) {
+    struct waybright* wb = wl_container_of(listener, wb, listeners.monitor_add);
+    struct wlr_output *wlr_output = data;
+
+    wb->handler(events_monitor_add, wlr_output);
 }
 
 int waybright_init(struct waybright* wb) {
@@ -42,6 +52,9 @@ int waybright_init(struct waybright* wb) {
     if (!wb->wlr_allocator)
         return 1;
 
+    wb->listeners.monitor_add.notify = handler_monitor_add;
+    wl_signal_add(&wb->wlr_backend->events.new_output, &wb->listeners.monitor_add);
+
     // wl_list_init(&wb->displays);
     // wl_list_init(&wb->views);
 
@@ -64,11 +77,8 @@ int waybright_init(struct waybright* wb) {
     return 0;
 }
 
-void waybright_set_handler(struct waybright* wb, int type, void(handler)()) {
-    if (type == events_monitor_add) {
-        wb->listeners.monitor_add.notify = handler;
-        wl_signal_add(&wb->wlr_backend->events.new_output, &wb->listeners.monitor_add);
-    }
+void waybright_set_handler(struct waybright* wb, void(*handler)(int type, void* data)) {
+    wb->handler = handler;
 }
 
 int waybright_open_socket(struct waybright* wb, const char* socket_name) {
