@@ -25,8 +25,17 @@ void main(List<String> arguments) {
     //   if (currentDisplay == null) {
     //     currentDisplay = display;
 
-    print(monitor.modes);
+    print(monitor.getModes());
     monitor.setPreferredMode();
+
+    monitor.setHandler("remove", () {
+      print("A monitor has been removed");
+
+      //   var displays = waybright.getAvailableDisplays();
+      //   if (displays.isEmpty) {
+      //     currentDisplay = null;
+      //   }
+    });
 
     //     var ctx = display.getRenderingContext();
 
@@ -36,16 +45,6 @@ void main(List<String> arguments) {
     //   }
   });
 
-  // waybright.setHandler("monitor-remove", () {
-  // print("A monitor has been removed");
-
-  //   var displays = waybright.getAvailableDisplays();
-  //   if (displays.isEmpty) {
-  //     currentDisplay = null;
-  //   }
-  // });
-
-  // server setup
   waybright.listen().then((socket) {
     print("Socket opened on ${socket.name}");
     socket.run();
