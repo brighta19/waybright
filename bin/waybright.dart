@@ -16,8 +16,7 @@ void main(List<String> arguments) async {
 
   // waybright.useProtocol(protocol);
 
-  // // display setup
-  // Display? currentDisplay;
+  Monitor? currentMonitor;
 
   waybright.setEventHandler("monitor-add", (monitor) {
     print("The monitor '${monitor.name}' has been added!");
@@ -26,26 +25,24 @@ void main(List<String> arguments) async {
     print("Monitor '${monitor.name} has ${modes.length} modes. Preferred mode: "
         "${preferredMode == null ? "none" : "$preferredMode"}.");
 
-    //   if (currentDisplay == null) {
-    //     currentDisplay = display;
+    if (currentMonitor == null) {
+      currentMonitor ??= monitor;
+      monitor.trySettingPreferredMode();
+      monitor.enable();
 
-    monitor.trySettingPreferredMode();
-    monitor.enable();
+      // var ctx = display.getRenderingContext();
+      monitor.setEventHandler("frame", () {
+        print("frame");
+        // ctx.clearRect(0, 0, display.width, display.height);
+      });
+    }
 
     monitor.setEventHandler("remove", () {
       print("A monitor has been removed");
 
-      //   var displays = waybright.getAvailableDisplays();
-      //   if (displays.isEmpty) {
-      //     currentDisplay = null;
-      //   }
-    });
-
-    //     var ctx = display.getRenderingContext();
-
-    monitor.setEventHandler("frame", () {
-      print("frame");
-      //       ctx.clearRect(0, 0, display.width, display.height);
+      if (monitor == currentMonitor) {
+        currentMonitor = null;
+      }
     });
   });
 
