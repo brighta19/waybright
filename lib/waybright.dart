@@ -61,29 +61,52 @@ class MonitorMode {
 }
 
 class Monitor {
+  static final _eventTable = {
+    'monitor-remove': enum_events.events_monitor_remove,
+  };
+
+  static final Map<int, Function> _handlers = {};
+
+  static void _handler(int type, Pointer<Void> data) {
+    var handler = _handlers[type];
+    if (handler == null) return;
+
+    if (type == enum_events.events_monitor_remove) {
+      handler();
+    }
+  }
+
   final String name;
   final int width;
   final int height;
 
-  final Pointer<struct_wlr_output> _outputPtr;
+  final Pointer<struct_waybright_monitor> _monitorPtr;
   final List<MonitorMode> _modes = [];
   bool _iteratedThroughModes = false;
   MonitorMode? _preferredMode;
 
   // DisplayRenderingContext context = DisplayRenderingContext();
 
-  Monitor(this._outputPtr, this.name, this.width, this.height);
+  Monitor(this._monitorPtr, this.name, this.width, this.height) {
+    Waybright._wblib.waybright_monitor_set_handler(
+        _monitorPtr, Pointer.fromFunction(_handler));
+  }
 
-  // void on(String event, Function callback) {}
+  void setHandler(String event, Function handler) {
+    var type = _eventTable[event];
+    if (type != null) {
+      _handlers[type] = handler;
+    }
+  }
 
   // DisplayRenderingContext getRenderingContext() {
   //   return context;
   // }
 
-  List<MonitorMode> get modes {
+  List<MonitorMode> getModes() {
     if (_iteratedThroughModes) return _modes;
 
-    Pointer<struct_wl_list> head = _outputPtr.ref.modes.next;
+    Pointer<struct_wl_list> head = _monitorPtr.ref.wlr_output.ref.modes.next;
     Pointer<struct_wl_list> link = head;
     Pointer<struct_wlr_output_mode> item;
     while (link.ref.next != head) {
@@ -116,13 +139,14 @@ class Monitor {
 
   MonitorMode? getPreferredMode() {
     if (_iteratedThroughModes) return _preferredMode;
-    modes;
+    getModes();
     return _preferredMode;
   }
 
   void setMode(MonitorMode mode) {
     mode._outputModePtr ??= malloc();
-    Waybright._wblib.wlr_output_set_mode(_outputPtr, mode._outputModePtr!);
+    Waybright._wblib
+        .wlr_output_set_mode(_monitorPtr.ref.wlr_output, mode._outputModePtr!);
   }
 
   void setPreferredMode() {
@@ -148,18 +172,16 @@ class Waybright {
     if (handler == null) return;
 
     if (type == enum_events.events_monitor_add) {
-      Pointer<struct_wlr_output> wlrOutput = data.cast();
+      Pointer<struct_waybright_monitor> monitorPtr = data.cast();
       var monitor = Monitor(
-        wlrOutput,
-        wlrOutput.ref.name.cast<Utf8>().toDartString(),
-        wlrOutput.ref.width,
-        wlrOutput.ref.height,
+        monitorPtr,
+        monitorPtr.ref.wlr_output.ref.name.cast<Utf8>().toDartString(),
+        monitorPtr.ref.wlr_output.ref.width,
+        monitorPtr.ref.wlr_output.ref.height,
       );
 
       handler(monitor);
     }
-
-    _handlers.forEach((event, handler) {});
   }
 
   late final Pointer<struct_waybright> _wbPtr;

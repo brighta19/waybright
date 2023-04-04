@@ -3,6 +3,10 @@
 // #include <wlr/render/wlr_texture.h>
 #include "./waybright.h"
 
+struct waybright_monitor* waybright_monitor_create() {
+    return calloc(sizeof(struct waybright_monitor), 1);
+}
+
 struct wlr_output_mode* wl_list_wlr_output_mode_item(struct wl_list *ptr) {
     return wl_container_of(ptr, (struct wlr_output_mode*)NULL, link);
 }
@@ -23,9 +27,23 @@ void waybright_destroy(struct waybright* wb) {
     free(wb);
 }
 
+void handler_monitor_remove(struct wl_listener *listener, void *data) {
+    struct waybright_monitor* wb_monitor = wl_container_of(listener, wb_monitor, listeners.remove);
+    struct wlr_output *wlr_output = data;
+
+    wb_monitor->handler(events_monitor_remove, wlr_output);
+}
+
 void handler_monitor_add(struct wl_listener *listener, void *data) {
     struct waybright* wb = wl_container_of(listener, wb, listeners.monitor_add);
     struct wlr_output *wlr_output = data;
+
+    struct waybright_monitor* wb_monitor = waybright_monitor_create();
+    wb_monitor->wb = wb;
+    wb_monitor->wlr_output = wlr_output;
+
+    wb_monitor->listeners.remove.notify = handler_monitor_remove;
+    wl_signal_add(&wb_monitor->wlr_output->events.destroy, &wb_monitor->listeners.remove);
 
     wb->handler(events_monitor_add, wlr_output);
 }
@@ -111,4 +129,9 @@ int waybright_open_socket(struct waybright* wb, const char* socket_name) {
 
 void waybright_run(struct waybright* wb) {
     wl_display_run(wb->wl_display);
+}
+
+
+void waybright_monitor_set_handler(struct waybright_monitor* wbo, void(*handler)(int type, void* data)) {
+    wbo->handler = handler;
 }
