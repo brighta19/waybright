@@ -17,7 +17,7 @@ dependencies:
   ffi: ^2.0.1
 
 ffigen:
-  output: 'lib/waybright_bindings.dart'
+  output: 'lib/src/waybright_bindings.dart'
   name: 'WaybrightLibrary'
   description: 'Bindings from Waybright'
   compiler-opts:

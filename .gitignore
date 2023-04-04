@@ -2,6 +2,7 @@
 # Created by `dart pub`
 .vscode/
 .dart_tool/
-lib/waybright_bindings.dart
+lib/src/waybright_bindings.dart
 lib/waybright.so
 build/
+doc/

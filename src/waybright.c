@@ -7,6 +7,19 @@ struct waybright_monitor* waybright_monitor_create() {
     return calloc(sizeof(struct waybright_monitor), 1);
 }
 
+void waybright_monitor_destroy(struct waybright_monitor* wb_monitor) {
+    if (!wb_monitor) return;
+
+    wlr_output_destroy(wb_monitor->wlr_output);
+
+    free(wb_monitor);
+}
+
+void waybright_monitor_set_handler(struct waybright_monitor* wb_monitor, void(*handler)(int type, void* data)) {
+    fflush(stdout);
+    wb_monitor->handler = handler;
+}
+
 struct wlr_output_mode* wl_list_wlr_output_mode_item(struct wl_list *ptr) {
     return wl_container_of(ptr, (struct wlr_output_mode*)NULL, link);
 }
@@ -29,14 +42,27 @@ void waybright_destroy(struct waybright* wb) {
 
 void handler_monitor_remove(struct wl_listener *listener, void *data) {
     struct waybright_monitor* wb_monitor = wl_container_of(listener, wb_monitor, listeners.remove);
-    struct wlr_output *wlr_output = data;
+    // struct wlr_output *wlr_output = data;
 
-    wb_monitor->handler(events_monitor_remove, wlr_output);
+    if (wb_monitor->handler)
+        wb_monitor->handler(events_monitor_remove, wb_monitor);
+
+    waybright_monitor_destroy(wb_monitor);
+}
+
+void handler_monitor_frame(struct wl_listener *listener, void *data) {
+    struct waybright_monitor* wb_monitor = wl_container_of(listener, wb_monitor, listeners.frame);
+    // struct wlr_output *wlr_output = data;
+
+    if (wb_monitor->handler)
+        wb_monitor->handler(events_monitor_frame, wb_monitor);
 }
 
 void handler_monitor_add(struct wl_listener *listener, void *data) {
     struct waybright* wb = wl_container_of(listener, wb, listeners.monitor_add);
     struct wlr_output *wlr_output = data;
+
+	wlr_output_init_render(wlr_output, wb->wlr_allocator, wb->wlr_renderer);
 
     struct waybright_monitor* wb_monitor = waybright_monitor_create();
     wb_monitor->wb = wb;
@@ -44,8 +70,11 @@ void handler_monitor_add(struct wl_listener *listener, void *data) {
 
     wb_monitor->listeners.remove.notify = handler_monitor_remove;
     wl_signal_add(&wb_monitor->wlr_output->events.destroy, &wb_monitor->listeners.remove);
+    wb_monitor->listeners.frame.notify = handler_monitor_frame;
+    wl_signal_add(&wb_monitor->wlr_output->events.frame, &wb_monitor->listeners.frame);
 
-    wb->handler(events_monitor_add, wb_monitor);
+    if (wb->handler)
+        wb->handler(events_monitor_add, wb_monitor);
 }
 
 int waybright_init(struct waybright* wb) {
@@ -129,9 +158,4 @@ int waybright_open_socket(struct waybright* wb, const char* socket_name) {
 
 void waybright_run(struct waybright* wb) {
     wl_display_run(wb->wl_display);
-}
-
-
-void waybright_monitor_set_handler(struct waybright_monitor* wbo, void(*handler)(int type, void* data)) {
-    wbo->handler = handler;
 }

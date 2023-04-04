@@ -7,7 +7,8 @@
 
 enum events {
     events_monitor_add,
-    events_monitor_remove
+    events_monitor_remove,
+    events_monitor_frame,
 };
 struct waybright {
     struct wl_display* wl_display;
@@ -29,6 +30,7 @@ struct waybright_monitor {
 
     struct {
         struct wl_listener remove;
+        struct wl_listener frame;
     } listeners;
 
     void(*handler)(int type, void* data);
@@ -36,6 +38,7 @@ struct waybright_monitor {
 
 
 struct wlr_output_mode* wl_list_wlr_output_mode_item(struct wl_list *ptr);
+void waybright_monitor_set_handler(struct waybright_monitor* wb_monitor, void(*handler)(int type, void* data));
 struct waybright* waybright_create();
 void waybright_destroy(struct waybright* wb);
 int waybright_init(struct waybright*);
@@ -43,5 +46,3 @@ void waybright_set_handler(struct waybright* wb, void(*handler)(int type, void* 
 /// @param socket_name can be NULL to auto-select a name
 int waybright_open_socket(struct waybright* wb, const char* socket_name);
 void waybright_run(struct waybright* wb);
-
-void waybright_monitor_set_handler(struct waybright_monitor* wbo, void(*handler)(int type, void* data));

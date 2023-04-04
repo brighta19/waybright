@@ -1,6 +1,9 @@
+/// The waybright library.
+library;
+
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
-import 'package:waybright/waybright_bindings.dart';
+import 'src/waybright_bindings.dart';
 
 // enum WindowType { topLevel, popUp }
 
@@ -44,25 +47,32 @@ import 'package:waybright/waybright_bindings.dart';
 //   DisplayResolution(this.width, this.height);
 // }
 
+/// A combination of a resolution and refresh rate.
 class MonitorMode {
+  /// The resolution width.
   final int width;
+
+  /// The resolution height.
   final int height;
+
+  /// The refresh rate.
   final int refreshRate;
-  final bool preferred;
 
   Pointer<struct_wlr_output_mode>? _outputModePtr;
 
-  MonitorMode(this.width, this.height, this.refreshRate, this.preferred);
+  MonitorMode(this.width, this.height, this.refreshRate);
 
   @override
   String toString() {
-    return "(${width}x$height @ ${refreshRate}mHz${preferred ? ", preferred" : ""})";
+    return "(${width}x$height @ ${refreshRate}mHz)";
   }
 }
 
+/// A physical or virtual monitor that can render images.
 class Monitor {
   static final _eventTable = {
     'remove': enum_events.events_monitor_remove,
+    'frame': enum_events.events_monitor_frame,
   };
 
   static final Map<int, Function> _handlers = {};
@@ -71,14 +81,14 @@ class Monitor {
     var handler = _handlers[type];
     if (handler == null) return;
 
-    if (type == enum_events.events_monitor_remove) {
-      handler();
-    }
+    handler();
   }
 
+  /// This monitor's name.
   final String name;
-  final int width;
-  final int height;
+
+  /// Whether this monitor is allowed to render or not.
+  bool enabled = false;
 
   final Pointer<struct_waybright_monitor> _monitorPtr;
   final List<MonitorMode> _modes = [];
@@ -87,11 +97,12 @@ class Monitor {
 
   // DisplayRenderingContext context = DisplayRenderingContext();
 
-  Monitor(this._monitorPtr, this.name, this.width, this.height) {
+  Monitor(this._monitorPtr, this.name) {
     Waybright._wblib.waybright_monitor_set_handler(
         _monitorPtr, Pointer.fromFunction(_handler));
   }
 
+  /// Sets an event handler for this monitor.
   void setHandler(String event, Function handler) {
     var type = _eventTable[event];
     if (type != null) {
@@ -99,10 +110,7 @@ class Monitor {
     }
   }
 
-  // DisplayRenderingContext getRenderingContext() {
-  //   return context;
-  // }
-
+  /// Retrieves this monitor's modes (resolution + refresh rate).
   List<MonitorMode> getModes() {
     if (_iteratedThroughModes) return _modes;
 
@@ -115,11 +123,10 @@ class Monitor {
         item.ref.width,
         item.ref.height,
         item.ref.refresh,
-        item.ref.preferred,
       );
       mode._outputModePtr = item;
 
-      // While i find modes, find the preferred mode
+      // While I find modes, find the preferred mode
       if (item.ref.preferred) {
         _preferredMode = mode;
       }
@@ -137,24 +144,44 @@ class Monitor {
     return _modes;
   }
 
+  /// Attempts to retrieve this monitor's preferred mode.
   MonitorMode? getPreferredMode() {
     if (_iteratedThroughModes) return _preferredMode;
     getModes();
     return _preferredMode;
   }
 
+  /// Sets this monitor's resolution and refresh rate.
   void setMode(MonitorMode mode) {
     mode._outputModePtr ??= malloc();
     Waybright._wblib
         .wlr_output_set_mode(_monitorPtr.ref.wlr_output, mode._outputModePtr!);
   }
 
+  /// If there is a preferred mode, sets this monitor to use it.
   void setPreferredMode() {
     var mode = getPreferredMode();
     if (mode != null) {
       setMode(mode);
     }
   }
+
+  /// Enables this monitor to start rendering.
+  void enable() {
+    Waybright._wblib.wlr_output_enable(_monitorPtr.ref.wlr_output, true);
+    Waybright._wblib.wlr_output_commit(_monitorPtr.ref.wlr_output);
+    enabled = true;
+  }
+
+  /// Disables this monitor.
+  void disable() {
+    Waybright._wblib.wlr_output_enable(_monitorPtr.ref.wlr_output, false);
+    enabled = false;
+  }
+
+  // DisplayRenderingContext getRenderingContext() {
+  //   return context;
+  // }
 }
 
 class Waybright {
@@ -176,8 +203,6 @@ class Waybright {
       var monitor = Monitor(
         monitorPtr,
         monitorPtr.ref.wlr_output.ref.name.cast<Utf8>().toDartString(),
-        monitorPtr.ref.wlr_output.ref.width,
-        monitorPtr.ref.wlr_output.ref.height,
       );
 
       handler(monitor);
@@ -197,6 +222,20 @@ class Waybright {
     _wblib.waybright_set_handler(_wbPtr, Pointer.fromFunction(_handler));
   }
 
+  /// Sets an event handler for waybright.
+  void setHandler(String event, Function handler) {
+    var type = _eventTable[event];
+    if (type != null) {
+      _handlers[type] = handler;
+    }
+  }
+
+  /// Starts a wayland server.
+  ///
+  /// Optionally set a [socketName] to specify where the server should run.
+  /// Ignore it to automatically select a socket name.
+  /// Throws if a socket couldn't be created automatically, or, if specified,
+  /// the [socketName] is taken.
   Future<Socket> listen({
     String? socketName,
     bool setEnvironmentVariable = true,
@@ -213,13 +252,6 @@ class Waybright {
     }
   }
 
-  void setHandler(String event, Function handler) {
-    var type = _eventTable[event];
-    if (type != null) {
-      _handlers[type] = handler;
-    }
-  }
-
   // void useProtocol(Protocol protocol) {}
 
   // List<Monitor> getAvailableMonitors() {
@@ -229,11 +261,15 @@ class Waybright {
 
 class Socket {
   final Pointer<struct_waybright> _wlPtr;
+
+  /// The socket name of this wayland server.
   final String name;
 
   Socket(this._wlPtr, this.name);
 
-  /// This function is synchronous (blocking)
+  /// Enters the wayland server's event loop.
+  ///
+  /// This function is synchronous (blocking).
   void run() {
     Waybright._wblib.waybright_run(_wlPtr);
   }
