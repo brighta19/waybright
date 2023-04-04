@@ -1,6 +1,6 @@
 import 'package:waybright/waybright.dart';
 
-void main(List<String> arguments) {
+void main(List<String> arguments) async {
   var waybright = Waybright();
 
   // // protocol setup
@@ -19,20 +19,20 @@ void main(List<String> arguments) {
   // // display setup
   // Display? currentDisplay;
 
-  waybright.setHandler("monitor-add", (Monitor monitor) {
+  waybright.setEventHandler("monitor-add", (monitor) {
     print("The monitor '${monitor.name}' has been added!");
-    var modes = monitor.getModes();
-    var preferredMode = monitor.getPreferredMode();
-    print("Monitor '${monitor.name} has ${modes.length} modes. "
-        "${preferredMode == null ? "Has no preferred mode" : "Preferred mode: $preferredMode"}.");
+    var modes = monitor.modes;
+    var preferredMode = monitor.preferredMode;
+    print("Monitor '${monitor.name} has ${modes.length} modes. Preferred mode: "
+        "${preferredMode == null ? "none" : "$preferredMode"}.");
 
     //   if (currentDisplay == null) {
     //     currentDisplay = display;
 
-    monitor.setPreferredMode();
+    monitor.trySettingPreferredMode();
     monitor.enable();
 
-    monitor.setHandler("remove", () {
+    monitor.setEventHandler("remove", () {
       print("A monitor has been removed");
 
       //   var displays = waybright.getAvailableDisplays();
@@ -43,16 +43,13 @@ void main(List<String> arguments) {
 
     //     var ctx = display.getRenderingContext();
 
-    monitor.setHandler("frame", () {
+    monitor.setEventHandler("frame", () {
       print("frame");
       //       ctx.clearRect(0, 0, display.width, display.height);
     });
   });
 
-  waybright.listen().then((socket) {
-    print("Socket opened on ${socket.name}");
-    socket.run();
-  }).onError((error, stackTrace) {
-    print("Failed to run server");
-  });
+  var socket = await waybright.openSocket();
+  print("Socket opened on ${socket.name}");
+  socket.runEventLoop();
 }

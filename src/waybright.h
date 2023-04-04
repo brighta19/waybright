@@ -5,10 +5,10 @@
 #include <wlr/render/wlr_renderer.h>
 #include <malloc.h>
 
-enum events {
-    events_monitor_add,
-    events_monitor_remove,
-    events_monitor_frame,
+enum event_type {
+    event_type_monitor_add,
+    event_type_monitor_remove,
+    event_type_monitor_frame,
 };
 struct waybright {
     struct wl_display* wl_display;
@@ -21,7 +21,7 @@ struct waybright {
         struct wl_listener monitor_add;
     } listeners;
 
-    void(*handler)(int type, void* data);
+    void(*handle_event)(int type, void* data);
 };
 
 struct waybright_monitor {
@@ -33,16 +33,16 @@ struct waybright_monitor {
         struct wl_listener frame;
     } listeners;
 
-    void(*handler)(int type, void* data);
+    void(*handle_event)(int type, void* data);
 };
 
 
-struct wlr_output_mode* wl_list_wlr_output_mode_item(struct wl_list *ptr);
-void waybright_monitor_set_handler(struct waybright_monitor* wb_monitor, void(*handler)(int type, void* data));
+struct wlr_output_mode* get_wlr_output_mode_from_wl_list(struct wl_list *ptr);
+void waybright_monitor_set_event_handler(struct waybright_monitor* wb_monitor, void(*event_handler)(int event_type, void* data));
 struct waybright* waybright_create();
 void waybright_destroy(struct waybright* wb);
 int waybright_init(struct waybright*);
-void waybright_set_handler(struct waybright* wb, void(*handler)(int type, void* data));
+void waybright_set_event_handler(struct waybright* wb, void(*event_handler)(int event_type, void* data));
 /// @param socket_name can be NULL to auto-select a name
 int waybright_open_socket(struct waybright* wb, const char* socket_name);
-void waybright_run(struct waybright* wb);
+void waybright_run_event_loop(struct waybright* wb);
