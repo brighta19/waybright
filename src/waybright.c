@@ -45,7 +45,7 @@ void handler_monitor_add(struct wl_listener *listener, void *data) {
     wb_monitor->listeners.remove.notify = handler_monitor_remove;
     wl_signal_add(&wb_monitor->wlr_output->events.destroy, &wb_monitor->listeners.remove);
 
-    wb->handler(events_monitor_add, wlr_output);
+    wb->handler(events_monitor_add, wb_monitor);
 }
 
 int waybright_init(struct waybright* wb) {

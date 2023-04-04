@@ -62,7 +62,7 @@ class MonitorMode {
 
 class Monitor {
   static final _eventTable = {
-    'monitor-remove': enum_events.events_monitor_remove,
+    'remove': enum_events.events_monitor_remove,
   };
 
   static final Map<int, Function> _handlers = {};
