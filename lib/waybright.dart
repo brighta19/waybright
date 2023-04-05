@@ -52,8 +52,9 @@ final WaybrightLibrary _wblib =
 
 class CanvasRenderingContext {
   final Pointer<struct_waybright_canvas> _canvasPtr;
+  Canvas canvas;
 
-  CanvasRenderingContext(this._canvasPtr);
+  CanvasRenderingContext(this._canvasPtr, this.canvas);
 
   int get fillStyle {
     // TODO: Implement this method
@@ -76,7 +77,7 @@ class CanvasRenderingContext {
 /// A canvas used for rendering images on a [Monitor]
 class Canvas {
   /// The context to used for modifying the monitor's canvas
-  final CanvasRenderingContext renderingContext;
+  late CanvasRenderingContext renderingContext;
 
   /// This canvas's width
   final int width;
@@ -84,8 +85,11 @@ class Canvas {
   /// This canvas's height
   final int height;
 
-  Canvas(canvasPtr, this.width, this.height)
-      : renderingContext = CanvasRenderingContext(canvasPtr);
+  final Pointer<struct_waybright_canvas> _canvasPtr;
+
+  Canvas(this._canvasPtr, this.width, this.height) {
+    renderingContext = CanvasRenderingContext(_canvasPtr, this);
+  }
 }
 
 /// A combination of a resolution and refresh rate.
