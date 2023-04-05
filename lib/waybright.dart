@@ -6,7 +6,7 @@ import 'package:ffi/ffi.dart';
 import 'src/waybright_bindings.dart';
 
 final WaybrightLibrary _wblib =
-    WaybrightLibrary(DynamicLibrary.open("lib/waybright.so"));
+    WaybrightLibrary(DynamicLibrary.open("build/waybright.so"));
 
 // enum WindowType { topLevel, popUp }
 
@@ -50,6 +50,44 @@ final WaybrightLibrary _wblib =
 //   DisplayResolution(this.width, this.height);
 // }
 
+class CanvasRenderingContext {
+  final Pointer<struct_waybright_canvas> _canvasPtr;
+
+  CanvasRenderingContext(this._canvasPtr);
+
+  int get fillStyle {
+    // TODO: Implement this method
+    return 0;
+  }
+
+  set fillStyle(int color) {
+    _wblib.waybright_canvas_set_fill_style(_canvasPtr, color);
+  }
+
+  void clearRect(int x, int y, int width, int height) {
+    _wblib.waybright_canvas_clear_rect(_canvasPtr, x, y, width, height);
+  }
+
+  void fillRect(int x, int y, int width, int height) {
+    _wblib.waybright_canvas_fill_rect(_canvasPtr, x, y, width, height);
+  }
+}
+
+/// A canvas used for rendering images on a [Monitor]
+class Canvas {
+  /// The context to used for modifying the monitor's canvas
+  final CanvasRenderingContext renderingContext;
+
+  /// This canvas's width
+  final int width;
+
+  /// This canvas's height
+  final int height;
+
+  Canvas(canvasPtr, this.width, this.height)
+      : renderingContext = CanvasRenderingContext(canvasPtr);
+}
+
 /// A combination of a resolution and refresh rate.
 class MonitorMode {
   /// The resolution width.
@@ -72,7 +110,7 @@ class MonitorMode {
   }
 }
 
-/// A physical or virtual monitor that can render images.
+/// A physical or virtual monitor that can render a [Canvas].
 class Monitor {
   static final _eventTypeFromString = {
     'remove': enum_event_type.event_type_monitor_remove,
@@ -94,16 +132,23 @@ class Monitor {
   /// Whether this monitor is allowed to render or not.
   bool isEnabled = false;
 
+  Canvas? _canvas;
+
   final Pointer<struct_waybright_monitor> _monitorPtr;
   final List<MonitorMode> _modes = [];
   bool _hasIteratedThroughModes = false;
   MonitorMode? _preferredMode;
 
-  // DisplayRenderingContext context = DisplayRenderingContext();
-
   Monitor(this._monitorPtr, this.name) {
     _wblib.waybright_monitor_set_event_handler(
         _monitorPtr, Pointer.fromFunction(_executeEventHandler));
+  }
+
+  /// The canvas that this monitor will render.
+  ///
+  /// It becomes available when this monitor is enabled.
+  Canvas? get canvas {
+    return _canvas;
   }
 
   /// Sets an event handler for this monitor.
@@ -170,20 +215,29 @@ class Monitor {
 
   /// Enables this monitor to start rendering.
   void enable() {
-    _wblib.wlr_output_enable(_monitorPtr.ref.wlr_output, true);
-    _wblib.wlr_output_commit(_monitorPtr.ref.wlr_output);
+    _wblib.waybright_monitor_enable(_monitorPtr);
+    _canvas = Canvas(
+      _monitorPtr.ref.wb_canvas,
+      _monitorPtr.ref.wlr_output.ref.width,
+      _monitorPtr.ref.wlr_output.ref.height,
+    );
     isEnabled = true;
   }
 
   /// Disables this monitor.
   void disable() {
     _wblib.wlr_output_enable(_monitorPtr.ref.wlr_output, false);
+    _canvas = null;
     isEnabled = false;
   }
 
-  // DisplayRenderingContext getRenderingContext() {
-  //   return context;
-  // }
+  /// Renders this monitor's canvas.
+  ///
+  /// Should only be called diring the `frame` event. Calling this function
+  /// every `frame` can increase CPU usage.
+  void renderCanvas() {
+    _wblib.waybright_monitor_render(_monitorPtr);
+  }
 }
 
 class Waybright {

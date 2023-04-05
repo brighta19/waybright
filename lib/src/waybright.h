@@ -1,3 +1,4 @@
+#include <cairo/cairo.h>
 #include <wayland-server-core.h>
 #include <wlr/backend.h>
 #include <wlr/render/allocator.h>
@@ -10,6 +11,7 @@ enum event_type {
     event_type_monitor_remove,
     event_type_monitor_frame,
 };
+
 struct waybright {
     struct wl_display* wl_display;
     struct wlr_backend* wlr_backend;
@@ -24,9 +26,16 @@ struct waybright {
     void(*handle_event)(int type, void* data);
 };
 
+struct waybright_canvas {
+    cairo_t *ctx;
+    cairo_surface_t *canvas;
+    float color_fill[4];
+};
+
 struct waybright_monitor {
     struct waybright* wb;
     struct wlr_output* wlr_output;
+    struct waybright_canvas* wb_canvas;
 
     struct {
         struct wl_listener remove;
@@ -46,3 +55,9 @@ void waybright_set_event_handler(struct waybright* wb, void(*event_handler)(int 
 /// @param socket_name can be NULL to auto-select a name
 int waybright_open_socket(struct waybright* wb, const char* socket_name);
 void waybright_run_event_loop(struct waybright* wb);
+
+void waybright_canvas_set_fill_style(struct waybright_canvas* wb_canvas, int color);
+void waybright_canvas_clear_rect(struct waybright_canvas* wb_canvas, int x, int y, int width, int height);
+void waybright_canvas_fill_rect(struct waybright_canvas* wb_canvas, int x, int y, int width, int height);
+void waybright_monitor_enable(struct waybright_monitor* wb_monitor);
+void waybright_monitor_render(struct waybright_monitor* wb_monitor);

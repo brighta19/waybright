@@ -1,7 +1,15 @@
 #include <stdlib.h>
+#include <drm/drm_fourcc.h>
 // #include <wlr/types/wlr_compositor.h>
 // #include <wlr/render/wlr_texture.h>
 #include "./waybright.h"
+
+void hex_to_color(int hex, float* color) {
+    color[0] = ((hex & 0xff0000) >> 16) / (float)0xff;
+    color[1] = ((hex & 0x00ff00) >> 8) / (float)0xff;
+    color[2] = (hex & 0x0000ff) / (float)0xff;
+    color[3] = 1.0;
+}
 
 struct waybright_monitor* waybright_monitor_create() {
     return calloc(sizeof(struct waybright_monitor), 1);
@@ -101,13 +109,6 @@ int waybright_init(struct waybright* wb) {
     wb->listeners.monitor_add.notify = handle_monitor_add_event;
     wl_signal_add(&wb->wlr_backend->events.new_output, &wb->listeners.monitor_add);
 
-    // wl_list_init(&wb->displays);
-    // wl_list_init(&wb->views);
-
-    // wb->listeners.display_add.notify = on_display_add;
-    // wl_signal_add(&wb->backend->events.new_output, &wb->listeners.display_add);
-
-
     // // Initialize compositor
     // wb->compositor = wlr_compositor_create(wb->display, wb->renderer->wlr_renderer);
     // assert(wb->compositor);
@@ -157,4 +158,82 @@ int waybright_open_socket(struct waybright* wb, const char* socket_name) {
 
 void waybright_run_event_loop(struct waybright* wb) {
     wl_display_run(wb->wl_display);
+}
+
+void waybright_canvas_set_fill_style(struct waybright_canvas* wb_canvas, int color) {
+    hex_to_color(color, wb_canvas->color_fill);
+}
+
+void waybright_canvas_clear_rect(struct waybright_canvas* wb_canvas, int x, int y, int width, int height) {
+    cairo_set_source_rgba(wb_canvas->ctx, 1.0, 1.0, 1.0, 1.0);
+    cairo_rectangle(wb_canvas->ctx, x, y, width, height);
+    cairo_fill(wb_canvas->ctx);
+}
+
+void waybright_canvas_fill_rect(struct waybright_canvas* wb_canvas, int x, int y, int width, int height) {
+    cairo_set_source_rgba(
+        wb_canvas->ctx,
+        wb_canvas->color_fill[0],
+        wb_canvas->color_fill[1],
+        wb_canvas->color_fill[2],
+        wb_canvas->color_fill[3]
+    );
+    cairo_rectangle(wb_canvas->ctx, x, y, width, height);
+    cairo_fill(wb_canvas->ctx);
+}
+
+struct waybright_canvas* waybright_canvas_create() {
+    return calloc(sizeof(struct waybright_canvas), 1);
+}
+
+void waybright_canvas_init(struct waybright_canvas* wb_canvas, struct waybright_monitor* wb_monitor) {
+    wb_canvas->canvas = cairo_image_surface_create(
+        CAIRO_FORMAT_ARGB32,
+        wb_monitor->wlr_output->width,
+        wb_monitor->wlr_output->height
+    );
+    wb_canvas->ctx = cairo_create(wb_canvas->canvas);
+}
+
+void waybright_monitor_enable(struct waybright_monitor* wb_monitor) {
+    wlr_output_enable(wb_monitor->wlr_output, true);
+    wlr_output_commit(wb_monitor->wlr_output);
+
+    struct waybright_canvas* wb_canvas = waybright_canvas_create();
+    waybright_canvas_init(wb_canvas, wb_monitor);
+    wb_monitor->wb_canvas = wb_canvas;
+}
+
+void waybright_monitor_render(struct waybright_monitor* wb_monitor) {
+    if (!wb_monitor->wb_canvas) return;
+
+    struct wlr_renderer* wlr_renderer = wb_monitor->wb->wlr_renderer;
+    struct wlr_output* wlr_output = wb_monitor->wlr_output;
+    int width = wb_monitor->wlr_output->width;
+    int height = wb_monitor->wlr_output->height;
+    cairo_surface_t* canvas = wb_monitor->wb_canvas->canvas;
+
+    cairo_surface_flush(canvas);
+
+    int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, width);
+    unsigned char *pixel_data = cairo_image_surface_get_data(canvas);
+
+    struct wlr_texture *texture = wlr_texture_from_pixels(
+        wlr_renderer,
+        DRM_FORMAT_ARGB8888,
+        stride,
+        width,
+        height,
+        pixel_data
+    );
+
+    wlr_output_attach_render(wlr_output, NULL);
+    wlr_renderer_begin(wlr_renderer, width, height);
+
+    wlr_render_texture(wlr_renderer, texture, wlr_output->transform_matrix, 0, 0, 1.0);
+
+    wlr_renderer_end(wlr_renderer);
+    wlr_output_commit(wlr_output);
+
+    wlr_texture_destroy(texture);
 }

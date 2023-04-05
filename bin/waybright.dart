@@ -18,7 +18,7 @@ void main(List<String> arguments) async {
 
   Monitor? currentMonitor;
 
-  waybright.setEventHandler("monitor-add", (monitor) {
+  waybright.setEventHandler("monitor-add", (Monitor monitor) {
     print("The monitor '${monitor.name}' has been added!");
     var modes = monitor.modes;
     var preferredMode = monitor.preferredMode;
@@ -30,11 +30,28 @@ void main(List<String> arguments) async {
       monitor.trySettingPreferredMode();
       monitor.enable();
 
-      // var ctx = display.getRenderingContext();
-      monitor.setEventHandler("frame", () {
-        print("frame");
-        // ctx.clearRect(0, 0, display.width, display.height);
-      });
+      var canvas = monitor.canvas;
+      if (canvas != null) {
+        var ctx = canvas.renderingContext;
+        bool rendered = false;
+        monitor.setEventHandler("frame", () {
+          if (!rendered) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = 0xff3333;
+            ctx.fillRect(200, 200, 100, 100);
+
+            ctx.fillStyle = 0x33ff33;
+            ctx.fillRect(300, 150, 100, 100);
+
+            ctx.fillStyle = 0x3333ff;
+            ctx.fillRect(250, 250, 100, 100);
+
+            monitor.renderCanvas();
+            rendered = true;
+          }
+        });
+      }
     }
 
     monitor.setEventHandler("remove", () {

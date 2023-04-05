@@ -24,7 +24,7 @@ ffigen:
   - '-DWLR_USE_UNSTABLE'
   headers:
     entry-points:
-      - 'src/waybright.h'
+      - 'lib/src/waybright.h'
   structs:
     rename:
       '(.*)': 'struct_$1'
