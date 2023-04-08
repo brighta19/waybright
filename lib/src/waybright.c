@@ -33,8 +33,6 @@ void waybright_canvas_destroy(struct waybright_canvas* wb_canvas) {
 void waybright_monitor_destroy(struct waybright_monitor* wb_monitor) {
     if (!wb_monitor) return;
 
-    wlr_output_destroy(wb_monitor->wlr_output);
-    wlr_output_damage_destroy(wb_monitor->wlr_output_damage);
     waybright_canvas_destroy(wb_monitor->wb_canvas);
 
     free(wb_monitor);
@@ -295,8 +293,6 @@ int waybright_monitor_get_background_color(struct waybright_monitor* wb_monitor)
 
 // void waybright_monitor_render_canvas(struct waybright_monitor* wb_monitor) {
 //     if (!wb_monitor->wb_canvas) return;
-
 //     cairo_surface_t* canvas = wb_monitor->wb_canvas->canvas;
-
 //     cairo_surface_flush(canvas);
 // }

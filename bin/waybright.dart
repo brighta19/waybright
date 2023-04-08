@@ -1,34 +1,32 @@
 import 'package:waybright/waybright.dart';
 
-Monitor? currentMonitor;
+const backgroundColors = [
+  0x88ffcc,
+  0xffaaaa,
+];
 
-void initializeMonitor(Monitor monitor) {
-  monitor.trySettingPreferredMode();
-  monitor.enable();
-  monitor.backgroundColor = 0x88ffcc;
+var monitors = <Monitor>[];
 
-  // monitor.setEventHandler("frame", () {});
-}
-
-void handleNewMonitor(Monitor monitor) {
-  print("The monitor '${monitor.name}' has been added!");
-
+void initializeMonitor(Monitor monitor, int number) {
   var modes = monitor.modes;
   var preferredMode = monitor.preferredMode;
   print("Monitor '${monitor.name} has ${modes.length} modes. Preferred mode: "
       "${preferredMode == null ? "none" : "$preferredMode"}.");
 
-  if (currentMonitor == null) {
-    currentMonitor = monitor;
-    initializeMonitor(monitor);
-  }
+  monitor.trySettingPreferredMode();
+  monitor.enable();
+  monitor.backgroundColor = backgroundColors[number % backgroundColors.length];
+}
+
+void handleNewMonitor(Monitor monitor) {
+  monitors.add(monitor);
+  print("The monitor '${monitor.name}' has been added!");
+
+  initializeMonitor(monitor, monitors.length - 1);
 
   monitor.setEventHandler("remove", () {
-    print("A monitor has been removed");
-
-    if (monitor == currentMonitor) {
-      currentMonitor = null;
-    }
+    monitors.remove(monitor);
+    print("The monitor `${monitor.name}` has been removed!");
   });
 }
 

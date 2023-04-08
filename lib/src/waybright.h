@@ -30,6 +30,7 @@ struct waybright {
 struct waybright_canvas {
     cairo_t *ctx;
     cairo_surface_t *canvas;
+
     float color_fill[4];
 };
 
