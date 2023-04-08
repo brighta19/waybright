@@ -1,18 +1,28 @@
 # waybright
----
 
 A dart library for building wayland compositors using wlroots, along with a
 sample compositor located in `/bin`.
 
-I don't understand everything going on in this whole wayland environment (though I am trying).
-And i've never made a window manager. And I lowkey don't know what I'm doing.
+**WARNING: I have no idea what I'm doing. Use this library if you dare.**
 
-But kinda tired of reading. Now, me just do. **YOLO**.
+---
 
-<!--
-A sample command-line application with an entrypoint in `bin/`, library code
-in `lib/`, and example unit test in `test/`.
--->
+I got interested in the concept of making my own window manager. Wayland is apparently the new fresh shoes compared to the old X11.
+
+This is my first venture in wayland. and x11. and (kinda) custom desktop environments. and building (public) libraries. etc.
+
+But I'm bored of reading and trying to understand.
+Now, me just code. Don't expect perfectness.
+
+**YOLO**.
+
+---
+
+How did i come up with `waybright`? I took wayland, I took my name (Bright) and I *performed intense fusion*.
+
+And I like it. 🙂
+
+---
 
 ## Requirements
 - wayland (I'm using *v1.21.0*)
