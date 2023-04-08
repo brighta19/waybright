@@ -235,13 +235,22 @@ class Monitor {
     isEnabled = false;
   }
 
+  /// The background color of this monitor.
+  int get backgroundColor {
+    return _wblib.waybright_monitor_get_background_color(_monitorPtr);
+  }
+
+  set backgroundColor(int color) {
+    _wblib.waybright_monitor_set_background_color(_monitorPtr, color);
+  }
+
   /// Renders this monitor's canvas.
   ///
   /// Should only be called diring the `frame` event. Calling this function
   /// every `frame` can increase CPU usage.
-  void renderCanvas() {
-    _wblib.waybright_monitor_render(_monitorPtr);
-  }
+  // void renderCanvas() {
+  //   _wblib.waybright_monitor_render_canvas(_monitorPtr);
+  // }
 }
 
 class Waybright {

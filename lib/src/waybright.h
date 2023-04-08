@@ -3,6 +3,7 @@
 #include <wlr/backend.h>
 #include <wlr/render/allocator.h>
 #include <wlr/types/wlr_output.h>
+#include <wlr/types/wlr_output_damage.h>
 #include <wlr/render/wlr_renderer.h>
 #include <malloc.h>
 
@@ -35,7 +36,10 @@ struct waybright_canvas {
 struct waybright_monitor {
     struct waybright* wb;
     struct wlr_output* wlr_output;
+    struct wlr_output_damage* wlr_output_damage;
     struct waybright_canvas* wb_canvas;
+
+    float background_color[4];
 
     struct {
         struct wl_listener remove;
@@ -60,4 +64,7 @@ void waybright_canvas_set_fill_style(struct waybright_canvas* wb_canvas, int col
 void waybright_canvas_clear_rect(struct waybright_canvas* wb_canvas, int x, int y, int width, int height);
 void waybright_canvas_fill_rect(struct waybright_canvas* wb_canvas, int x, int y, int width, int height);
 void waybright_monitor_enable(struct waybright_monitor* wb_monitor);
-void waybright_monitor_render(struct waybright_monitor* wb_monitor);
+void waybright_monitor_set_background_color(struct waybright_monitor* wb_monitor, int color);
+int waybright_monitor_get_background_color(struct waybright_monitor* wb_monitor);
+
+// void waybright_monitor_render_canvas(struct waybright_monitor* wb_monitor);
