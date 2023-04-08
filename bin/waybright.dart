@@ -30,10 +30,26 @@ void handleNewMonitor(Monitor monitor) {
   });
 }
 
+void handleNewWindow(Window window) {
+  print("A new window has been added! "
+      "It is ${window.isPopup ? "" : "NOT"} a popup window.");
+
+  window.setEventHandler("show", () {
+    print("An application wants its window shown!");
+  });
+  window.setEventHandler("hide", () {
+    print("An application wants its window hidden!");
+  });
+  window.setEventHandler("remove", () {
+    print("A window has been removed!");
+  });
+}
+
 void main(List<String> arguments) async {
   var waybright = Waybright();
 
   waybright.setEventHandler("monitor-add", handleNewMonitor);
+  waybright.setEventHandler("window-add", handleNewWindow);
 
   var socket = await waybright.openSocket();
   print("Socket opened on ${socket.name}");

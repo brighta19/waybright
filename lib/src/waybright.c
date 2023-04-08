@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <drm/drm_fourcc.h>
-// #include <wlr/types/wlr_compositor.h>
 // #include <wlr/render/wlr_texture.h>
 #include "./waybright.h"
 
@@ -15,10 +14,6 @@ void set_color_to_array(int color, float* color_array) {
     color_array[1] = ((color & 0x00ff00) >> 8) / (float)0xff;
     color_array[2] = (color & 0x0000ff) / (float)0xff;
     color_array[3] = 1.0;
-}
-
-struct waybright_monitor* waybright_monitor_create() {
-    return calloc(sizeof(struct waybright_monitor), 1);
 }
 
 void waybright_canvas_destroy(struct waybright_canvas* wb_canvas) {
@@ -38,8 +33,10 @@ void waybright_monitor_destroy(struct waybright_monitor* wb_monitor) {
     free(wb_monitor);
 }
 
-void waybright_monitor_set_event_handler(struct waybright_monitor* wb_monitor, void(*event_handler)(int event_type, void* data)) {
-    wb_monitor->handle_event = event_handler;
+void waybright_window_destroy(struct waybright_window* wb_window) {
+    if (!wb_window) return;
+
+    free(wb_window);
 }
 
 struct wlr_output_mode* get_wlr_output_mode_from_wl_list(struct wl_list *ptr) {
@@ -149,7 +146,7 @@ void handle_monitor_add_event(struct wl_listener *listener, void *data) {
 
 	wlr_output_init_render(wlr_output, wb->wlr_allocator, wb->wlr_renderer);
 
-    struct waybright_monitor* wb_monitor = waybright_monitor_create();
+    struct waybright_monitor* wb_monitor = calloc(sizeof(struct waybright_monitor), 1);
     wb_monitor->wb = wb;
     wb_monitor->wlr_output = wlr_output;
     wb_monitor->wlr_output_damage = wlr_output_damage_create(wlr_output);
@@ -161,6 +158,54 @@ void handle_monitor_add_event(struct wl_listener *listener, void *data) {
 
     if (wb->handle_event)
         wb->handle_event(event_type_monitor_add, wb_monitor);
+}
+
+void handle_window_show_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.show);
+
+    if (wb_window->handle_event)
+        wb_window->handle_event(event_type_window_show, wb_window);
+}
+
+void handle_window_hide_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.hide);
+
+    if (wb_window->handle_event)
+        wb_window->handle_event(event_type_window_hide, wb_window);
+}
+
+void handle_window_remove_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.remove);
+
+    if (wb_window->handle_event)
+        wb_window->handle_event(event_type_window_remove, wb_window);
+
+    waybright_window_destroy(wb_window);
+}
+
+void handle_window_add_event(struct wl_listener *listener, void *data) {
+    struct waybright* wb = wl_container_of(listener, wb, listeners.window_add);
+    struct wlr_xdg_surface *wlr_xdg_surface = data;
+
+    if (wlr_xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
+        return;
+
+    struct waybright_window* wb_window = calloc(sizeof(struct waybright_window), 1);
+    wb_window->wb = wb;
+    wb_window->wlr_xdg_surface = wlr_xdg_surface;
+    wb_window->is_popup = 0;
+
+	wb_window->listeners.show.notify = handle_window_show_event;
+	wl_signal_add(&wlr_xdg_surface->events.map, &wb_window->listeners.show);
+	wb_window->listeners.hide.notify = handle_window_hide_event;
+	wl_signal_add(&wlr_xdg_surface->events.unmap, &wb_window->listeners.hide);
+	wb_window->listeners.remove.notify = handle_window_remove_event;
+	wl_signal_add(&wlr_xdg_surface->events.destroy, &wb_window->listeners.remove);
+
+    // More events coming soon to a town near you!
+
+    if (wb->handle_event)
+        wb->handle_event(event_type_window_add, wb_window);
 }
 
 int waybright_init(struct waybright* wb) {
@@ -188,23 +233,21 @@ int waybright_init(struct waybright* wb) {
     wb->listeners.monitor_add.notify = handle_monitor_add_event;
     wl_signal_add(&wb->wlr_backend->events.new_output, &wb->listeners.monitor_add);
 
-    // // Initialize compositor
-    // wb->compositor = wlr_compositor_create(wb->display, wb->renderer->wlr_renderer);
-    // assert(wb->compositor);
+    // Enables clients to allocate surfaces (windows)
+    wb->wlr_compositor = wlr_compositor_create(wb->wl_display, wb->wlr_renderer);
+    if (!wb->wlr_compositor)
+        return 1;
 
-    // // Initialize xdg-shell
-    // wb->xdg_shell = wlr_xdg_shell_create(wb->display);
-    // assert(wb->xdg_shell);
-    // wb->listeners.new_xdg_surface.notify = on_new_xdg_surface;
-    // wl_signal_add(&wb->xdg_shell->events.new_surface, &wb->listeners.new_xdg_surface);
+    wb->wlr_xdg_shell = wlr_xdg_shell_create(wb->wl_display);
+    if (!wb->wlr_xdg_shell)
+        return 1;
+    wb->listeners.window_add.notify = handle_window_add_event;
+    wl_signal_add(&wb->wlr_xdg_shell->events.new_surface, &wb->listeners.window_add);
+
 
     // init_signals(wb);
 
     return 0;
-}
-
-void waybright_set_event_handler(struct waybright* wb, void(*event_handler)(int event_type, void* data)) {
-    wb->handle_event = event_handler;
 }
 
 int waybright_open_socket(struct waybright* wb, const char* socket_name) {

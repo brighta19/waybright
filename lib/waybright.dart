@@ -8,14 +8,6 @@ import 'src/waybright_bindings.dart';
 final WaybrightLibrary _wblib =
     WaybrightLibrary(DynamicLibrary.open("build/waybright.so"));
 
-// enum WindowType { topLevel, popUp }
-
-// class Window {
-//   WindowType type;
-
-//   Window(this.type);
-// }
-
 // class WindowStack {
 //   addToFront(Window window) {}
 //   moveToFront() {}
@@ -144,8 +136,7 @@ class Monitor {
   MonitorMode? _preferredMode;
 
   Monitor(this._monitorPtr, this.name) {
-    _wblib.waybright_monitor_set_event_handler(
-        _monitorPtr, Pointer.fromFunction(_executeEventHandler));
+    _monitorPtr.ref.handle_event = Pointer.fromFunction(_executeEventHandler);
   }
 
   /// The canvas that this monitor will render.
@@ -253,9 +244,47 @@ class Monitor {
   // }
 }
 
+/// An application window.
+///
+/// In wayland, this contains an xdg-surface from the xdg-shell protocol
+class Window {
+  static final _eventTypeFromString = {
+    'show': enum_event_type.event_type_window_show,
+    'hide': enum_event_type.event_type_window_hide,
+    'remove': enum_event_type.event_type_window_remove,
+  };
+
+  static final Map<int, Function> _eventHandlers = {};
+
+  static void _executeEventHandler(int type, Pointer<Void> data) {
+    var handleEvent = _eventHandlers[type];
+    if (handleEvent == null) return;
+
+    handleEvent();
+  }
+
+  /// Whether this window is a popup window.
+  var isPopup = false;
+
+  final Pointer<struct_waybright_window> _windowPtr;
+
+  Window(this._windowPtr, this.isPopup) {
+    _windowPtr.ref.handle_event = Pointer.fromFunction(_executeEventHandler);
+  }
+
+  /// Sets an event handler for this window.
+  void setEventHandler(String event, Function handler) {
+    var type = _eventTypeFromString[event];
+    if (type != null) {
+      _eventHandlers[type] = handler;
+    }
+  }
+}
+
 class Waybright {
   static final _eventTypeFromString = {
     'monitor-add': enum_event_type.event_type_monitor_add,
+    'window-add': enum_event_type.event_type_window_add,
   };
 
   static final Map<int, Function> _eventHandlers = {};
@@ -272,6 +301,11 @@ class Waybright {
       );
 
       handleEvent(monitor);
+    } else if (type == enum_event_type.event_type_window_add) {
+      var windowPtr = data as Pointer<struct_waybright_window>;
+      var window = Window(windowPtr, windowPtr.ref.is_popup == 1);
+
+      handleEvent(window);
     }
   }
 
@@ -286,8 +320,7 @@ class Waybright {
       throw Exception("Waybright instance creation failed unexpectedly.");
     }
 
-    _wblib.waybright_set_event_handler(
-        _wbPtr, Pointer.fromFunction(_executeEventHandler));
+    _wbPtr.ref.handle_event = Pointer.fromFunction(_executeEventHandler);
   }
 
   /// Sets an event handler for waybright.
