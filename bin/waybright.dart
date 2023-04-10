@@ -6,11 +6,12 @@ const backgroundColors = [
 ];
 
 var monitors = <Monitor>[];
+var windows = <Window>[];
 
 void initializeMonitor(Monitor monitor, int number) {
   var modes = monitor.modes;
   var preferredMode = monitor.preferredMode;
-  print("Monitor '${monitor.name} has ${modes.length} modes. Preferred mode: "
+  print("- Monitor '${monitor.name} has ${modes.length} modes. Preferred mode: "
       "${preferredMode == null ? "none" : "$preferredMode"}.");
 
   monitor.trySettingPreferredMode();
@@ -31,17 +32,28 @@ void handleNewMonitor(Monitor monitor) {
 }
 
 void handleNewWindow(Window window) {
-  print("A new window has been added! "
-      "It is ${window.isPopup ? "" : "NOT"} a popup window.");
+  windows.add(window);
+  print("A ${window.isPopup ? "popup " : ""}window from "
+      "${window.appId.isEmpty ? "an application" : "application `${window.appId}`"}"
+      " has been added!");
+
+  if (window.title.isNotEmpty) print("- Title: ${window.title}");
 
   window.setEventHandler("show", () {
-    print("An application wants its window shown!");
+    print(
+        "${window.appId.isEmpty ? "An application" : "Application `${window.appId}`"}"
+        " wants its window shown!");
   });
   window.setEventHandler("hide", () {
-    print("An application wants its window hidden!");
+    print(
+        "${window.appId.isEmpty ? "An application" : "Application `${window.appId}`"}"
+        " wants its window hidden!");
   });
   window.setEventHandler("remove", () {
-    print("A window has been removed!");
+    windows.remove(window);
+    print("A ${window.isPopup ? "popup " : ""}window from "
+        "${window.appId.isEmpty ? "an application" : "application `${window.appId}`"}"
+        " has been removed!");
   });
 }
 

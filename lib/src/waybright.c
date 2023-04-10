@@ -190,9 +190,11 @@ void handle_window_add_event(struct wl_listener *listener, void *data) {
     if (wlr_xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
         return;
 
+    struct wlr_xdg_toplevel* wlr_xdg_toplevel = wlr_xdg_surface->toplevel;
     struct waybright_window* wb_window = calloc(sizeof(struct waybright_window), 1);
     wb_window->wb = wb;
     wb_window->wlr_xdg_surface = wlr_xdg_surface;
+    wb_window->wlr_xdg_toplevel = wlr_xdg_toplevel;
     wb_window->is_popup = 0;
 
 	wb_window->listeners.show.notify = handle_window_show_event;

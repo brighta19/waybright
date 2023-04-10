@@ -63,6 +63,7 @@ struct waybright_monitor {
 struct waybright_window {
     struct waybright* wb;
     struct wlr_xdg_surface* wlr_xdg_surface;
+    struct wlr_xdg_toplevel* wlr_xdg_toplevel;
 
     int is_popup;
 

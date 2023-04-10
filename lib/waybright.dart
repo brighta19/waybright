@@ -9,6 +9,7 @@ final WaybrightLibrary _wblib =
     WaybrightLibrary(DynamicLibrary.open("build/waybright.so"));
 
 String _toString(Pointer<Char> stringPtr) {
+  if (stringPtr == nullptr) return "";
   return (stringPtr as Pointer<Utf8>).toDartString();
 }
 
@@ -134,21 +135,20 @@ class Monitor {
   }
 
   /// This monitor's name.
-  final String name;
+  String name = "unknown-monitor";
 
   /// Whether this monitor is allowed to render or not.
   bool isEnabled = false;
 
   Canvas? _canvas;
 
-  final Pointer<struct_waybright_monitor> _monitorPtr;
-  final List<MonitorMode> _modes = [];
+  Pointer<struct_waybright_monitor>? _monitorPtr;
+  List<MonitorMode> _modes = [];
   bool _hasIteratedThroughModes = false;
   MonitorMode? _preferredMode;
+  MonitorMode _mode = MonitorMode(0, 0, 0);
 
-  Monitor(this._monitorPtr, this.name) {
-    _monitorPtr.ref.handle_event = Pointer.fromFunction(_executeEventHandler);
-  }
+  Monitor();
 
   /// The canvas that this monitor will render.
   ///
@@ -169,33 +169,43 @@ class Monitor {
   List<MonitorMode> get modes {
     if (_hasIteratedThroughModes) return _modes;
 
-    var head = _monitorPtr.ref.wlr_output.ref.modes.next;
-    var link = head;
-    Pointer<struct_wlr_output_mode> item;
-    while (link.ref.next != head) {
-      item = _wblib.get_wlr_output_mode_from_wl_list(link);
-      var mode = MonitorMode(
-        item.ref.width,
-        item.ref.height,
-        item.ref.refresh,
-      ).._outputModePtr = item;
+    var monitorPtr = _monitorPtr;
+    if (monitorPtr != null) {
+      var head = monitorPtr.ref.wlr_output.ref.modes.next;
+      var link = head;
+      Pointer<struct_wlr_output_mode> item;
+      while (link.ref.next != head) {
+        item = _wblib.get_wlr_output_mode_from_wl_list(link);
+        var mode = MonitorMode(
+          item.ref.width,
+          item.ref.height,
+          item.ref.refresh,
+        ).._outputModePtr = item;
 
-      // While I find modes, find the preferred mode
-      if (item.ref.preferred) {
-        _preferredMode = mode;
+        // While I find modes, find the preferred mode
+        if (item.ref.preferred) {
+          _preferredMode = mode;
+        }
+
+        _modes.add(mode);
+
+        link = link.ref.next;
       }
 
-      _modes.add(mode);
+      if (_preferredMode == null && _modes.isNotEmpty) {
+        _preferredMode = _modes[0];
+      }
 
-      link = link.ref.next;
+      _hasIteratedThroughModes = true;
+      return _modes;
     }
 
-    if (_preferredMode == null && _modes.isNotEmpty) {
-      _preferredMode = _modes[0];
-    }
+    return [];
+  }
 
+  set modes(List<MonitorMode> modes) {
     _hasIteratedThroughModes = true;
-    return _modes;
+    _modes = modes;
   }
 
   /// Attempts to retrieve this monitor's preferred mode.
@@ -206,50 +216,73 @@ class Monitor {
   }
 
   /// Sets this monitor's resolution and refresh rate.
-  void setMode(MonitorMode mode) {
-    var outputModePtr = mode._outputModePtr ??= malloc();
-    _wblib.wlr_output_set_mode(_monitorPtr.ref.wlr_output, outputModePtr);
+  MonitorMode get mode {
+    return _mode;
+  }
+
+  set mode(MonitorMode mode) {
+    var monitorPtr = _monitorPtr;
+    var outputModePtr = mode._outputModePtr;
+    if (_monitorPtr != null && mode._outputModePtr != null) {
+      _wblib.wlr_output_set_mode(monitorPtr!.ref.wlr_output, outputModePtr!);
+    }
+
+    _mode = mode;
   }
 
   /// If there is a preferred mode, sets this monitor to use it.
   void trySettingPreferredMode() {
     var mode = preferredMode;
     if (mode != null) {
-      setMode(mode);
+      this.mode = mode;
     }
   }
 
   /// Enables this monitor to start rendering.
   void enable() {
-    _wblib.waybright_monitor_enable(_monitorPtr);
+    var monitorPtr = _monitorPtr;
+    if (monitorPtr != null) {
+      _wblib.waybright_monitor_enable(monitorPtr);
 
-    var canvas = Canvas(
-      _monitorPtr.ref.wlr_output.ref.width,
-      _monitorPtr.ref.wlr_output.ref.height,
-    );
-    var renderingContext = CanvasRenderingContext(canvas)
-      .._canvasPtr = _monitorPtr.ref.wb_canvas;
-    canvas.renderingContext = renderingContext;
-    _canvas = canvas;
-    _canvas = canvas;
+      var canvas = Canvas(
+        monitorPtr.ref.wlr_output.ref.width,
+        monitorPtr.ref.wlr_output.ref.height,
+      );
+      var renderingContext = CanvasRenderingContext(canvas)
+        .._canvasPtr = monitorPtr.ref.wb_canvas;
+      canvas.renderingContext = renderingContext;
+      _canvas = canvas;
+    }
 
     isEnabled = true;
   }
 
   /// Disables this monitor.
   void disable() {
-    _wblib.wlr_output_enable(_monitorPtr.ref.wlr_output, false);
+    var monitorPtr = _monitorPtr;
+    if (monitorPtr != null) {
+      _wblib.wlr_output_enable(monitorPtr.ref.wlr_output, false);
+    }
+
     _canvas = null;
     isEnabled = false;
   }
 
   /// The background color of this monitor.
   int get backgroundColor {
-    return _wblib.waybright_monitor_get_background_color(_monitorPtr);
+    var monitorPtr = _monitorPtr;
+    if (monitorPtr != null) {
+      return _wblib.waybright_monitor_get_background_color(monitorPtr);
+    }
+
+    return 0;
   }
 
   set backgroundColor(int color) {
-    _wblib.waybright_monitor_set_background_color(_monitorPtr, color);
+    var monitorPtr = _monitorPtr;
+    if (monitorPtr != null) {
+      _wblib.waybright_monitor_set_background_color(monitorPtr, color);
+    }
   }
 
   /// Renders this monitor's canvas.
@@ -280,14 +313,18 @@ class Window {
     handleEvent();
   }
 
+  /// The application id of this window.
+  String appId = "unknown-application";
+
+  /// The title of this window.
+  String title = "untitled";
+
   /// Whether this window is a popup window.
-  var isPopup = false;
+  bool isPopup;
 
-  final Pointer<struct_waybright_window> _windowPtr;
+  Pointer<struct_waybright_window>? _windowPtr;
 
-  Window(this._windowPtr, this.isPopup) {
-    _windowPtr.ref.handle_event = Pointer.fromFunction(_executeEventHandler);
-  }
+  Window(this.isPopup);
 
   /// Sets an event handler for this window.
   void setEventHandler(String event, Function handler) {
@@ -312,15 +349,25 @@ class Waybright {
 
     if (type == enum_event_type.event_type_monitor_add) {
       var monitorPtr = data as Pointer<struct_waybright_monitor>;
-      var monitor = Monitor(
-        monitorPtr,
-        _toString(monitorPtr.ref.wlr_output.ref.name),
-      );
+      var wlrOutput = monitorPtr.ref.wlr_output.ref;
+
+      var monitor = Monitor()
+        ..name = _toString(wlrOutput.name)
+        .._monitorPtr = monitorPtr
+        .._monitorPtr?.ref.handle_event =
+            Pointer.fromFunction(Monitor._executeEventHandler);
 
       handleEvent(monitor);
     } else if (type == enum_event_type.event_type_window_add) {
       var windowPtr = data as Pointer<struct_waybright_window>;
-      var window = Window(windowPtr, windowPtr.ref.is_popup == 1);
+      var wlrXdgToplevel = windowPtr.ref.wlr_xdg_toplevel.ref;
+
+      var window = Window(windowPtr.ref.is_popup == 1)
+        ..appId = _toString(wlrXdgToplevel.app_id)
+        ..title = _toString(wlrXdgToplevel.title)
+        .._windowPtr = windowPtr
+        .._windowPtr?.ref.handle_event =
+            Pointer.fromFunction(Window._executeEventHandler);
 
       handleEvent(window);
     }
