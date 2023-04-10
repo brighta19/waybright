@@ -8,6 +8,10 @@ import 'src/waybright_bindings.dart';
 final WaybrightLibrary _wblib =
     WaybrightLibrary(DynamicLibrary.open("build/waybright.so"));
 
+String _toString(Pointer<Char> stringPtr) {
+  return (stringPtr as Pointer<Utf8>).toDartString();
+}
+
 // class WindowStack {
 //   addToFront(Window window) {}
 //   moveToFront() {}
@@ -43,10 +47,10 @@ final WaybrightLibrary _wblib =
 // }
 
 class CanvasRenderingContext {
-  final Pointer<struct_waybright_canvas> _canvasPtr;
-  Canvas canvas;
+  Pointer<struct_waybright_canvas>? _canvasPtr;
+  final Canvas canvas;
 
-  CanvasRenderingContext(this._canvasPtr, this.canvas);
+  CanvasRenderingContext(this.canvas);
 
   int get fillStyle {
     // TODO: Implement this method
@@ -54,22 +58,31 @@ class CanvasRenderingContext {
   }
 
   set fillStyle(int color) {
-    _wblib.waybright_canvas_set_fill_style(_canvasPtr, color);
+    var canvasPtr = _canvasPtr;
+    if (canvasPtr != null) {
+      _wblib.waybright_canvas_set_fill_style(canvasPtr, color);
+    }
   }
 
   void clearRect(int x, int y, int width, int height) {
-    _wblib.waybright_canvas_clear_rect(_canvasPtr, x, y, width, height);
+    var canvasPtr = _canvasPtr;
+    if (canvasPtr != null) {
+      _wblib.waybright_canvas_clear_rect(canvasPtr, x, y, width, height);
+    }
   }
 
   void fillRect(int x, int y, int width, int height) {
-    _wblib.waybright_canvas_fill_rect(_canvasPtr, x, y, width, height);
+    var canvasPtr = _canvasPtr;
+    if (canvasPtr != null) {
+      _wblib.waybright_canvas_fill_rect(canvasPtr, x, y, width, height);
+    }
   }
 }
 
 /// A canvas used for rendering images on a [Monitor]
 class Canvas {
   /// The context to used for modifying the monitor's canvas
-  late CanvasRenderingContext renderingContext;
+  CanvasRenderingContext? renderingContext;
 
   /// This canvas's width
   final int width;
@@ -77,11 +90,9 @@ class Canvas {
   /// This canvas's height
   final int height;
 
-  final Pointer<struct_waybright_canvas> _canvasPtr;
+  Pointer<struct_waybright_canvas>? _canvasPtr;
 
-  Canvas(this._canvasPtr, this.width, this.height) {
-    renderingContext = CanvasRenderingContext(_canvasPtr, this);
-  }
+  Canvas(this.width, this.height);
 }
 
 /// A combination of a resolution and refresh rate.
@@ -211,11 +222,17 @@ class Monitor {
   /// Enables this monitor to start rendering.
   void enable() {
     _wblib.waybright_monitor_enable(_monitorPtr);
-    _canvas = Canvas(
-      _monitorPtr.ref.wb_canvas,
+
+    var canvas = Canvas(
       _monitorPtr.ref.wlr_output.ref.width,
       _monitorPtr.ref.wlr_output.ref.height,
     );
+    var renderingContext = CanvasRenderingContext(canvas)
+      .._canvasPtr = _monitorPtr.ref.wb_canvas;
+    canvas.renderingContext = renderingContext;
+    _canvas = canvas;
+    _canvas = canvas;
+
     isEnabled = true;
   }
 
@@ -237,7 +254,7 @@ class Monitor {
 
   /// Renders this monitor's canvas.
   ///
-  /// Should only be called diring the `frame` event. Calling this function
+  /// Should only be called during the `frame` event. Calling this function
   /// every `frame` can increase CPU usage.
   // void renderCanvas() {
   //   _wblib.waybright_monitor_render_canvas(_monitorPtr);
@@ -297,7 +314,7 @@ class Waybright {
       var monitorPtr = data as Pointer<struct_waybright_monitor>;
       var monitor = Monitor(
         monitorPtr,
-        (monitorPtr.ref.wlr_output.ref.name as Pointer<Utf8>).toDartString(),
+        _toString(monitorPtr.ref.wlr_output.ref.name),
       );
 
       handleEvent(monitor);
@@ -346,7 +363,7 @@ class Waybright {
       throw Exception("Opening wayland socket failed unexpectedly.");
     }
 
-    var name = (_wbPtr.ref.socket_name as Pointer<Utf8>).toDartString();
+    var name = _toString(_wbPtr.ref.socket_name);
     return Socket(_wbPtr, name);
   }
 
