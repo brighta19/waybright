@@ -82,6 +82,7 @@ int waybright_init(struct waybright*);
 int waybright_open_socket(struct waybright* wb, const char* socket_name);
 void waybright_run_event_loop(struct waybright* wb);
 
+int waybright_renderer_get_fill_style(struct waybright_renderer* wb_renderer);
 void waybright_renderer_set_fill_style(struct waybright_renderer* wb_renderer, int color);
 void waybright_renderer_clear_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height);
 void waybright_renderer_fill_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height);

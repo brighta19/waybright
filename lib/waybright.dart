@@ -28,7 +28,10 @@ class Renderer {
 
   /// The color used to fill in shapes.
   int get fillStyle {
-    // TODO: Implement this method
+    var rendererPtr = _rendererPtr;
+    if (rendererPtr != null) {
+      return _wblib.waybright_renderer_get_fill_style(rendererPtr);
+    }
     return 0;
   }
 
@@ -66,7 +69,7 @@ class Renderer {
 }
 
 /// A combination of a resolution and refresh rate.
-class MonitorMode {
+class Mode {
   /// The resolution width.
   final int width;
 
@@ -78,8 +81,8 @@ class MonitorMode {
 
   Pointer<struct_wlr_output_mode>? _outputModePtr;
 
-  /// Creates a MonitorMode instance.
-  MonitorMode(this.width, this.height, this.refreshRate);
+  /// Creates a [Mode] instance.
+  Mode(this.width, this.height, this.refreshRate);
 
   @override
   String toString() {
@@ -115,17 +118,16 @@ class Monitor {
   /// This monitor's name.
   String name = "unknown-monitor";
 
-  /// Whether this monitor is allowed to render or not.
-  bool isEnabled = false;
-
-  Renderer renderer;
+  /// This monitor's renderer.
+  final Renderer renderer;
 
   final Map<int, Function> _eventHandlers = {};
   Pointer<struct_waybright_monitor>? _monitorPtr;
-  List<MonitorMode> _modes = [];
+  bool _isEnabled = false;
+  List<Mode> _modes = [];
   bool _hasIteratedThroughModes = false;
-  MonitorMode? _preferredMode;
-  MonitorMode _mode = MonitorMode(0, 0, 0);
+  Mode? _preferredMode;
+  Mode _mode = Mode(0, 0, 0);
 
   Monitor(this.renderer) {
     _monitorInstances.add(this);
@@ -139,8 +141,13 @@ class Monitor {
     }
   }
 
+  /// Whether this monitor is allowed to render or not.
+  get isEnabled {
+    return _isEnabled;
+  }
+
   /// This monitor's modes (resolution + refresh rate).
-  List<MonitorMode> get modes {
+  List<Mode> get modes {
     if (_hasIteratedThroughModes) return _modes;
 
     var monitorPtr = _monitorPtr;
@@ -150,7 +157,7 @@ class Monitor {
       Pointer<struct_wlr_output_mode> item;
       while (link.ref.next != head) {
         item = _wblib.get_wlr_output_mode_from_wl_list(link);
-        var mode = MonitorMode(
+        var mode = Mode(
           item.ref.width,
           item.ref.height,
           item.ref.refresh,
@@ -177,24 +184,24 @@ class Monitor {
     return [];
   }
 
-  set modes(List<MonitorMode> modes) {
+  set modes(List<Mode> modes) {
     _hasIteratedThroughModes = true;
     _modes = modes;
   }
 
-  /// Attempts to retrieve this monitor's preferred mode.
-  MonitorMode? get preferredMode {
+  /// This monitor's preferred mode.
+  Mode? get preferredMode {
     if (_hasIteratedThroughModes) return _preferredMode;
     modes;
     return _preferredMode;
   }
 
   /// This monitor's resolution and refresh rate.
-  MonitorMode get mode {
+  Mode get mode {
     return _mode;
   }
 
-  set mode(MonitorMode mode) {
+  set mode(Mode mode) {
     var monitorPtr = _monitorPtr;
     var outputModePtr = mode._outputModePtr;
     if (_monitorPtr != null && mode._outputModePtr != null) {
@@ -219,7 +226,7 @@ class Monitor {
       _wblib.waybright_monitor_enable(monitorPtr);
     }
 
-    isEnabled = true;
+    _isEnabled = true;
   }
 
   /// Disables this monitor.
@@ -229,7 +236,7 @@ class Monitor {
       _wblib.waybright_monitor_disable(monitorPtr);
     }
 
-    isEnabled = false;
+    _isEnabled = false;
   }
 
   /// The background color of this monitor.
@@ -360,7 +367,7 @@ class Waybright {
     _waybrightInstances.add(this);
   }
 
-  /// Sets an event handler this [Waybright] instance.
+  /// Sets an event handler for this [Waybright] instance.
   void setEventHandler(String event, Function handler) {
     var type = _eventTypeFromString[event];
     if (type != null) {

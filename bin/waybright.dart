@@ -43,7 +43,7 @@ void handleNewMonitor(Monitor monitor) {
         renderer.drawWindow(window, 0, 0);
       }
     });
-  } else if (monitors.length == 2) {
+  } else {
     var renderer = monitor.renderer;
     monitor.setEventHandler("frame", () {
       renderer.fillStyle = 0xffdd66;
