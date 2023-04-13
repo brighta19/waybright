@@ -1,5 +1,7 @@
 #include <drm/drm_fourcc.h>
 #include <stdlib.h>
+#include <time.h>
+#include <wlr/render/wlr_texture.h>
 #include "./waybright.h"
 
 int get_color_from_array(float* color_array) {
@@ -258,7 +260,7 @@ void waybright_renderer_clear_rect(struct waybright_renderer* wb_renderer, int x
     struct wlr_renderer* wlr_renderer = wlr_output->renderer;
 
     struct wlr_box wlr_box = { .x = x, .y = y, .width = width, .height = height };
-    wlr_render_rect(wlr_renderer, &wlr_box, (float[4]){1.0, 1.0, 1.0, 1.0}, wlr_output->transform_matrix);
+    wlr_render_rect(wlr_renderer, &wlr_box, (float[4]){0.0, 0.0, 0.0, 0.0}, wlr_output->transform_matrix);
 }
 
 void waybright_renderer_fill_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height) {
@@ -267,6 +269,22 @@ void waybright_renderer_fill_rect(struct waybright_renderer* wb_renderer, int x,
 
     struct wlr_box wlr_box = { .x = x, .y = y, .width = width, .height = height };
     wlr_render_rect(wlr_renderer, &wlr_box, wb_renderer->color_fill, wlr_output->transform_matrix);
+}
+
+void waybright_renderer_draw_window(struct waybright_renderer* wb_renderer, struct waybright_window* wb_window, int x, int y) {
+    struct wlr_output* wlr_output = wb_renderer->wlr_output;
+    struct wlr_renderer* wlr_renderer = wlr_output->renderer;
+    struct wlr_surface* wlr_surface = wb_window->wlr_xdg_surface->surface;
+
+    struct wlr_texture* wlr_texture = wlr_surface_get_texture(wlr_surface);
+    if (!wlr_texture)
+        return;
+
+    wlr_render_texture(wlr_renderer, wlr_texture, wlr_output->transform_matrix, x, y, 1.0);
+
+    struct timespec now;
+	clock_gettime(CLOCK_MONOTONIC, &now);
+    wlr_surface_send_frame_done(wlr_surface, &now);
 }
 
 void waybright_monitor_enable(struct waybright_monitor* wb_monitor) {

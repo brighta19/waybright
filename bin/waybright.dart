@@ -11,8 +11,11 @@ var windows = <Window>[];
 void initializeMonitor(Monitor monitor, int number) {
   var modes = monitor.modes;
   var preferredMode = monitor.preferredMode;
-  print("- Monitor '${monitor.name} has ${modes.length} modes. Preferred mode: "
-      "${preferredMode == null ? "none" : "$preferredMode"}.");
+  print("- Monitor '${monitor.name} has ${modes.length} modes.");
+  if (modes.isNotEmpty) {
+    print("- Preferred mode: "
+        "${preferredMode == null ? "none" : "$preferredMode"}.");
+  }
 
   monitor.trySettingPreferredMode();
   monitor.enable();
@@ -35,38 +38,50 @@ void handleNewMonitor(Monitor monitor) {
     monitor.setEventHandler("frame", () {
       renderer.fillStyle = 0x6666ff;
       renderer.fillRect(50, 50, 100, 100);
+
+      for (var window in windows) {
+        renderer.drawWindow(window, 0, 0);
+      }
     });
   } else if (monitors.length == 2) {
     var renderer = monitor.renderer;
     monitor.setEventHandler("frame", () {
       renderer.fillStyle = 0xffdd66;
       renderer.fillRect(50, 50, 100, 100);
+
+      for (var window in windows) {
+        renderer.drawWindow(window, 0, 0);
+      }
     });
   }
 }
 
 void handleNewWindow(Window window) {
   windows.add(window);
-  print("A ${window.isPopup ? "popup " : ""}window from "
-      "${window.appId.isEmpty ? "an application" : "application `${window.appId}`"}"
+
+  final appId = window.appId;
+  final title = window.title;
+
+  print("${window.isPopup ? "A popup" : "A"} window from "
+      "${appId.isEmpty ? "an application" : "application `$appId`"}"
       " has been added!");
 
-  if (window.title.isNotEmpty) print("- Title: ${window.title}");
+  if (window.title.isNotEmpty) print("- Title: '$title'");
 
   window.setEventHandler("show", () {
-    print(
-        "${window.appId.isEmpty ? "An application" : "Application `${window.appId}`"}"
-        " wants its window shown!");
+    print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
+        " wants ${title.isEmpty ? "its window" : "the window '$title'"}"
+        " shown!");
   });
   window.setEventHandler("hide", () {
-    print(
-        "${window.appId.isEmpty ? "An application" : "Application `${window.appId}`"}"
-        " wants its window hidden!");
+    print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
+        " wants ${title.isEmpty ? "its window" : "the window '$title'"}"
+        " hidden!");
   });
   window.setEventHandler("remove", () {
     windows.remove(window);
-    print("A ${window.isPopup ? "popup " : ""}window from "
-        "${window.appId.isEmpty ? "an application" : "application `${window.appId}`"}"
+    print("${window.isPopup ? "A popup" : "A"} window from "
+        "${appId.isEmpty ? "an application" : "application `$appId`"}"
         " has been removed!");
   });
 }
@@ -78,6 +93,6 @@ void main(List<String> arguments) async {
   waybright.setEventHandler("window-add", handleNewWindow);
 
   var socket = await waybright.openSocket();
-  print("Socket opened on ${socket.name}");
+  print("Socket opened on ${socket.name}.");
   socket.runEventLoop();
 }

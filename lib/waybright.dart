@@ -22,34 +22,11 @@ String _toString(Pointer<Char> stringPtr) {
 //   get reverse {}
 // }
 
-// abstract class Protocol {
-//   static int nextId = 0;
-
-//   int id = nextId++;
-
-//   on(String event, Function callback);
-//   emit() {}
-// }
-
-// class XDGShellProtocol extends Protocol {
-//   @override
-//   on(String event, Function callback) {}
-// }
-
-// class DisplayRenderingContext {
-//   clearRect(int x, int y, int width, int height) {}
-// }
-
-// class DisplayResolution {
-//   int width;
-//   int height;
-
-//   DisplayResolution(this.width, this.height);
-// }
-
+/// A renderer.
 class Renderer {
   Pointer<struct_waybright_renderer>? _rendererPtr;
 
+  /// The color used to fill in shapes.
   int get fillStyle {
     // TODO: Implement this method
     return 0;
@@ -62,6 +39,7 @@ class Renderer {
     }
   }
 
+  /// Sets all pixels to transparent black.
   void clearRect(int x, int y, int width, int height) {
     var rendererPtr = _rendererPtr;
     if (rendererPtr != null) {
@@ -69,10 +47,20 @@ class Renderer {
     }
   }
 
+  /// Draws a rectangle filled with the current [fillStyle].
   void fillRect(int x, int y, int width, int height) {
     var rendererPtr = _rendererPtr;
     if (rendererPtr != null) {
       _wblib.waybright_renderer_fill_rect(rendererPtr, x, y, width, height);
+    }
+  }
+
+  /// Draws a rectangle.
+  void drawWindow(Window window, int x, int y) {
+    var rendererPtr = _rendererPtr;
+    var windowPtr = window._windowPtr;
+    if (rendererPtr != null && windowPtr != null) {
+      _wblib.waybright_renderer_draw_window(rendererPtr, windowPtr, x, y);
     }
   }
 }
@@ -90,7 +78,7 @@ class MonitorMode {
 
   Pointer<struct_wlr_output_mode>? _outputModePtr;
 
-  /// Creates a MonitorMode instance
+  /// Creates a MonitorMode instance.
   MonitorMode(this.width, this.height, this.refreshRate);
 
   @override
@@ -151,7 +139,7 @@ class Monitor {
     }
   }
 
-  /// Retrieves this monitor's modes (resolution + refresh rate).
+  /// This monitor's modes (resolution + refresh rate).
   List<MonitorMode> get modes {
     if (_hasIteratedThroughModes) return _modes;
 
@@ -201,7 +189,7 @@ class Monitor {
     return _preferredMode;
   }
 
-  /// Sets this monitor's resolution and refresh rate.
+  /// This monitor's resolution and refresh rate.
   MonitorMode get mode {
     return _mode;
   }
@@ -264,21 +252,30 @@ class Monitor {
 
 /// An application window.
 ///
-/// In wayland, this contains an xdg-surface from the xdg-shell protocol
+/// In wayland, this contains an xdg-surface from the xdg-shell protocol.
 class Window {
+  static final _windowInstances = <Window>[];
+
   static final _eventTypeFromString = {
     'show': enum_event_type.event_type_window_show,
     'hide': enum_event_type.event_type_window_hide,
     'remove': enum_event_type.event_type_window_remove,
   };
 
-  static final Map<int, Function> _eventHandlers = {};
-
   static void _executeEventHandler(int type, Pointer<Void> data) {
-    var handleEvent = _eventHandlers[type];
-    if (handleEvent == null) return;
+    for (var window in _windowInstances) {
+      var windowPtr = data as Pointer<struct_waybright_window>;
+      if (window._windowPtr != windowPtr) continue;
 
-    handleEvent();
+      var handleEvent = window._eventHandlers[type];
+      if (handleEvent == null) return;
+
+      handleEvent();
+
+      if (type == enum_event_type.event_type_window_remove) {
+        _windowInstances.remove(window);
+      }
+    }
   }
 
   /// The application id of this window.
@@ -290,9 +287,12 @@ class Window {
   /// Whether this window is a popup window.
   bool isPopup;
 
+  final Map<int, Function> _eventHandlers = {};
   Pointer<struct_waybright_window>? _windowPtr;
 
-  Window(this.isPopup);
+  Window(this.isPopup) {
+    _windowInstances.add(this);
+  }
 
   /// Sets an event handler for this window.
   void setEventHandler(String event, Function handler) {
@@ -303,6 +303,7 @@ class Window {
   }
 }
 
+/// A Waybright!
 class Waybright {
   static final _waybrightInstances = <Waybright>[];
 
@@ -346,7 +347,7 @@ class Waybright {
   final Map<int, Function> _eventHandlers = {};
   final Pointer<struct_waybright> _wbPtr = _wblib.waybright_create();
 
-  /// Creates a Waybright instance
+  /// Creates a [Waybright] instance.
   ///
   /// Throws an [Exception] if an unexpected exception occurs.
   Waybright() {
@@ -359,7 +360,7 @@ class Waybright {
     _waybrightInstances.add(this);
   }
 
-  /// Sets an event handler for waybright.
+  /// Sets an event handler this [Waybright] instance.
   void setEventHandler(String event, Function handler) {
     var type = _eventTypeFromString[event];
     if (type != null) {
@@ -385,14 +386,9 @@ class Waybright {
     var name = _toString(_wbPtr.ref.socket_name);
     return Socket(_wbPtr, name);
   }
-
-  // void useProtocol(Protocol protocol) {}
-
-  // List<Monitor> getAvailableMonitors() {
-  //   return [];
-  // }
 }
 
+/// A wayland socket.
 class Socket {
   final Pointer<struct_waybright> _wlPtr;
 
