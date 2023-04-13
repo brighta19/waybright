@@ -47,11 +47,8 @@ String _toString(Pointer<Char> stringPtr) {
 //   DisplayResolution(this.width, this.height);
 // }
 
-class CanvasRenderingContext {
-  Pointer<struct_waybright_canvas>? _canvasPtr;
-  final Canvas canvas;
-
-  CanvasRenderingContext(this.canvas);
+class Renderer {
+  Pointer<struct_waybright_renderer>? _rendererPtr;
 
   int get fillStyle {
     // TODO: Implement this method
@@ -59,41 +56,25 @@ class CanvasRenderingContext {
   }
 
   set fillStyle(int color) {
-    var canvasPtr = _canvasPtr;
-    if (canvasPtr != null) {
-      _wblib.waybright_canvas_set_fill_style(canvasPtr, color);
+    var rendererPtr = _rendererPtr;
+    if (rendererPtr != null) {
+      _wblib.waybright_renderer_set_fill_style(rendererPtr, color);
     }
   }
 
   void clearRect(int x, int y, int width, int height) {
-    var canvasPtr = _canvasPtr;
-    if (canvasPtr != null) {
-      _wblib.waybright_canvas_clear_rect(canvasPtr, x, y, width, height);
+    var rendererPtr = _rendererPtr;
+    if (rendererPtr != null) {
+      _wblib.waybright_renderer_clear_rect(rendererPtr, x, y, width, height);
     }
   }
 
   void fillRect(int x, int y, int width, int height) {
-    var canvasPtr = _canvasPtr;
-    if (canvasPtr != null) {
-      _wblib.waybright_canvas_fill_rect(canvasPtr, x, y, width, height);
+    var rendererPtr = _rendererPtr;
+    if (rendererPtr != null) {
+      _wblib.waybright_renderer_fill_rect(rendererPtr, x, y, width, height);
     }
   }
-}
-
-/// A canvas used for rendering images on a [Monitor]
-class Canvas {
-  /// The context to used for modifying the monitor's canvas
-  CanvasRenderingContext? renderingContext;
-
-  /// This canvas's width
-  final int width;
-
-  /// This canvas's height
-  final int height;
-
-  Pointer<struct_waybright_canvas>? _canvasPtr;
-
-  Canvas(this.width, this.height);
 }
 
 /// A combination of a resolution and refresh rate.
@@ -118,20 +99,29 @@ class MonitorMode {
   }
 }
 
-/// A physical or virtual monitor that can render a [Canvas].
+/// A physical or virtual monitor.
 class Monitor {
+  static final _monitorInstances = <Monitor>[];
+
   static final _eventTypeFromString = {
     'remove': enum_event_type.event_type_monitor_remove,
     'frame': enum_event_type.event_type_monitor_frame,
   };
 
-  static final Map<int, Function> _eventHandlers = {};
-
   static void _executeEventHandler(int type, Pointer<Void> data) {
-    var handleEvent = _eventHandlers[type];
-    if (handleEvent == null) return;
+    for (var monitor in _monitorInstances) {
+      var monitorPtr = data as Pointer<struct_waybright_monitor>;
+      if (monitor._monitorPtr != monitorPtr) continue;
 
-    handleEvent();
+      var handleEvent = monitor._eventHandlers[type];
+      if (handleEvent == null) return;
+
+      handleEvent();
+
+      if (type == enum_event_type.event_type_monitor_remove) {
+        _monitorInstances.remove(monitor);
+      }
+    }
   }
 
   /// This monitor's name.
@@ -140,21 +130,17 @@ class Monitor {
   /// Whether this monitor is allowed to render or not.
   bool isEnabled = false;
 
-  Canvas? _canvas;
+  Renderer renderer;
 
+  final Map<int, Function> _eventHandlers = {};
   Pointer<struct_waybright_monitor>? _monitorPtr;
   List<MonitorMode> _modes = [];
   bool _hasIteratedThroughModes = false;
   MonitorMode? _preferredMode;
   MonitorMode _mode = MonitorMode(0, 0, 0);
 
-  Monitor();
-
-  /// The canvas that this monitor will render.
-  ///
-  /// It becomes available when this monitor is enabled.
-  Canvas? get canvas {
-    return _canvas;
+  Monitor(this.renderer) {
+    _monitorInstances.add(this);
   }
 
   /// Sets an event handler for this monitor.
@@ -243,15 +229,6 @@ class Monitor {
     var monitorPtr = _monitorPtr;
     if (monitorPtr != null) {
       _wblib.waybright_monitor_enable(monitorPtr);
-
-      var canvas = Canvas(
-        monitorPtr.ref.wlr_output.ref.width,
-        monitorPtr.ref.wlr_output.ref.height,
-      );
-      var renderingContext = CanvasRenderingContext(canvas)
-        .._canvasPtr = monitorPtr.ref.wb_canvas;
-      canvas.renderingContext = renderingContext;
-      _canvas = canvas;
     }
 
     isEnabled = true;
@@ -261,10 +238,9 @@ class Monitor {
   void disable() {
     var monitorPtr = _monitorPtr;
     if (monitorPtr != null) {
-      _wblib.wlr_output_enable(monitorPtr.ref.wlr_output, false);
+      _wblib.waybright_monitor_disable(monitorPtr);
     }
 
-    _canvas = null;
     isEnabled = false;
   }
 
@@ -284,14 +260,6 @@ class Monitor {
       _wblib.waybright_monitor_set_background_color(monitorPtr, color);
     }
   }
-
-  /// Renders this monitor's canvas.
-  ///
-  /// Should only be called during the `frame` event. Calling this function
-  /// every `frame` can increase CPU usage.
-  // void renderCanvas() {
-  //   _wblib.waybright_monitor_render_canvas(_monitorPtr);
-  // }
 }
 
 /// An application window.
@@ -336,43 +304,46 @@ class Window {
 }
 
 class Waybright {
+  static final _waybrightInstances = <Waybright>[];
+
   static final _eventTypeFromString = {
     'monitor-add': enum_event_type.event_type_monitor_add,
     'window-add': enum_event_type.event_type_window_add,
   };
 
-  static final Map<int, Function> _eventHandlers = {};
-
   static void _executeEventHandler(int type, Pointer<Void> data) {
-    var handleEvent = _eventHandlers[type];
-    if (handleEvent == null) return;
+    for (var waybright in _waybrightInstances) {
+      var handleEvent = waybright._eventHandlers[type];
+      if (handleEvent == null) return;
 
-    if (type == enum_event_type.event_type_monitor_add) {
-      var monitorPtr = data as Pointer<struct_waybright_monitor>;
-      var wlrOutput = monitorPtr.ref.wlr_output.ref;
+      if (type == enum_event_type.event_type_monitor_add) {
+        var monitorPtr = data as Pointer<struct_waybright_monitor>;
 
-      var monitor = Monitor()
-        ..name = _toString(wlrOutput.name)
-        .._monitorPtr = monitorPtr
-        .._monitorPtr?.ref.handle_event =
-            Pointer.fromFunction(Monitor._executeEventHandler);
+        var renderer = Renderer().._rendererPtr = monitorPtr.ref.wb_renderer;
+        var monitor = Monitor(renderer)
+          ..name = _toString(monitorPtr.ref.wlr_output.ref.name)
+          .._monitorPtr = monitorPtr
+          .._monitorPtr?.ref.handle_event =
+              Pointer.fromFunction(Monitor._executeEventHandler);
 
-      handleEvent(monitor);
-    } else if (type == enum_event_type.event_type_window_add) {
-      var windowPtr = data as Pointer<struct_waybright_window>;
-      var wlrXdgToplevel = windowPtr.ref.wlr_xdg_toplevel.ref;
+        handleEvent(monitor);
+      } else if (type == enum_event_type.event_type_window_add) {
+        var windowPtr = data as Pointer<struct_waybright_window>;
+        var wlrXdgToplevel = windowPtr.ref.wlr_xdg_toplevel.ref;
 
-      var window = Window(windowPtr.ref.is_popup == 1)
-        ..appId = _toString(wlrXdgToplevel.app_id)
-        ..title = _toString(wlrXdgToplevel.title)
-        .._windowPtr = windowPtr
-        .._windowPtr?.ref.handle_event =
-            Pointer.fromFunction(Window._executeEventHandler);
+        var window = Window(windowPtr.ref.is_popup == 1)
+          ..appId = _toString(wlrXdgToplevel.app_id)
+          ..title = _toString(wlrXdgToplevel.title)
+          .._windowPtr = windowPtr
+          .._windowPtr?.ref.handle_event =
+              Pointer.fromFunction(Window._executeEventHandler);
 
-      handleEvent(window);
+        handleEvent(window);
+      }
     }
   }
 
+  final Map<int, Function> _eventHandlers = {};
   final Pointer<struct_waybright> _wbPtr = _wblib.waybright_create();
 
   /// Creates a Waybright instance
@@ -385,6 +356,7 @@ class Waybright {
     }
 
     _wbPtr.ref.handle_event = Pointer.fromFunction(_executeEventHandler);
+    _waybrightInstances.add(this);
   }
 
   /// Sets an event handler for waybright.

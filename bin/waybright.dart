@@ -29,6 +29,20 @@ void handleNewMonitor(Monitor monitor) {
     monitors.remove(monitor);
     print("The monitor `${monitor.name}` has been removed!");
   });
+
+  if (monitors.length == 1) {
+    var renderer = monitor.renderer;
+    monitor.setEventHandler("frame", () {
+      renderer.fillStyle = 0x6666ff;
+      renderer.fillRect(50, 50, 100, 100);
+    });
+  } else if (monitors.length == 2) {
+    var renderer = monitor.renderer;
+    monitor.setEventHandler("frame", () {
+      renderer.fillStyle = 0xffdd66;
+      renderer.fillRect(50, 50, 100, 100);
+    });
+  }
 }
 
 void handleNewWindow(Window window) {

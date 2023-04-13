@@ -1,6 +1,5 @@
-#include <stdlib.h>
 #include <drm/drm_fourcc.h>
-// #include <wlr/render/wlr_texture.h>
+#include <stdlib.h>
 #include "./waybright.h"
 
 int get_color_from_array(float* color_array) {
@@ -16,19 +15,16 @@ void set_color_to_array(int color, float* color_array) {
     color_array[3] = 1.0;
 }
 
-void waybright_canvas_destroy(struct waybright_canvas* wb_canvas) {
-    if (!wb_canvas) return;
+void waybright_renderer_destroy(struct waybright_renderer* wb_renderer) {
+    if (!wb_renderer) return;
 
-    cairo_destroy(wb_canvas->ctx);
-    cairo_surface_destroy(wb_canvas->canvas);
-
-    free(wb_canvas);
+    free(wb_renderer);
 }
 
 void waybright_monitor_destroy(struct waybright_monitor* wb_monitor) {
     if (!wb_monitor) return;
 
-    waybright_canvas_destroy(wb_monitor->wb_canvas);
+    waybright_renderer_destroy(wb_monitor->wb_renderer);
 
     free(wb_monitor);
 }
@@ -72,30 +68,14 @@ void handle_monitor_remove_event(struct wl_listener *listener, void *data) {
 /// Seems to happen when the output is ready to display a frame AND if the compositor needs to display a frame (Ex. if a client commits a frame) ...
 void handle_monitor_frame_event(struct wl_listener *listener, void *data) {
     struct waybright_monitor* wb_monitor = wl_container_of(listener, wb_monitor, listeners.frame);
-    // struct wlr_output *wlr_output = data;
-
-    if (wb_monitor->handle_event)
-        wb_monitor->handle_event(event_type_monitor_frame, wb_monitor);
-
+    struct wlr_output *wlr_output = data;
     struct wlr_renderer* wlr_renderer = wb_monitor->wb->wlr_renderer;
-    struct wlr_output* wlr_output = wb_monitor->wlr_output;
-    struct wlr_output_damage* wlr_output_damage = wb_monitor->wlr_output_damage;
 
-
-    bool needs_frame; // Whether or not I need to render a new frame
-    pixman_region32_t buffer_damage; // A list of regions that represent ALL damage accumulated from previous buffers
-    pixman_region32_init(&buffer_damage);
 
     // I indicate that I want to render.
-    wlr_output_damage_attach_render(wlr_output_damage, &needs_frame, &buffer_damage);
-
-    if (!needs_frame) {
-        // There's no need to render, so I indicate that I'll no longer render.
-        wlr_output_rollback(wlr_output);
+    if (!wlr_output_attach_render(wlr_output, NULL)) {
         return;
     }
-
-    // If I'm here, then I need to render a new frame for the output.
 
     int width, height; // The will-be size of the new frame
 
@@ -108,36 +88,16 @@ void handle_monitor_frame_event(struct wl_listener *listener, void *data) {
     // Fills the entire buffer with a single color.
     wlr_renderer_clear(wlr_renderer, wb_monitor->background_color);
 
+
+    if (wb_monitor->handle_event)
+        wb_monitor->handle_event(event_type_monitor_frame, wb_monitor);
+
+
     // I'm done drawing!
     wlr_renderer_end(wlr_renderer);
 
     // Submit my frame to the output.
     wlr_output_commit(wlr_output);
-
-    // No longer unnecessary
-    pixman_region32_fini(&buffer_damage);
-
-
-    // struct wlr_renderer* wlr_renderer = wb_monitor->wb->wlr_renderer;
-    // struct wlr_output* wlr_output = wb_monitor->wlr_output;
-    // int width = wb_monitor->wlr_output->width;
-    // int height = wb_monitor->wlr_output->height;
-    // cairo_surface_t* canvas = wb_monitor->wb_canvas->canvas;
-
-    //     int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, width);
-    //     unsigned char *pixel_data = cairo_image_surface_get_data(canvas);
-    // struct wlr_texture *texture = wlr_texture_from_pixels(
-    //         wlr_renderer,
-    //         DRM_FORMAT_ARGB8888,
-    //         stride,
-    //         width,
-    //         height,
-    //         pixel_data
-    //     );
-
-    // wlr_render_texture(wlr_renderer, texture, wlr_output->transform_matrix, 0, 0, 1.0);
-
-    // wlr_texture_destroy(texture);
 }
 
 void handle_monitor_add_event(struct wl_listener *listener, void *data) {
@@ -146,15 +106,20 @@ void handle_monitor_add_event(struct wl_listener *listener, void *data) {
 
 	wlr_output_init_render(wlr_output, wb->wlr_allocator, wb->wlr_renderer);
 
+    struct waybright_renderer* wb_renderer = calloc(sizeof(struct waybright_renderer), 1);
+    wb_renderer->wlr_output = wlr_output;
+    wb_renderer->wlr_renderer = wb->wlr_renderer;
+    set_color_to_array(0x000000, wb_renderer->color_fill);
+
     struct waybright_monitor* wb_monitor = calloc(sizeof(struct waybright_monitor), 1);
     wb_monitor->wb = wb;
+    wb_monitor->wb_renderer = wb_renderer;
     wb_monitor->wlr_output = wlr_output;
-    wb_monitor->wlr_output_damage = wlr_output_damage_create(wlr_output);
 
     wb_monitor->listeners.remove.notify = handle_monitor_remove_event;
-    wl_signal_add(&wb_monitor->wlr_output->events.destroy, &wb_monitor->listeners.remove);
+    wl_signal_add(&wlr_output->events.destroy, &wb_monitor->listeners.remove);
     wb_monitor->listeners.frame.notify = handle_monitor_frame_event;
-    wl_signal_add(&wb_monitor->wlr_output->events.frame, &wb_monitor->listeners.frame);
+    wl_signal_add(&wlr_output->events.frame, &wb_monitor->listeners.frame);
 
     if (wb->handle_event)
         wb->handle_event(event_type_monitor_add, wb_monitor);
@@ -284,48 +249,33 @@ void waybright_run_event_loop(struct waybright* wb) {
     wl_display_run(wb->wl_display);
 }
 
-void waybright_canvas_set_fill_style(struct waybright_canvas* wb_canvas, int color) {
-    set_color_to_array(color, wb_canvas->color_fill);
+void waybright_renderer_set_fill_style(struct waybright_renderer* wb_renderer, int color) {
+    set_color_to_array(color, wb_renderer->color_fill);
 }
 
-void waybright_canvas_clear_rect(struct waybright_canvas* wb_canvas, int x, int y, int width, int height) {
-    cairo_set_source_rgba(wb_canvas->ctx, 1.0, 1.0, 1.0, 1.0);
-    cairo_rectangle(wb_canvas->ctx, x, y, width, height);
-    cairo_fill(wb_canvas->ctx);
+void waybright_renderer_clear_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height) {
+    struct wlr_output* wlr_output = wb_renderer->wlr_output;
+    struct wlr_renderer* wlr_renderer = wlr_output->renderer;
+
+    struct wlr_box wlr_box = { .x = x, .y = y, .width = width, .height = height };
+    wlr_render_rect(wlr_renderer, &wlr_box, (float[4]){1.0, 1.0, 1.0, 1.0}, wlr_output->transform_matrix);
 }
 
-void waybright_canvas_fill_rect(struct waybright_canvas* wb_canvas, int x, int y, int width, int height) {
-    cairo_set_source_rgba(
-        wb_canvas->ctx,
-        wb_canvas->color_fill[0],
-        wb_canvas->color_fill[1],
-        wb_canvas->color_fill[2],
-        wb_canvas->color_fill[3]
-    );
-    cairo_rectangle(wb_canvas->ctx, x, y, width, height);
-    cairo_fill(wb_canvas->ctx);
-}
+void waybright_renderer_fill_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height) {
+    struct wlr_output* wlr_output = wb_renderer->wlr_output;
+    struct wlr_renderer* wlr_renderer = wlr_output->renderer;
 
-struct waybright_canvas* waybright_canvas_create() {
-    return calloc(sizeof(struct waybright_canvas), 1);
-}
-
-void waybright_canvas_init(struct waybright_canvas* wb_canvas, struct waybright_monitor* wb_monitor) {
-    wb_canvas->canvas = cairo_image_surface_create(
-        CAIRO_FORMAT_ARGB32,
-        wb_monitor->wlr_output->width,
-        wb_monitor->wlr_output->height
-    );
-    wb_canvas->ctx = cairo_create(wb_canvas->canvas);
+    struct wlr_box wlr_box = { .x = x, .y = y, .width = width, .height = height };
+    wlr_render_rect(wlr_renderer, &wlr_box, wb_renderer->color_fill, wlr_output->transform_matrix);
 }
 
 void waybright_monitor_enable(struct waybright_monitor* wb_monitor) {
     wlr_output_enable(wb_monitor->wlr_output, true);
     wlr_output_commit(wb_monitor->wlr_output);
+}
 
-    struct waybright_canvas* wb_canvas = waybright_canvas_create();
-    waybright_canvas_init(wb_canvas, wb_monitor);
-    wb_monitor->wb_canvas = wb_canvas;
+void waybright_monitor_disable(struct waybright_monitor* wb_monitor) {
+    wlr_output_enable(wb_monitor->wlr_output, false);
 }
 
 void waybright_monitor_set_background_color(struct waybright_monitor* wb_monitor, int color) {
@@ -335,9 +285,3 @@ void waybright_monitor_set_background_color(struct waybright_monitor* wb_monitor
 int waybright_monitor_get_background_color(struct waybright_monitor* wb_monitor) {
     return get_color_from_array(wb_monitor->background_color);
 }
-
-// void waybright_monitor_render_canvas(struct waybright_monitor* wb_monitor) {
-//     if (!wb_monitor->wb_canvas) return;
-//     cairo_surface_t* canvas = wb_monitor->wb_canvas->canvas;
-//     cairo_surface_flush(canvas);
-// }

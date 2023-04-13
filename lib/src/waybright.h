@@ -1,4 +1,3 @@
-#include <cairo/cairo.h>
 #include <wayland-server-core.h>
 #include <wlr/backend.h>
 #include <wlr/render/allocator.h>
@@ -36,19 +35,17 @@ struct waybright {
 
     void(*handle_event)(int type, void* data);
 };
-
-struct waybright_canvas {
-    cairo_t *ctx;
-    cairo_surface_t *canvas;
+struct waybright_renderer {
+    struct wlr_output* wlr_output;
+    struct wlr_renderer* wlr_renderer;
 
     float color_fill[4];
 };
 
 struct waybright_monitor {
     struct waybright* wb;
+    struct waybright_renderer* wb_renderer;
     struct wlr_output* wlr_output;
-    struct wlr_output_damage* wlr_output_damage;
-    struct waybright_canvas* wb_canvas;
 
     float background_color[4];
 
@@ -85,11 +82,11 @@ int waybright_init(struct waybright*);
 int waybright_open_socket(struct waybright* wb, const char* socket_name);
 void waybright_run_event_loop(struct waybright* wb);
 
-void waybright_canvas_set_fill_style(struct waybright_canvas* wb_canvas, int color);
-void waybright_canvas_clear_rect(struct waybright_canvas* wb_canvas, int x, int y, int width, int height);
-void waybright_canvas_fill_rect(struct waybright_canvas* wb_canvas, int x, int y, int width, int height);
+void waybright_renderer_set_fill_style(struct waybright_renderer* wb_renderer, int color);
+void waybright_renderer_clear_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height);
+void waybright_renderer_fill_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height);
+
 void waybright_monitor_enable(struct waybright_monitor* wb_monitor);
+void waybright_monitor_disable(struct waybright_monitor* wb_monitor);
 void waybright_monitor_set_background_color(struct waybright_monitor* wb_monitor, int color);
 int waybright_monitor_get_background_color(struct waybright_monitor* wb_monitor);
-
-// void waybright_monitor_render_canvas(struct waybright_monitor* wb_monitor);
