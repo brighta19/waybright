@@ -7,10 +7,26 @@ const backgroundColors = [
 
 var monitors = <Monitor>[];
 var windows = <Window>[];
+Window? focusedWindow;
 
-void initializeMonitor(Monitor monitor, int number) {
+void focusWindow(Window window) {
+  if (focusedWindow != null) {
+    focusedWindow?.blur();
+  }
+
+  window.focus();
+  focusedWindow = window;
+}
+
+void blurWindow(Window window) {
+  window.blur();
+  focusedWindow = null;
+}
+
+void initializeMonitor(Monitor monitor) {
   var modes = monitor.modes;
   var preferredMode = monitor.preferredMode;
+
   print("- Monitor '${monitor.name} has ${modes.length} modes.");
   if (modes.isNotEmpty) {
     print("- Preferred mode: "
@@ -19,14 +35,8 @@ void initializeMonitor(Monitor monitor, int number) {
 
   monitor.trySettingPreferredMode();
   monitor.enable();
-  monitor.backgroundColor = backgroundColors[number % backgroundColors.length];
-}
-
-void handleNewMonitor(Monitor monitor) {
-  monitors.add(monitor);
-  print("The monitor '${monitor.name}' has been added!");
-
-  initializeMonitor(monitor, monitors.length - 1);
+  monitor.backgroundColor =
+      backgroundColors[(monitors.length - 1) % backgroundColors.length];
 
   monitor.setEventHandler("remove", () {
     monitors.remove(monitor);
@@ -35,25 +45,71 @@ void handleNewMonitor(Monitor monitor) {
 
   if (monitors.length == 1) {
     var renderer = monitor.renderer;
+
     monitor.setEventHandler("frame", () {
       renderer.fillStyle = 0x6666ff;
       renderer.fillRect(50, 50, 100, 100);
 
       for (var window in windows) {
-        renderer.drawWindow(window, 0, 0);
+        if (window.isVisible) {
+          renderer.drawWindow(window, 0, 0);
+        }
       }
     });
   } else {
     var renderer = monitor.renderer;
+
     monitor.setEventHandler("frame", () {
       renderer.fillStyle = 0xffdd66;
       renderer.fillRect(50, 50, 100, 100);
 
       for (var window in windows) {
-        renderer.drawWindow(window, 0, 0);
+        if (window.isVisible) {
+          renderer.drawWindow(window, 0, 0);
+        }
       }
     });
   }
+}
+
+void handleNewMonitor(Monitor monitor) {
+  monitors.add(monitor);
+
+  print("The monitor '${monitor.name}' has been added!");
+
+  initializeMonitor(monitor);
+}
+
+void initializeWindow(Window window) {
+  final appId = window.appId;
+  final title = window.title;
+
+  window.setEventHandler("show", () {
+    print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
+        " wants ${title.isEmpty ? "its window" : "the window '$title'"}"
+        " shown!");
+
+    focusWindow(window);
+  });
+  window.setEventHandler("hide", () {
+    print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
+        " wants ${title.isEmpty ? "its window" : "the window '$title'"}"
+        " hidden!");
+
+    if (focusedWindow == window) {
+      blurWindow(window);
+    }
+  });
+  window.setEventHandler("remove", () {
+    windows.remove(window);
+    print("${window.isPopup ? "A popup" : "A"} window from "
+        "${appId.isEmpty ? "an application" : "application `$appId`"}"
+        " has been removed!");
+
+    if (window == focusedWindow && windows.isNotEmpty) {
+      focusWindow(windows.last);
+    }
+  });
 }
 
 void handleNewWindow(Window window) {
@@ -66,24 +122,9 @@ void handleNewWindow(Window window) {
       "${appId.isEmpty ? "an application" : "application `$appId`"}"
       " has been added!");
 
-  if (window.title.isNotEmpty) print("- Title: '$title'");
+  if (title.isNotEmpty) print("- Title: '$title'");
 
-  window.setEventHandler("show", () {
-    print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
-        " wants ${title.isEmpty ? "its window" : "the window '$title'"}"
-        " shown!");
-  });
-  window.setEventHandler("hide", () {
-    print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
-        " wants ${title.isEmpty ? "its window" : "the window '$title'"}"
-        " hidden!");
-  });
-  window.setEventHandler("remove", () {
-    windows.remove(window);
-    print("${window.isPopup ? "A popup" : "A"} window from "
-        "${appId.isEmpty ? "an application" : "application `$appId`"}"
-        " has been removed!");
-  });
+  initializeWindow(window);
 }
 
 void main(List<String> arguments) async {

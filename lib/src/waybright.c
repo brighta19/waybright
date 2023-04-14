@@ -307,3 +307,11 @@ void waybright_monitor_set_background_color(struct waybright_monitor* wb_monitor
 int waybright_monitor_get_background_color(struct waybright_monitor* wb_monitor) {
     return get_color_from_array(wb_monitor->background_color);
 }
+
+void waybright_window_focus(struct waybright_window* wb_window) {
+    wlr_xdg_toplevel_set_activated(wb_window->wlr_xdg_surface, true);
+}
+
+void waybright_window_blur(struct waybright_window* wb_window) {
+    wlr_xdg_toplevel_set_activated(wb_window->wlr_xdg_surface, false);
+}

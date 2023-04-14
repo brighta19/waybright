@@ -245,7 +245,6 @@ class Monitor {
     if (monitorPtr != null) {
       return _wblib.waybright_monitor_get_background_color(monitorPtr);
     }
-
     return 0;
   }
 
@@ -277,6 +276,12 @@ class Window {
       var handleEvent = window._eventHandlers[type];
       if (handleEvent == null) return;
 
+      if (type == enum_event_type.event_type_window_show) {
+        window.isVisible = true;
+      } else if (type == enum_event_type.event_type_window_hide) {
+        window.isVisible = false;
+      }
+
       handleEvent();
 
       if (type == enum_event_type.event_type_window_remove) {
@@ -294,6 +299,12 @@ class Window {
   /// Whether this window is a popup window.
   bool isPopup;
 
+  /// Whether this window is visible.
+  bool isVisible = false;
+
+  /// Whether this window is focused.
+  bool isFocused = false;
+
   final Map<int, Function> _eventHandlers = {};
   Pointer<struct_waybright_window>? _windowPtr;
 
@@ -307,6 +318,24 @@ class Window {
     if (type != null) {
       _eventHandlers[type] = handler;
     }
+  }
+
+  /// Applies focus to this window.
+  void focus() {
+    var windowPtr = _windowPtr;
+    if (windowPtr != null) {
+      return _wblib.waybright_window_focus(windowPtr);
+    }
+    isFocused = true;
+  }
+
+  /// Removes focus from this window.
+  void blur() {
+    var windowPtr = _windowPtr;
+    if (windowPtr != null) {
+      return _wblib.waybright_window_focus(windowPtr);
+    }
+    isFocused = false;
   }
 }
 

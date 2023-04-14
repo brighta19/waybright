@@ -92,3 +92,6 @@ void waybright_monitor_enable(struct waybright_monitor* wb_monitor);
 void waybright_monitor_disable(struct waybright_monitor* wb_monitor);
 void waybright_monitor_set_background_color(struct waybright_monitor* wb_monitor, int color);
 int waybright_monitor_get_background_color(struct waybright_monitor* wb_monitor);
+
+void waybright_window_focus(struct waybright_window* wb_window);
+void waybright_window_blur(struct waybright_window* wb_window);
