@@ -339,13 +339,100 @@ class Window {
   }
 }
 
+/// A pointer input device.
+class PointerDevice {
+  static final _pointerInstances = <PointerDevice>[];
+
+  static final _eventTypeFromString = {
+    'remove': enum_event_type.event_type_pointer_remove,
+  };
+
+  static void _executeEventHandler(int type, Pointer<Void> data) {
+    for (var pointer in _pointerInstances) {
+      var handleEvent = pointer._eventHandlers[type];
+      if (handleEvent == null) return;
+
+      handleEvent();
+
+      if (type == enum_event_type.event_type_pointer_remove) {
+        _pointerInstances.remove(pointer);
+      }
+    }
+  }
+
+  /// This pointer's name.
+  String name = "unknown-pointer";
+
+  Pointer<struct_waybright_pointer>? _pointerPtr;
+  final Map<int, Function> _eventHandlers = {};
+
+  PointerDevice() {
+    _pointerInstances.add(this);
+  }
+
+  /// Sets an event handler for this pointer.
+  void setEventHandler(String event, Function handler) {
+    var type = _eventTypeFromString[event];
+    if (type != null) {
+      _eventHandlers[type] = handler;
+    }
+  }
+}
+
+/// A keyboard input device.
+class KeyboardDevice {
+  static final _keyboardInstances = <KeyboardDevice>[];
+
+  static final _eventTypeFromString = {
+    'remove': enum_event_type.event_type_keyboard_remove,
+  };
+
+  static void _executeEventHandler(int type, Pointer<Void> data) {
+    for (var keyboard in _keyboardInstances) {
+      var handleEvent = keyboard._eventHandlers[type];
+      if (handleEvent == null) return;
+
+      handleEvent();
+
+      if (type == enum_event_type.event_type_keyboard_remove) {
+        _keyboardInstances.remove(keyboard);
+      }
+    }
+  }
+
+  /// This keyboard's name.
+  String name = "unknown-keyboard";
+
+  Pointer<struct_waybright_keyboard>? _keyboardPtr;
+  final Map<int, Function> _eventHandlers = {};
+
+  KeyboardDevice() {
+    _keyboardInstances.add(this);
+  }
+
+  /// Sets an event handler for this keyboard.
+  void setEventHandler(String event, Function handler) {
+    var type = _eventTypeFromString[event];
+    if (type != null) {
+      _eventHandlers[type] = handler;
+    }
+  }
+}
+
+/// An input device.
+class InputDevice {
+  PointerDevice? pointer;
+  KeyboardDevice? keyboard;
+}
+
 /// A Waybright!
 class Waybright {
   static final _waybrightInstances = <Waybright>[];
 
   static final _eventTypeFromString = {
-    'monitor-add': enum_event_type.event_type_monitor_add,
-    'window-add': enum_event_type.event_type_window_add,
+    'monitor-new': enum_event_type.event_type_monitor_new,
+    'window-new': enum_event_type.event_type_window_new,
+    'input-new': enum_event_type.event_type_input_new,
   };
 
   static void _executeEventHandler(int type, Pointer<Void> data) {
@@ -353,7 +440,7 @@ class Waybright {
       var handleEvent = waybright._eventHandlers[type];
       if (handleEvent == null) return;
 
-      if (type == enum_event_type.event_type_monitor_add) {
+      if (type == enum_event_type.event_type_monitor_new) {
         var monitorPtr = data as Pointer<struct_waybright_monitor>;
 
         var renderer = Renderer().._rendererPtr = monitorPtr.ref.wb_renderer;
@@ -364,7 +451,7 @@ class Waybright {
               Pointer.fromFunction(Monitor._executeEventHandler);
 
         handleEvent(monitor);
-      } else if (type == enum_event_type.event_type_window_add) {
+      } else if (type == enum_event_type.event_type_window_new) {
         var windowPtr = data as Pointer<struct_waybright_window>;
         var wlrXdgToplevel = windowPtr.ref.wlr_xdg_toplevel.ref;
 
@@ -376,6 +463,35 @@ class Waybright {
               Pointer.fromFunction(Window._executeEventHandler);
 
         handleEvent(window);
+      } else if (type == enum_event_type.event_type_input_new) {
+        var inputPtr = data as Pointer<struct_waybright_input>;
+        var wlrInputDevice = inputPtr.ref.wlr_input_device.ref;
+
+        var inputDevice = InputDevice();
+
+        if (inputPtr.ref.pointer != nullptr) {
+          var pointerPtr = inputPtr.ref.pointer;
+
+          var pointer = PointerDevice()
+            ..name = _toString(wlrInputDevice.name)
+            .._pointerPtr = pointerPtr
+            .._pointerPtr?.ref.handle_event =
+                Pointer.fromFunction(PointerDevice._executeEventHandler);
+
+          inputDevice.pointer = pointer;
+        } else if (inputPtr.ref.keyboard != nullptr) {
+          var keyboardPtr = inputPtr.ref.keyboard;
+
+          var keyboard = KeyboardDevice()
+            ..name = _toString(wlrInputDevice.name)
+            .._keyboardPtr = keyboardPtr
+            .._keyboardPtr?.ref.handle_event =
+                Pointer.fromFunction(KeyboardDevice._executeEventHandler);
+
+          inputDevice.keyboard = keyboard;
+        }
+
+        handleEvent(inputDevice);
       }
     }
   }

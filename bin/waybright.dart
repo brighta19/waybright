@@ -7,6 +7,9 @@ const backgroundColors = [
 
 var monitors = <Monitor>[];
 var windows = <Window>[];
+var pointers = <PointerDevice>[];
+var keyboards = <KeyboardDevice>[];
+
 Window? focusedWindow;
 
 void focusWindow(Window window) {
@@ -122,16 +125,50 @@ void handleNewWindow(Window window) {
       "${appId.isEmpty ? "an application" : "application `$appId`"}"
       " has been added!");
 
-  if (title.isNotEmpty) print("- Title: '$title'");
+  if (title.isNotEmpty) {
+    print("- Title: '$title'");
+  }
 
   initializeWindow(window);
+}
+
+void handleNewPointer(PointerDevice pointer) {
+  pointer.setEventHandler("remove", () {
+    pointers.remove(pointer);
+    print("A pointer has been removed!");
+  });
+}
+
+void handleNewKeyboard(KeyboardDevice keyboard) {
+  keyboard.setEventHandler("remove", () {
+    keyboards.remove(keyboard);
+    print("A keyboard has been removed!");
+  });
+}
+
+void handleNewInput(InputDevice inputDevice) {
+  var pointer = inputDevice.pointer;
+  var keyboard = inputDevice.keyboard;
+
+  if (pointer != null) {
+    pointers.add(pointer);
+    print("The pointer '${pointer.name}' has been added!");
+
+    handleNewPointer(pointer);
+  } else if (keyboard != null) {
+    keyboards.add(keyboard);
+    print("The keyboard '${keyboard.name}' has been added!");
+
+    handleNewKeyboard(keyboard);
+  }
 }
 
 void main(List<String> arguments) async {
   var waybright = Waybright();
 
-  waybright.setEventHandler("monitor-add", handleNewMonitor);
-  waybright.setEventHandler("window-add", handleNewWindow);
+  waybright.setEventHandler("monitor-new", handleNewMonitor);
+  waybright.setEventHandler("window-new", handleNewWindow);
+  waybright.setEventHandler("input-new", handleNewInput);
 
   var socket = await waybright.openSocket();
   print("Socket opened on ${socket.name}.");

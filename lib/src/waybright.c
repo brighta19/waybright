@@ -37,6 +37,24 @@ void waybright_window_destroy(struct waybright_window* wb_window) {
     free(wb_window);
 }
 
+void waybright_pointer_destroy(struct waybright_pointer* wb_pointer) {
+    if (!wb_pointer) return;
+
+    if (wb_pointer->wb_input)
+        free(wb_pointer->wb_input);
+
+    free(wb_pointer);
+}
+
+void waybright_keyboard_destroy(struct waybright_keyboard* wb_keyboard) {
+    if (!wb_keyboard) return;
+
+    if (wb_keyboard->wb_input)
+        free(wb_keyboard->wb_input);
+
+    free(wb_keyboard);
+}
+
 struct wlr_output_mode* get_wlr_output_mode_from_wl_list(struct wl_list *ptr) {
     return wl_container_of(ptr, (struct wlr_output_mode*)NULL, link);
 }
@@ -67,7 +85,7 @@ void handle_monitor_remove_event(struct wl_listener *listener, void *data) {
     waybright_monitor_destroy(wb_monitor);
 }
 
-/// Seems to happen when the output is ready to display a frame AND if the compositor needs to display a frame (Ex. if a client commits a frame) ...
+/// Occurs according to the monitor's refresh rate (set by the mode).
 void handle_monitor_frame_event(struct wl_listener *listener, void *data) {
     struct waybright_monitor* wb_monitor = wl_container_of(listener, wb_monitor, listeners.frame);
     struct wlr_output *wlr_output = data;
@@ -102,11 +120,11 @@ void handle_monitor_frame_event(struct wl_listener *listener, void *data) {
     wlr_output_commit(wlr_output);
 }
 
-void handle_monitor_add_event(struct wl_listener *listener, void *data) {
-    struct waybright* wb = wl_container_of(listener, wb, listeners.monitor_add);
+void handle_monitor_new_event(struct wl_listener *listener, void *data) {
+    struct waybright* wb = wl_container_of(listener, wb, listeners.monitor_new);
     struct wlr_output *wlr_output = data;
 
-	wlr_output_init_render(wlr_output, wb->wlr_allocator, wb->wlr_renderer);
+    wlr_output_init_render(wlr_output, wb->wlr_allocator, wb->wlr_renderer);
 
     struct waybright_renderer* wb_renderer = calloc(sizeof(struct waybright_renderer), 1);
     wb_renderer->wlr_output = wlr_output;
@@ -124,7 +142,7 @@ void handle_monitor_add_event(struct wl_listener *listener, void *data) {
     wl_signal_add(&wlr_output->events.frame, &wb_monitor->listeners.frame);
 
     if (wb->handle_event)
-        wb->handle_event(event_type_monitor_add, wb_monitor);
+        wb->handle_event(event_type_monitor_new, wb_monitor);
 }
 
 void handle_window_show_event(struct wl_listener *listener, void *data) {
@@ -150,8 +168,8 @@ void handle_window_remove_event(struct wl_listener *listener, void *data) {
     waybright_window_destroy(wb_window);
 }
 
-void handle_window_add_event(struct wl_listener *listener, void *data) {
-    struct waybright* wb = wl_container_of(listener, wb, listeners.window_add);
+void handle_window_new_event(struct wl_listener *listener, void *data) {
+    struct waybright* wb = wl_container_of(listener, wb, listeners.window_new);
     struct wlr_xdg_surface *wlr_xdg_surface = data;
 
     if (wlr_xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
@@ -164,17 +182,89 @@ void handle_window_add_event(struct wl_listener *listener, void *data) {
     wb_window->wlr_xdg_toplevel = wlr_xdg_toplevel;
     wb_window->is_popup = 0;
 
-	wb_window->listeners.show.notify = handle_window_show_event;
-	wl_signal_add(&wlr_xdg_surface->events.map, &wb_window->listeners.show);
-	wb_window->listeners.hide.notify = handle_window_hide_event;
-	wl_signal_add(&wlr_xdg_surface->events.unmap, &wb_window->listeners.hide);
-	wb_window->listeners.remove.notify = handle_window_remove_event;
-	wl_signal_add(&wlr_xdg_surface->events.destroy, &wb_window->listeners.remove);
+    wb_window->listeners.show.notify = handle_window_show_event;
+    wl_signal_add(&wlr_xdg_surface->events.map, &wb_window->listeners.show);
+    wb_window->listeners.hide.notify = handle_window_hide_event;
+    wl_signal_add(&wlr_xdg_surface->events.unmap, &wb_window->listeners.hide);
+    wb_window->listeners.remove.notify = handle_window_remove_event;
+    wl_signal_add(&wlr_xdg_surface->events.destroy, &wb_window->listeners.remove);
 
     // More events coming soon to a town near you!
 
     if (wb->handle_event)
-        wb->handle_event(event_type_window_add, wb_window);
+        wb->handle_event(event_type_window_new, wb_window);
+}
+
+void handle_pointer_remove_event(struct wl_listener* listener, void *data) {
+    struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.remove);
+
+    if (wb_pointer->handle_event)
+        wb_pointer->handle_event(event_type_pointer_remove, wb_pointer);
+
+    waybright_pointer_destroy(wb_pointer);
+}
+
+void handle_pointer_new_event(struct waybright* wb, struct waybright_pointer* wb_pointer) {
+    // wlr_cursor_attach_input_device(wb->wlr_cursor, wb_pointer->wlr_input_device);
+
+    struct wlr_input_device* wlr_input_device = wb_pointer->wb_input->wlr_input_device;
+
+    wb_pointer->listeners.remove.notify = handle_pointer_remove_event;
+    wl_signal_add(&wlr_input_device->events.destroy, &wb_pointer->listeners.remove);
+}
+
+void handle_keyboard_remove_event(struct wl_listener* listener, void *data) {
+    struct waybright_keyboard* wb_keyboard = wl_container_of(listener, wb_keyboard, listeners.remove);
+
+    if (wb_keyboard->handle_event)
+        wb_keyboard->handle_event(event_type_keyboard_remove, wb_keyboard);
+
+    waybright_keyboard_destroy(wb_keyboard);
+}
+
+void handle_keyboard_new_event(struct waybright* wb, struct waybright_keyboard* wb_keyboard) {
+    struct wlr_input_device* wlr_input_device = wb_keyboard->wb_input->wlr_input_device;
+
+    wb_keyboard->listeners.remove.notify = handle_keyboard_remove_event;
+    wl_signal_add(&wlr_input_device->events.destroy, &wb_keyboard->listeners.remove);
+}
+
+void handle_input_new_event(struct wl_listener *listener, void *data) {
+    struct waybright* wb = wl_container_of(listener, wb, listeners.input_new);
+    struct wlr_input_device* wlr_input_device = data;
+
+    struct waybright_input* wb_input = calloc(sizeof(struct waybright_input), 1);
+    wb_input->wb = wb;
+    wb_input->wlr_input_device = wlr_input_device;
+
+    switch (wlr_input_device->type) {
+        case WLR_INPUT_DEVICE_POINTER:
+            struct waybright_pointer* wb_pointer = calloc(sizeof(struct waybright_pointer), 1);
+            wb_pointer->wb = wb;
+            wb_pointer->wlr_pointer = wlr_input_device->pointer;
+            wb_pointer->wb_input = wb_input;
+            wb_input->pointer = wb_pointer;
+
+            handle_pointer_new_event(wb, wb_pointer);
+            break;
+
+        case WLR_INPUT_DEVICE_KEYBOARD:
+            struct waybright_keyboard* wb_keyboard = calloc(sizeof(struct waybright_keyboard), 1);
+            wb_keyboard->wb = wb;
+            wb_keyboard->wlr_keyboard = wlr_input_device->keyboard;
+            wb_keyboard->wb_input = wb_input;
+            wb_input->keyboard = wb_keyboard;
+
+            handle_keyboard_new_event(wb, wb_keyboard);
+            break;
+
+        // stay turned for more!
+        default:
+            break;
+    }
+
+    if (wb->handle_event)
+        wb->handle_event(event_type_input_new, wb_input);
 }
 
 int waybright_init(struct waybright* wb) {
@@ -199,9 +289,6 @@ int waybright_init(struct waybright* wb) {
     if (!wb->wlr_allocator)
         return 1;
 
-    wb->listeners.monitor_add.notify = handle_monitor_add_event;
-    wl_signal_add(&wb->wlr_backend->events.new_output, &wb->listeners.monitor_add);
-
     // Enables clients to allocate surfaces (windows)
     wb->wlr_compositor = wlr_compositor_create(wb->wl_display, wb->wlr_renderer);
     if (!wb->wlr_compositor)
@@ -210,11 +297,14 @@ int waybright_init(struct waybright* wb) {
     wb->wlr_xdg_shell = wlr_xdg_shell_create(wb->wl_display);
     if (!wb->wlr_xdg_shell)
         return 1;
-    wb->listeners.window_add.notify = handle_window_add_event;
-    wl_signal_add(&wb->wlr_xdg_shell->events.new_surface, &wb->listeners.window_add);
 
 
-    // init_signals(wb);
+    wb->listeners.monitor_new.notify = handle_monitor_new_event;
+    wl_signal_add(&wb->wlr_backend->events.new_output, &wb->listeners.monitor_new);
+    wb->listeners.window_new.notify = handle_window_new_event;
+    wl_signal_add(&wb->wlr_xdg_shell->events.new_surface, &wb->listeners.window_new);
+    wb->listeners.input_new.notify = handle_input_new_event;
+    wl_signal_add(&wb->wlr_backend->events.new_input, &wb->listeners.input_new);
 
     return 0;
 }
@@ -237,11 +327,11 @@ int waybright_open_socket(struct waybright* wb, const char* socket_name) {
         }
     }
 
-	if (!wlr_backend_start(wb->wlr_backend)) {
-		wlr_backend_destroy(wb->wlr_backend);
+    if (!wlr_backend_start(wb->wlr_backend)) {
+        wlr_backend_destroy(wb->wlr_backend);
         wl_display_destroy(wb->wl_display);
         return 1;
-	}
+    }
 
     setenv("WAYLAND_DISPLAY", wb->socket_name, 1);
     return 0;
@@ -287,7 +377,7 @@ void waybright_renderer_draw_window(struct waybright_renderer* wb_renderer, stru
     wlr_render_texture(wlr_renderer, wlr_texture, wlr_output->transform_matrix, x, y, 1.0);
 
     struct timespec now;
-	clock_gettime(CLOCK_MONOTONIC, &now);
+    clock_gettime(CLOCK_MONOTONIC, &now);
     wlr_surface_send_frame_done(wlr_surface, &now);
 }
 

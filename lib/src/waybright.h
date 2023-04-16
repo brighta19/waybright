@@ -3,19 +3,29 @@
 #include <wlr/render/allocator.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_compositor.h>
+#include <wlr/types/wlr_input_device.h>
+#include <wlr/types/wlr_keyboard.h>
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_output_damage.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/types/wlr_pointer.h>
 #include <malloc.h>
 
 enum event_type {
-    event_type_monitor_add,
+    event_type_monitor_new,
     event_type_monitor_remove,
     event_type_monitor_frame,
-    event_type_window_add,
+
+    event_type_window_new,
     event_type_window_remove,
     event_type_window_show,
     event_type_window_hide,
+
+    event_type_input_new,
+
+    event_type_pointer_remove,
+
+    event_type_keyboard_remove,
 };
 
 struct waybright {
@@ -29,12 +39,14 @@ struct waybright {
     const char* socket_name;
 
     struct {
-        struct wl_listener monitor_add;
-        struct wl_listener window_add;
+        struct wl_listener monitor_new;
+        struct wl_listener window_new;
+        struct wl_listener input_new;
     } listeners;
 
     void(*handle_event)(int type, void* data);
 };
+
 struct waybright_renderer {
     struct wlr_output* wlr_output;
     struct wlr_renderer* wlr_renderer;
@@ -67,6 +79,38 @@ struct waybright_window {
     struct {
         struct wl_listener show;
         struct wl_listener hide;
+        struct wl_listener remove;
+    } listeners;
+
+    void(*handle_event)(int type, void* data);
+};
+
+struct waybright_input {
+    struct waybright* wb;
+    struct wlr_input_device* wlr_input_device;
+
+    struct waybright_pointer* pointer;
+    struct waybright_keyboard* keyboard;
+};
+
+struct waybright_pointer {
+    struct waybright* wb;
+    struct waybright_input* wb_input;
+    struct wlr_pointer* wlr_pointer;
+
+    struct {
+        struct wl_listener remove;
+    } listeners;
+
+    void(*handle_event)(int type, void* data);
+};
+
+struct waybright_keyboard {
+    struct waybright* wb;
+    struct waybright_input* wb_input;
+    struct wlr_keyboard* wlr_keyboard;
+
+    struct {
         struct wl_listener remove;
     } listeners;
 
