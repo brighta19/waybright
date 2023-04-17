@@ -30,7 +30,7 @@ void initializeMonitor(Monitor monitor) {
   var modes = monitor.modes;
   var preferredMode = monitor.preferredMode;
 
-  print("- Monitor '${monitor.name} has ${modes.length} modes.");
+  print("- Monitor '${monitor.name}' has ${modes.length} modes.");
   if (modes.isNotEmpty) {
     print("- Preferred mode: "
         "${preferredMode == null ? "none" : "$preferredMode"}.");
@@ -43,7 +43,7 @@ void initializeMonitor(Monitor monitor) {
 
   monitor.setEventHandler("remove", () {
     monitors.remove(monitor);
-    print("The monitor `${monitor.name}` has been removed!");
+    print("The monitor '${monitor.name}' has been removed!");
   });
 
   if (monitors.length == 1) {
@@ -88,14 +88,14 @@ void initializeWindow(Window window) {
   final title = window.title;
 
   window.setEventHandler("show", () {
-    print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
+    print("${appId.isEmpty ? "An application" : "Application '$appId'"}"
         " wants ${title.isEmpty ? "its window" : "the window '$title'"}"
         " shown!");
 
     focusWindow(window);
   });
   window.setEventHandler("hide", () {
-    print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
+    print("${appId.isEmpty ? "An application" : "Application '$appId'"}"
         " wants ${title.isEmpty ? "its window" : "the window '$title'"}"
         " hidden!");
 
@@ -122,7 +122,7 @@ void handleNewWindow(Window window) {
   final title = window.title;
 
   print("${window.isPopup ? "A popup" : "A"} window from "
-      "${appId.isEmpty ? "an application" : "application `$appId`"}"
+      "${appId.isEmpty ? "an application" : "application '$appId'"}"
       " has been added!");
 
   if (title.isNotEmpty) {

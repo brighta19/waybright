@@ -1,10 +1,10 @@
 EXECUTABLE=waybright
 WAYLAND_PROTOCOLS=$(shell pkg-config --variable=pkgdatadir wayland-protocols)
 WAYLAND_SCANNER=$(shell pkg-config --variable=wayland_scanner wayland-scanner)
-LIBS=$(shell pkg-config --libs wayland-server) \
-	$(shell pkg-config --libs wlroots) \
-	$(shell pkg-config --libs cairo) \
-	$(shell pkg-config --libs libdrm)
+LIBS=$(shell pkg-config --cflags --libs wayland-server) \
+	$(shell pkg-config --cflags --libs wlroots) \
+	$(shell pkg-config --cflags --libs cairo) \
+	$(shell pkg-config --cflags --libs libdrm)
 
 build/$(EXECUTABLE): build/waybright.so lib/src/waybright_bindings.dart bin/waybright.dart lib/waybright.dart
 	@mkdir -p build

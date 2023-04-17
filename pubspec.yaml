@@ -22,6 +22,7 @@ ffigen:
   description: 'Bindings from Waybright'
   compiler-opts:
   - '-DWLR_USE_UNSTABLE'
+  - '-I/usr/include/pixman-1'
   - '-Ilib/src/'
   headers:
     entry-points:
