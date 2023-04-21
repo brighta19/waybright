@@ -3,7 +3,7 @@ library;
 
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
-import 'src/waybright_bindings.dart';
+import 'src/generated/waybright_bindings.dart';
 
 final WaybrightLibrary _wblib =
     WaybrightLibrary(DynamicLibrary.open("build/waybright.so"));
@@ -211,14 +211,6 @@ class Monitor {
     _mode = mode;
   }
 
-  /// If there is a preferred mode, sets this monitor to use it.
-  void trySettingPreferredMode() {
-    var mode = preferredMode;
-    if (mode != null) {
-      this.mode = mode;
-    }
-  }
-
   /// Enables this monitor to start rendering.
   void enable() {
     var monitorPtr = _monitorPtr;
@@ -339,15 +331,22 @@ class Window {
   }
 }
 
+/// A pointer move event
 class PointerMoveEvent {
+  /// The x-distance a pointer had moved
   double deltaX;
+
+  /// The y-distance a pointer had moved
   double deltaY;
 
   PointerMoveEvent(this.deltaX, this.deltaY);
 }
 
-/// A pointer input device.
-class PointerDevice {
+/// An input device
+class InputDevice {}
+
+/// A pointer device.
+class PointerDevice extends InputDevice {
   static final _pointerInstances = <PointerDevice>[];
 
   static final _eventTypeFromString = {
@@ -397,8 +396,8 @@ class PointerDevice {
   }
 }
 
-/// A keyboard input device.
-class KeyboardDevice {
+/// A keyboard device.
+class KeyboardDevice extends InputDevice {
   static final _keyboardInstances = <KeyboardDevice>[];
 
   static final _eventTypeFromString = {
@@ -438,7 +437,7 @@ class KeyboardDevice {
 }
 
 /// An input device.
-class InputDevice {
+class InputNewEvent {
   PointerDevice? pointer;
   KeyboardDevice? keyboard;
 }
@@ -485,7 +484,7 @@ class Waybright {
         var inputPtr = data as Pointer<struct_waybright_input>;
         var wlrInputDevice = inputPtr.ref.wlr_input_device.ref;
 
-        var inputDevice = InputDevice();
+        var inputEvent = InputNewEvent();
 
         if (inputPtr.ref.pointer != nullptr) {
           var pointerPtr = inputPtr.ref.pointer;
@@ -496,7 +495,7 @@ class Waybright {
             .._pointerPtr?.ref.handle_event =
                 Pointer.fromFunction(PointerDevice._executeEventHandler);
 
-          inputDevice.pointer = pointer;
+          inputEvent.pointer = pointer;
         } else if (inputPtr.ref.keyboard != nullptr) {
           var keyboardPtr = inputPtr.ref.keyboard;
 
@@ -506,10 +505,10 @@ class Waybright {
             .._keyboardPtr?.ref.handle_event =
                 Pointer.fromFunction(KeyboardDevice._executeEventHandler);
 
-          inputDevice.keyboard = keyboard;
+          inputEvent.keyboard = keyboard;
         }
 
-        handleEvent(inputDevice);
+        handleEvent(inputEvent);
       }
     }
   }

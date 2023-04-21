@@ -2,8 +2,5 @@
 # Created by `dart pub`
 .vscode/
 .dart_tool/
-lib/src/waybright_bindings.dart
-lib/src/xdg-shell-protocol.h
-lib/waybright.so
 build/
 doc/

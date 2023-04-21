@@ -1,4 +1,3 @@
-#include <drm/drm_fourcc.h>
 #include <stdlib.h>
 #include <time.h>
 #include <wlr/render/wlr_texture.h>

@@ -7,8 +7,7 @@ const backgroundColors = [
 
 var monitors = <Monitor>[];
 var windows = <Window>[];
-var pointers = <PointerDevice>[];
-var keyboards = <KeyboardDevice>[];
+var inputDevices = <InputDevice>[];
 
 Window? focusedWindow;
 
@@ -41,7 +40,7 @@ void initializeMonitor(Monitor monitor) {
         "${preferredMode == null ? "none" : "$preferredMode"}.");
   }
 
-  monitor.trySettingPreferredMode();
+  if (preferredMode != null) monitor.mode = preferredMode;
   monitor.enable();
   monitor.backgroundColor =
       backgroundColors[(monitors.length - 1) % backgroundColors.length];
@@ -153,29 +152,29 @@ void handleNewPointer(PointerDevice pointer) {
     cursor["y"] = (y + event.deltaY).clamp(0, 400);
   });
   pointer.setEventHandler("remove", () {
-    pointers.remove(pointer);
+    inputDevices.remove(pointer);
     print("A pointer has been removed!");
   });
 }
 
 void handleNewKeyboard(KeyboardDevice keyboard) {
   keyboard.setEventHandler("remove", () {
-    keyboards.remove(keyboard);
+    inputDevices.remove(keyboard);
     print("A keyboard has been removed!");
   });
 }
 
-void handleNewInput(InputDevice inputDevice) {
-  var pointer = inputDevice.pointer;
-  var keyboard = inputDevice.keyboard;
+void handleNewInput(InputNewEvent event) {
+  var pointer = event.pointer;
+  var keyboard = event.keyboard;
 
   if (pointer != null) {
-    pointers.add(pointer);
+    inputDevices.add(pointer);
     print("The pointer '${pointer.name}' has been added!");
 
     handleNewPointer(pointer);
   } else if (keyboard != null) {
-    keyboards.add(keyboard);
+    inputDevices.add(keyboard);
     print("The keyboard '${keyboard.name}' has been added!");
 
     handleNewKeyboard(keyboard);
