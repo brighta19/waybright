@@ -23,6 +23,7 @@ enum event_type {
 
     event_type_input_new,
 
+    event_type_pointer_move,
     event_type_pointer_remove,
 
     event_type_keyboard_remove,
@@ -93,12 +94,23 @@ struct waybright_input {
     struct waybright_keyboard* keyboard;
 };
 
+struct waybright_pointer_move_event {
+    struct waybright_pointer* wb_pointer;
+
+    double delta_x;
+    double delta_y;
+};
+
 struct waybright_pointer {
     struct waybright* wb;
     struct waybright_input* wb_input;
     struct wlr_pointer* wlr_pointer;
 
+    double x;
+    double y;
+
     struct {
+        struct wl_listener move;
         struct wl_listener remove;
     } listeners;
 

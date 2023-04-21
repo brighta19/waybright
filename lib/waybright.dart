@@ -339,11 +339,19 @@ class Window {
   }
 }
 
+class PointerMoveEvent {
+  double deltaX;
+  double deltaY;
+
+  PointerMoveEvent(this.deltaX, this.deltaY);
+}
+
 /// A pointer input device.
 class PointerDevice {
   static final _pointerInstances = <PointerDevice>[];
 
   static final _eventTypeFromString = {
+    'move': enum_event_type.event_type_pointer_move,
     'remove': enum_event_type.event_type_pointer_remove,
   };
 
@@ -351,6 +359,16 @@ class PointerDevice {
     for (var pointer in _pointerInstances) {
       var handleEvent = pointer._eventHandlers[type];
       if (handleEvent == null) return;
+
+      if (type == enum_event_type.event_type_pointer_move) {
+        var wbPointerMoveEvent =
+            data as Pointer<struct_waybright_pointer_move_event>;
+        var event = PointerMoveEvent(
+            wbPointerMoveEvent.ref.delta_x, wbPointerMoveEvent.ref.delta_y);
+
+        handleEvent(event);
+        return;
+      }
 
       handleEvent();
 

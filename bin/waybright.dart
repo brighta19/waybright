@@ -12,6 +12,11 @@ var keyboards = <KeyboardDevice>[];
 
 Window? focusedWindow;
 
+var cursor = {
+  "x": 50.0,
+  "y": 50.0,
+};
+
 void focusWindow(Window window) {
   if (focusedWindow != null) {
     focusedWindow?.blur();
@@ -58,6 +63,11 @@ void initializeMonitor(Monitor monitor) {
           renderer.drawWindow(window, 0, 0);
         }
       }
+
+      renderer.fillStyle = 0x000000;
+      var cursorX = cursor["x"]?.toInt() ?? 0;
+      var cursorY = cursor["y"]?.toInt() ?? 0;
+      renderer.fillRect(cursorX, cursorY, 10, 10);
     });
   } else {
     var renderer = monitor.renderer;
@@ -133,6 +143,15 @@ void handleNewWindow(Window window) {
 }
 
 void handleNewPointer(PointerDevice pointer) {
+  pointer.setEventHandler("move", (PointerMoveEvent event) {
+    var x = cursor["x"];
+    var y = cursor["y"];
+
+    if (x == null || y == null) return;
+
+    cursor["x"] = (x + event.deltaX).clamp(0, 500);
+    cursor["y"] = (y + event.deltaY).clamp(0, 400);
+  });
   pointer.setEventHandler("remove", () {
     pointers.remove(pointer);
     print("A pointer has been removed!");

@@ -195,6 +195,20 @@ void handle_window_new_event(struct wl_listener *listener, void *data) {
         wb->handle_event(event_type_window_new, wb_window);
 }
 
+void handle_pointer_move_event(struct wl_listener *listener, void *data) {
+    struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.move);
+    struct wlr_event_pointer_motion* event = data;
+
+    struct waybright_pointer_move_event wb_pointer_move_event = {
+        .wb_pointer = wb_pointer,
+        .delta_x = event->delta_x,
+        .delta_y = event->delta_y
+    };
+
+    if (wb_pointer->handle_event)
+        wb_pointer->handle_event(event_type_pointer_move, &wb_pointer_move_event);
+}
+
 void handle_pointer_remove_event(struct wl_listener* listener, void *data) {
     struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.remove);
 
@@ -211,6 +225,11 @@ void handle_pointer_new_event(struct waybright* wb, struct waybright_pointer* wb
 
     wb_pointer->listeners.remove.notify = handle_pointer_remove_event;
     wl_signal_add(&wlr_input_device->events.destroy, &wb_pointer->listeners.remove);
+
+    struct wlr_pointer* wlr_pointer = wb_pointer->wlr_pointer;
+
+    wb_pointer->listeners.move.notify = handle_pointer_move_event;
+    wl_signal_add(&wlr_pointer->events.motion, &wb_pointer->listeners.move);
 }
 
 void handle_keyboard_remove_event(struct wl_listener* listener, void *data) {
