@@ -8,6 +8,7 @@
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_output_damage.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_pointer.h>
 #include <malloc.h>
 
@@ -36,6 +37,7 @@ struct waybright {
     struct wlr_allocator* wlr_allocator;
     struct wlr_compositor* wlr_compositor;
     struct wlr_xdg_shell* wlr_xdg_shell;
+    struct wlr_seat* wlr_seat;
 
     const char* socket_name;
 
@@ -94,13 +96,6 @@ struct waybright_input {
     struct waybright_keyboard* keyboard;
 };
 
-struct waybright_pointer_move_event {
-    struct waybright_pointer* wb_pointer;
-
-    double delta_x;
-    double delta_y;
-};
-
 struct waybright_pointer {
     struct waybright* wb;
     struct waybright_input* wb_input;
@@ -151,3 +146,7 @@ int waybright_monitor_get_background_color(struct waybright_monitor* wb_monitor)
 
 void waybright_window_focus(struct waybright_window* wb_window);
 void waybright_window_blur(struct waybright_window* wb_window);
+void waybright_window_submit_pointer_move_event(struct waybright_window* wb_window, int time, int sx, int sy);
+
+void waybright_pointer_focus_on_window(struct waybright_pointer* wb_pointer, struct waybright_window* wb_window, int sx, int sy);
+void waybright_pointer_clear_focus(struct waybright_pointer* wb_pointer);

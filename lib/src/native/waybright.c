@@ -65,6 +65,7 @@ struct waybright* waybright_create() {
 void waybright_destroy(struct waybright* wb) {
     if (!wb) return;
 
+    wlr_seat_destroy(wb->wlr_seat);
     wlr_allocator_destroy(wb->wlr_allocator);
     wlr_renderer_destroy(wb->wlr_renderer);
     wlr_backend_destroy(wb->wlr_backend);
@@ -198,14 +199,8 @@ void handle_pointer_move_event(struct wl_listener *listener, void *data) {
     struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.move);
     struct wlr_event_pointer_motion* event = data;
 
-    struct waybright_pointer_move_event wb_pointer_move_event = {
-        .wb_pointer = wb_pointer,
-        .delta_x = event->delta_x,
-        .delta_y = event->delta_y
-    };
-
     if (wb_pointer->handle_event)
-        wb_pointer->handle_event(event_type_pointer_move, &wb_pointer_move_event);
+        wb_pointer->handle_event(event_type_pointer_move, event);
 }
 
 void handle_pointer_remove_event(struct wl_listener* listener, void *data) {
@@ -218,8 +213,6 @@ void handle_pointer_remove_event(struct wl_listener* listener, void *data) {
 }
 
 void handle_pointer_new_event(struct waybright* wb, struct waybright_pointer* wb_pointer) {
-    // wlr_cursor_attach_input_device(wb->wlr_cursor, wb_pointer->wlr_input_device);
-
     struct wlr_input_device* wlr_input_device = wb_pointer->wb_input->wlr_input_device;
 
     wb_pointer->listeners.remove.notify = handle_pointer_remove_event;
@@ -283,6 +276,8 @@ void handle_input_new_event(struct wl_listener *listener, void *data) {
 
     if (wb->handle_event)
         wb->handle_event(event_type_input_new, wb_input);
+
+    wlr_seat_set_capabilities(wb->wlr_seat, WL_SEAT_CAPABILITY_POINTER); // add keyboards later
 }
 
 int waybright_init(struct waybright* wb) {
@@ -316,6 +311,9 @@ int waybright_init(struct waybright* wb) {
     if (!wb->wlr_xdg_shell)
         return 1;
 
+    wb->wlr_seat = wlr_seat_create(wb->wl_display, "seat0");
+    if (!wb->wlr_seat)
+        return 1;
 
     wb->listeners.monitor_new.notify = handle_monitor_new_event;
     wl_signal_add(&wb->wlr_backend->events.new_output, &wb->listeners.monitor_new);
@@ -422,4 +420,23 @@ void waybright_window_focus(struct waybright_window* wb_window) {
 
 void waybright_window_blur(struct waybright_window* wb_window) {
     wlr_xdg_toplevel_set_activated(wb_window->wlr_xdg_surface, false);
+}
+
+void waybright_window_submit_pointer_move_event(struct waybright_window* wb_window, int time, int sx, int sy) {
+    struct wlr_seat* wlr_seat = wb_window->wb->wlr_seat;
+
+    wlr_seat_pointer_notify_motion(wlr_seat, time, sx, sy);
+}
+
+void waybright_pointer_focus_on_window(struct waybright_pointer* wb_pointer, struct waybright_window* wb_window, int sx, int sy) {
+    struct wlr_seat* wlr_seat = wb_pointer->wb->wlr_seat;
+    struct wlr_surface* wlr_surface = wb_window->wlr_xdg_surface->surface;
+
+    wlr_seat_pointer_notify_enter(wlr_seat, wlr_surface, sx, sy);
+}
+
+void waybright_pointer_clear_focus(struct waybright_pointer* wb_pointer) {
+    struct wlr_seat* wlr_seat = wb_pointer->wb->wlr_seat;
+
+    wlr_seat_pointer_clear_focus(wlr_seat);
 }

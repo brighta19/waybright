@@ -15,18 +15,17 @@ class PointerDevice extends InputDevice {
       if (handleEvent == null) return;
 
       if (type == enum_event_type.event_type_pointer_move) {
-        var wbPointerMoveEvent =
-            data as Pointer<struct_waybright_pointer_move_event>;
+        var eventPtr = data as Pointer<struct_wlr_event_pointer_motion>;
+
         var event = PointerMoveEvent(
-            wbPointerMoveEvent.ref.delta_x, wbPointerMoveEvent.ref.delta_y);
+          eventPtr.ref.delta_x,
+          eventPtr.ref.delta_y,
+          eventPtr.ref.time_msec,
+        );
 
         handleEvent(event);
-        return;
-      }
-
-      handleEvent();
-
-      if (type == enum_event_type.event_type_pointer_remove) {
+      } else if (type == enum_event_type.event_type_pointer_remove) {
+        handleEvent();
         _pointerInstances.remove(pointer);
       }
     }
@@ -47,6 +46,37 @@ class PointerDevice extends InputDevice {
     var type = _eventTypeFromString[event];
     if (type != null) {
       _eventHandlers[type] = handler;
+    }
+  }
+
+  /// Focuses this pointer on a window.
+  ///
+  /// [windowCursorX] and [windowCursorY] specifies where the pointer would
+  /// enter the window.
+  ///
+  /// Submitting pointer events to a window will not work unless this method
+  /// is called.
+  ///
+  /// Although unnecessary, it is safe to call this method on the same focused
+  /// window multiple times.
+  void focusOnWindow(Window window, int windowCursorX, int windowCursorY) {
+    var pointerPtr = _pointerPtr;
+    var windowPtr = window._windowPtr;
+    if (pointerPtr != null && windowPtr != null) {
+      _wblib.waybright_pointer_focus_on_window(
+        pointerPtr,
+        windowPtr,
+        windowCursorX,
+        windowCursorY,
+      );
+    }
+  }
+
+  /// Clears any focus on windows.
+  void clearFocus() {
+    var pointerPtr = _pointerPtr;
+    if (pointerPtr != null) {
+      _wblib.waybright_pointer_clear_focus(pointerPtr);
     }
   }
 }

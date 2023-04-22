@@ -9,11 +9,13 @@ var monitors = <Monitor>[];
 var windows = <Window>[];
 var inputDevices = <InputDevice>[];
 
+Monitor? currentMonitor;
 Window? focusedWindow;
+Window? hoveredWindow;
 
 var cursor = {
-  "x": 50.0,
-  "y": 50.0,
+  "x": 0.0,
+  "y": 0.0,
 };
 
 void focusWindow(Window window) {
@@ -34,10 +36,11 @@ void initializeMonitor(Monitor monitor) {
   var modes = monitor.modes;
   var preferredMode = monitor.preferredMode;
 
-  print("- Monitor '${monitor.name} has ${modes.length} modes.");
+  print("- Name: '${monitor.name}'");
+  print("- Number of modes: ${modes.length}");
   if (modes.isNotEmpty) {
     print("- Preferred mode: "
-        "${preferredMode == null ? "none" : "$preferredMode"}.");
+        "${preferredMode == null ? "none" : "$preferredMode"}");
   }
 
   if (preferredMode != null) monitor.mode = preferredMode;
@@ -47,10 +50,24 @@ void initializeMonitor(Monitor monitor) {
 
   monitor.setEventHandler("remove", () {
     monitors.remove(monitor);
-    print("The monitor `${monitor.name}` has been removed!");
+    print("A 📺 monitor has been removed!");
+    print("- Name: '${monitor.name}'");
+
+    if (monitor == currentMonitor) {
+      if (monitors.isEmpty) {
+        currentMonitor = null;
+      } else {
+        currentMonitor = monitors.first;
+      }
+    }
   });
 
   if (monitors.length == 1) {
+    currentMonitor = monitor;
+
+    cursor["x"] = monitor.mode.width / 2;
+    cursor["y"] = monitor.mode.height / 2;
+
     var renderer = monitor.renderer;
 
     monitor.setEventHandler("frame", () {
@@ -63,10 +80,13 @@ void initializeMonitor(Monitor monitor) {
         }
       }
 
-      renderer.fillStyle = 0x000000;
       var cursorX = cursor["x"]?.toInt() ?? 0;
       var cursorY = cursor["y"]?.toInt() ?? 0;
-      renderer.fillRect(cursorX, cursorY, 10, 10);
+
+      renderer.fillStyle = 0xffffff;
+      renderer.fillRect(cursorX - 2, cursorY - 2, 5, 5);
+      renderer.fillStyle = 0x000000;
+      renderer.fillRect(cursorX - 1, cursorY - 1, 3, 3);
     });
   } else {
     var renderer = monitor.renderer;
@@ -87,7 +107,7 @@ void initializeMonitor(Monitor monitor) {
 void handleNewMonitor(Monitor monitor) {
   monitors.add(monitor);
 
-  print("The monitor '${monitor.name}' has been added!");
+  print("A 📺 monitor has been added!");
 
   initializeMonitor(monitor);
 }
@@ -98,14 +118,14 @@ void initializeWindow(Window window) {
 
   window.setEventHandler("show", () {
     print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
-        " wants ${title.isEmpty ? "its window" : "the window '$title'"}"
+        " wants ${title.isEmpty ? "its 🪟 window" : "the 🪟 window '$title'"}"
         " shown!");
 
     focusWindow(window);
   });
   window.setEventHandler("hide", () {
     print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
-        " wants ${title.isEmpty ? "its window" : "the window '$title'"}"
+        " wants ${title.isEmpty ? "its 🪟 window" : "the 🪟 window '$title'"}"
         " hidden!");
 
     if (focusedWindow == window) {
@@ -114,9 +134,8 @@ void initializeWindow(Window window) {
   });
   window.setEventHandler("remove", () {
     windows.remove(window);
-    print("${window.isPopup ? "A popup" : "A"} window from "
-        "${appId.isEmpty ? "an application" : "application `$appId`"}"
-        " has been removed!");
+    print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
+        "'s 🪟${window.isPopup ? " popup" : ""} window has been removed!");
 
     if (window == focusedWindow && windows.isNotEmpty) {
       focusWindow(windows.last);
@@ -130,9 +149,8 @@ void handleNewWindow(Window window) {
   final appId = window.appId;
   final title = window.title;
 
-  print("${window.isPopup ? "A popup" : "A"} window from "
-      "${appId.isEmpty ? "an application" : "application `$appId`"}"
-      " has been added!");
+  print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
+      "'s 🪟${window.isPopup ? " popup" : ""} window has been added!");
 
   if (title.isNotEmpty) {
     print("- Title: '$title'");
@@ -143,24 +161,67 @@ void handleNewWindow(Window window) {
 
 void handleNewPointer(PointerDevice pointer) {
   pointer.setEventHandler("move", (PointerMoveEvent event) {
-    var x = cursor["x"];
-    var y = cursor["y"];
+    var monitor = currentMonitor;
+    var cursorX = cursor["x"];
+    var cursorY = cursor["y"];
 
-    if (x == null || y == null) return;
+    if (monitor == null || cursorX == null || cursorY == null) return;
 
-    cursor["x"] = (x + event.deltaX).clamp(0, 500);
-    cursor["y"] = (y + event.deltaY).clamp(0, 400);
+    var width = monitor.mode.width;
+    var height = monitor.mode.height;
+    var speed = 0.3; // my preference
+
+    cursorX = (cursorX + event.deltaX * speed).clamp(0.0, width.toDouble());
+    cursorY = (cursorY + event.deltaY * speed).clamp(0.0, height.toDouble());
+
+    cursor["x"] = cursorX;
+    cursor["y"] = cursorY;
+
+    Window? currentlyHoveredWindow;
+    for (var window in windows) {
+      var windowX = window.x;
+      var windowY = window.y;
+      var windowWidth = window.width;
+      var windowHeight = window.height;
+
+      if (cursorX >= windowX &&
+          cursorX < windowX + windowWidth &&
+          cursorY >= windowY &&
+          cursorY < windowY + windowHeight) {
+        currentlyHoveredWindow = window;
+        break;
+      }
+    }
+
+    if (currentlyHoveredWindow != null) {
+      var x = cursorX.toInt();
+      var y = cursorY.toInt();
+      var time = event.elapsedTimeMilliseconds;
+
+      if (currentlyHoveredWindow != hoveredWindow) {
+        pointer.focusOnWindow(currentlyHoveredWindow, x, y);
+        hoveredWindow = currentlyHoveredWindow;
+      }
+
+      currentlyHoveredWindow.submitPointerMoveEvent(x, y, time);
+    } else {
+      pointer.clearFocus();
+
+      hoveredWindow = null;
+    }
   });
   pointer.setEventHandler("remove", () {
     inputDevices.remove(pointer);
-    print("A pointer has been removed!");
+    print("A 🖱️ pointer has been removed!");
+    print("- Name: '${pointer.name}'");
   });
 }
 
 void handleNewKeyboard(KeyboardDevice keyboard) {
   keyboard.setEventHandler("remove", () {
     inputDevices.remove(keyboard);
-    print("A keyboard has been removed!");
+    print("A ⌨️ keyboard has been removed!");
+    print("- Name: '${keyboard.name}'");
   });
 }
 
@@ -170,12 +231,14 @@ void handleNewInput(InputNewEvent event) {
 
   if (pointer != null) {
     inputDevices.add(pointer);
-    print("The pointer '${pointer.name}' has been added!");
+    print("A 🖱️ pointer '${pointer.name}' has been added!");
+    print("- Name: '${pointer.name}'");
 
     handleNewPointer(pointer);
   } else if (keyboard != null) {
     inputDevices.add(keyboard);
-    print("The keyboard '${keyboard.name}' has been added!");
+    print("The ⌨️ keyboard '${keyboard.name}' has been added!");
+    print("- Name: '${keyboard.name}'");
 
     handleNewKeyboard(keyboard);
   }
@@ -189,6 +252,6 @@ void main(List<String> arguments) async {
   waybright.setEventHandler("input-new", handleNewInput);
 
   var socket = await waybright.openSocket();
-  print("Socket opened on ${socket.name}.");
+  print("~~~ Socket opened on '${socket.name}' ~~~");
   socket.runEventLoop();
 }

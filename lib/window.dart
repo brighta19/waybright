@@ -64,6 +64,44 @@ class Window {
     }
   }
 
+  // TODO: Add setters for x, y, width, and height
+
+  /// The horizontal position of this window
+  int get x {
+    var windowPtr = _windowPtr;
+    if (windowPtr != null) {
+      return windowPtr.ref.wlr_xdg_surface.ref.current.geometry.x;
+    }
+    return 0;
+  }
+
+  /// The vertical position of this window
+  int get y {
+    var windowPtr = _windowPtr;
+    if (windowPtr != null) {
+      return windowPtr.ref.wlr_xdg_surface.ref.current.geometry.y;
+    }
+    return 0;
+  }
+
+  /// The horizontal size of this window
+  int get width {
+    var windowPtr = _windowPtr;
+    if (windowPtr != null) {
+      return windowPtr.ref.wlr_xdg_surface.ref.current.geometry.width;
+    }
+    return 0;
+  }
+
+  /// The vertical size of this window
+  int get height {
+    var windowPtr = _windowPtr;
+    if (windowPtr != null) {
+      return windowPtr.ref.wlr_xdg_surface.ref.current.geometry.height;
+    }
+    return 0;
+  }
+
   /// Applies focus to this window.
   void focus() {
     var windowPtr = _windowPtr;
@@ -80,5 +118,19 @@ class Window {
       return _wblib.waybright_window_focus(windowPtr);
     }
     isFocused = false;
+  }
+
+  /// Submits pointer move events to this window.
+  void submitPointerMoveEvent(
+      int windowCursorX, int windowCursorY, int timeElapsedMilliseconds) {
+    var windowPtr = _windowPtr;
+    if (windowPtr != null) {
+      _wblib.waybright_window_submit_pointer_move_event(
+        windowPtr,
+        timeElapsedMilliseconds,
+        windowCursorX,
+        windowCursorY,
+      );
+    }
   }
 }

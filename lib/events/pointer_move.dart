@@ -8,5 +8,8 @@ class PointerMoveEvent {
   /// The y-distance a pointer had moved
   double deltaY;
 
-  PointerMoveEvent(this.deltaX, this.deltaY);
+  /// The time elapsed in milliseconds
+  int elapsedTimeMilliseconds;
+
+  PointerMoveEvent(this.deltaX, this.deltaY, this.elapsedTimeMilliseconds);
 }
