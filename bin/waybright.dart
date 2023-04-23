@@ -132,14 +132,14 @@ void initializeWindow(Window window) {
   final title = window.title;
 
   window.setEventHandler("show", () {
-    print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
+    print("${appId.isEmpty ? "An application" : "Application '$appId'"}"
         " wants ${title.isEmpty ? "its 🪟 window" : "the 🪟 window '$title'"}"
         " shown!");
 
     focusWindow(window);
   });
   window.setEventHandler("hide", () {
-    print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
+    print("${appId.isEmpty ? "An application" : "Application '$appId'"}"
         " wants ${title.isEmpty ? "its 🪟 window" : "the 🪟 window '$title'"}"
         " hidden!");
 
@@ -164,7 +164,7 @@ void handleNewWindow(Window window) {
   final appId = window.appId;
   final title = window.title;
 
-  print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
+  print("${appId.isEmpty ? "An application" : "Application '$appId'"}"
       "'s 🪟${window.isPopup ? " popup" : ""} window has been added!");
 
   if (title.isNotEmpty) {
