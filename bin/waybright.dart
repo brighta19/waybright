@@ -214,6 +214,25 @@ void handleNewPointer(PointerDevice pointer) {
       hoveredWindow = null;
     }
   });
+  pointer.setEventHandler("button", (PointerButtonEvent event) {
+    var cursorX = cursor["x"];
+    var cursorY = cursor["y"];
+
+    if (cursorX == null || cursorY == null) return;
+
+    var x = cursorX.toInt();
+    var y = cursorY.toInt();
+
+    Window? currentlyHoveredWindow = getWindowAtPoint(x, y);
+
+    if (currentlyHoveredWindow != null) {
+      currentlyHoveredWindow.submitPointerButtonEvent(
+        event.elapsedTimeMilliseconds,
+        event.button,
+        event.isPressed,
+      );
+    }
+  });
   pointer.setEventHandler("remove", () {
     inputDevices.remove(pointer);
     print("A 🖱️ pointer has been removed!");

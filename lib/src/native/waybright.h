@@ -25,6 +25,7 @@ enum event_type {
     event_type_input_new,
 
     event_type_pointer_move,
+    event_type_pointer_button,
     event_type_pointer_remove,
 
     event_type_keyboard_remove,
@@ -111,6 +112,7 @@ struct waybright_pointer {
 
     struct {
         struct wl_listener move;
+        struct wl_listener button;
         struct wl_listener remove;
     } listeners;
 
@@ -152,6 +154,7 @@ int waybright_monitor_get_background_color(struct waybright_monitor* wb_monitor)
 void waybright_window_focus(struct waybright_window* wb_window);
 void waybright_window_blur(struct waybright_window* wb_window);
 void waybright_window_submit_pointer_move_event(struct waybright_window* wb_window, int time, int sx, int sy);
+void waybright_window_submit_pointer_button_event(struct waybright_window* wb_window, int time, int button, int pressed);
 
 void waybright_pointer_focus_on_window(struct waybright_pointer* wb_pointer, struct waybright_window* wb_window, int sx, int sy);
 void waybright_pointer_clear_focus(struct waybright_pointer* wb_pointer);

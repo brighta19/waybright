@@ -136,4 +136,21 @@ class Window {
       );
     }
   }
+
+  /// Submits pointer button events to this window.
+  void submitPointerButtonEvent(
+    int timeElapsedMilliseconds,
+    int button,
+    bool isPressed,
+  ) {
+    var windowPtr = _windowPtr;
+    if (windowPtr != null) {
+      _wblib.waybright_window_submit_pointer_button_event(
+        windowPtr,
+        timeElapsedMilliseconds,
+        button,
+        isPressed ? 1 : 0,
+      );
+    }
+  }
 }

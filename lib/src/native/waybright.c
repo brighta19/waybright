@@ -208,6 +208,19 @@ void handle_pointer_move_event(struct wl_listener *listener, void *data) {
         wb_pointer->handle_event(event_type_pointer_move, &wb_pointer_event);
 }
 
+void handle_pointer_button_event(struct wl_listener *listener, void *data) {
+    struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.button);
+    struct wlr_event_pointer_button* event = data;
+
+    struct waybright_pointer_event wb_pointer_event = {
+        wb_pointer,
+        event
+    };
+
+    if (wb_pointer->handle_event)
+        wb_pointer->handle_event(event_type_pointer_button, &wb_pointer_event);
+}
+
 void handle_pointer_remove_event(struct wl_listener* listener, void *data) {
     struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.remove);
 
@@ -227,6 +240,8 @@ void handle_pointer_new_event(struct waybright* wb, struct waybright_pointer* wb
 
     wb_pointer->listeners.move.notify = handle_pointer_move_event;
     wl_signal_add(&wlr_pointer->events.motion, &wb_pointer->listeners.move);
+    wb_pointer->listeners.button.notify = handle_pointer_button_event;
+    wl_signal_add(&wlr_pointer->events.button, &wb_pointer->listeners.button);
 }
 
 void handle_keyboard_remove_event(struct wl_listener* listener, void *data) {
@@ -431,6 +446,13 @@ void waybright_window_submit_pointer_move_event(struct waybright_window* wb_wind
     struct wlr_seat* wlr_seat = wb_window->wb->wlr_seat;
 
     wlr_seat_pointer_notify_motion(wlr_seat, time, sx, sy);
+}
+
+void waybright_window_submit_pointer_button_event(struct waybright_window* wb_window, int time, int button, int pressed) {
+    struct wlr_seat* wlr_seat = wb_window->wb->wlr_seat;
+
+    int state = pressed ? WLR_BUTTON_PRESSED : WLR_BUTTON_RELEASED;
+    wlr_seat_pointer_notify_button(wlr_seat, time, button, state);
 }
 
 void waybright_pointer_focus_on_window(struct waybright_pointer* wb_pointer, struct waybright_window* wb_window, int sx, int sy) {

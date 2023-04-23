@@ -6,6 +6,7 @@ class PointerDevice extends InputDevice {
 
   static final _eventTypeFromString = {
     'move': enum_event_type.event_type_pointer_move,
+    'button': enum_event_type.event_type_pointer_button,
     'remove': enum_event_type.event_type_pointer_remove,
   };
 
@@ -24,6 +25,17 @@ class PointerDevice extends InputDevice {
         var event = PointerMoveEvent(
           wlrEventPtr.ref.delta_x,
           wlrEventPtr.ref.delta_y,
+          wlrEventPtr.ref.time_msec,
+        );
+
+        handleEvent(event);
+      } else if (type == enum_event_type.event_type_pointer_button) {
+        var wlrEventPtr =
+            eventPtr.ref.event as Pointer<struct_wlr_event_pointer_button>;
+
+        var event = PointerButtonEvent(
+          wlrEventPtr.ref.button,
+          wlrEventPtr.ref.state == enum_wlr_button_state.WLR_BUTTON_PRESSED,
           wlrEventPtr.ref.time_msec,
         );
 

@@ -7,6 +7,7 @@ import 'src/generated/waybright_bindings.dart';
 
 part './events/input_new.dart';
 part './events/pointer_move.dart';
+part './events/pointer_button.dart';
 part './devices/pointer.dart';
 part './devices/keyboard.dart';
 part './input_device.dart';
