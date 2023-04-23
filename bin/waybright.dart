@@ -1,5 +1,11 @@
 import 'package:waybright/waybright.dart';
 
+class Vector {
+  num x;
+  num y;
+  Vector(this.x, this.y);
+}
+
 const backgroundColors = [
   0x88ffcc,
   0xffaaaa,
@@ -10,15 +16,21 @@ var windows = <Window>[];
 var inputDevices = <InputDevice>[];
 
 Monitor? currentMonitor;
+
 Window? focusedWindow;
 Window? hoveredWindow;
+Window? pointerButtonFocusedWindow;
 
-var cursor = {
-  "x": 0.0,
-  "y": 0.0,
-};
+var isMovingWindow = false;
+var shouldSubmitPointerMoveEvents = true;
+
+var cursor = Vector(0.0, 0.0);
+var windowDrawingPositionAtGrab = Vector(0.0, 0.0);
+var cursorPositionAtGrab = Vector(0.0, 0.0);
 
 void focusWindow(Window window) {
+  if (focusedWindow == window) return;
+
   if (focusedWindow != null) {
     focusedWindow?.blur();
   }
@@ -27,17 +39,20 @@ void focusWindow(Window window) {
   focusedWindow = window;
 }
 
-void blurWindow(Window window) {
+void blurFocusedWindow() {
+  var window = focusedWindow;
+  if (window == null) return;
+
   window.blur();
   focusedWindow = null;
 }
 
-Window? getWindowAtPoint(int x, int y) {
+Window? getWindowAtPoint(num x, num y) {
   for (var window in windows) {
-    var windowX = window.x;
-    var windowY = window.y;
-    var windowWidth = window.width;
-    var windowHeight = window.height;
+    var windowX = window.contentX;
+    var windowY = window.contentY;
+    var windowWidth = window.contentWidth;
+    var windowHeight = window.contentHeight;
 
     if (x >= windowX &&
         x < windowX + windowWidth &&
@@ -50,13 +65,10 @@ Window? getWindowAtPoint(int x, int y) {
 }
 
 void drawCursor(Renderer renderer) {
-  var cursorX = cursor["x"]?.toInt() ?? 0;
-  var cursorY = cursor["y"]?.toInt() ?? 0;
-
   renderer.fillStyle = 0xffffff;
-  renderer.fillRect(cursorX - 2, cursorY - 2, 5, 5);
+  renderer.fillRect(cursor.x - 2, cursor.y - 2, 5, 5);
   renderer.fillStyle = 0x000000;
-  renderer.fillRect(cursorX - 1, cursorY - 1, 3, 3);
+  renderer.fillRect(cursor.x - 1, cursor.y - 1, 3, 3);
 }
 
 void initializeMonitor(Monitor monitor) {
@@ -92,8 +104,8 @@ void initializeMonitor(Monitor monitor) {
   if (monitors.length == 1) {
     currentMonitor = monitor;
 
-    cursor["x"] = monitor.mode.width / 2;
-    cursor["y"] = monitor.mode.height / 2;
+    cursor.x = monitor.mode.width / 2;
+    cursor.y = monitor.mode.height / 2;
 
     var renderer = monitor.renderer;
 
@@ -103,7 +115,7 @@ void initializeMonitor(Monitor monitor) {
 
       for (var window in windows) {
         if (window.isVisible) {
-          renderer.drawWindow(window, 0, 0);
+          renderer.drawWindow(window, window.drawingX, window.drawingY);
         }
       }
 
@@ -144,8 +156,22 @@ void initializeWindow(Window window) {
         " hidden!");
 
     if (focusedWindow == window) {
-      blurWindow(window);
+      blurFocusedWindow();
     }
+  });
+  // The window wants to be moved, which has to be handled manually.
+  window.setEventHandler("move", () {
+    print("${appId.isEmpty ? "An application" : "Application '$appId'"}"
+        " wants ${title.isEmpty ? "its 🪟 window" : "the 🪟 window '$title'"}"
+        " moved!");
+
+    isMovingWindow = true;
+    cursorPositionAtGrab.x = cursor.x;
+    cursorPositionAtGrab.y = cursor.y;
+    windowDrawingPositionAtGrab.x = window.drawingX;
+    windowDrawingPositionAtGrab.y = window.drawingY;
+
+    focusWindow(window);
   });
   window.setEventHandler("remove", () {
     windows.remove(window);
@@ -175,22 +201,34 @@ void handleNewWindow(Window window) {
 }
 
 void handlePointerMovement(PointerDevice pointer, int elapsedTimeMilliseconds) {
-  var x = cursor["x"]?.toInt();
-  var y = cursor["y"]?.toInt();
+  if (!shouldSubmitPointerMoveEvents) return;
 
-  if (x == null || y == null) return;
+  var buttonFocusedWindow = pointerButtonFocusedWindow;
+  if (buttonFocusedWindow != null) {
+    buttonFocusedWindow.submitPointerMoveEvent(
+      elapsedTimeMilliseconds,
+      cursor.x - buttonFocusedWindow.drawingX,
+      cursor.y - buttonFocusedWindow.drawingY,
+    );
+    return;
+  }
 
-  Window? currentlyHoveredWindow = getWindowAtPoint(x, y);
-
+  Window? currentlyHoveredWindow = getWindowAtPoint(cursor.x, cursor.y);
   if (currentlyHoveredWindow != null) {
-    var time = elapsedTimeMilliseconds;
-
     if (currentlyHoveredWindow != hoveredWindow) {
-      pointer.focusOnWindow(currentlyHoveredWindow, x, y);
+      pointer.focusOnWindow(
+        currentlyHoveredWindow,
+        cursor.x - currentlyHoveredWindow.drawingX,
+        cursor.y - currentlyHoveredWindow.drawingY,
+      );
       hoveredWindow = currentlyHoveredWindow;
     }
 
-    currentlyHoveredWindow.submitPointerMoveEvent(time, x, y);
+    currentlyHoveredWindow.submitPointerMoveEvent(
+      elapsedTimeMilliseconds,
+      cursor.x - currentlyHoveredWindow.drawingX,
+      cursor.y - currentlyHoveredWindow.drawingY,
+    );
   } else {
     pointer.clearFocus();
 
@@ -198,55 +236,88 @@ void handlePointerMovement(PointerDevice pointer, int elapsedTimeMilliseconds) {
   }
 }
 
+void handleWindowGrab() {
+  var window = focusedWindow;
+  if (window == null) return;
+
+  window.drawingX =
+      windowDrawingPositionAtGrab.x + cursor.x - cursorPositionAtGrab.x;
+  window.drawingY =
+      windowDrawingPositionAtGrab.y + cursor.y - cursorPositionAtGrab.y;
+}
+
 void handleNewPointer(PointerDevice pointer) {
   pointer.setEventHandler("move", (PointerMoveEvent event) {
     var monitor = currentMonitor;
-    var cursorX = cursor["x"];
-    var cursorY = cursor["y"];
+    if (monitor == null) return;
 
-    if (monitor == null || cursorX == null || cursorY == null) return;
-
-    var width = monitor.mode.width;
-    var height = monitor.mode.height;
     var speed = 0.5; // my preference
 
-    cursorX = (cursorX + event.deltaX * speed).clamp(0.0, width.toDouble());
-    cursorY = (cursorY + event.deltaY * speed).clamp(0.0, height.toDouble());
+    cursor.x = (cursor.x + event.deltaX * speed).clamp(0, monitor.mode.width);
+    cursor.y = (cursor.y + event.deltaY * speed).clamp(0, monitor.mode.height);
 
-    cursor["x"] = cursorX;
-    cursor["y"] = cursorY;
-
-    handlePointerMovement(pointer, event.elapsedTimeMilliseconds);
+    if (isMovingWindow) {
+      handleWindowGrab();
+    } else {
+      handlePointerMovement(pointer, event.elapsedTimeMilliseconds);
+    }
   });
   pointer.setEventHandler("teleport", (PointerTeleportEvent event) {
     var monitor = currentMonitor;
     if (monitor == null || event.monitor != monitor) return;
 
-    var width = monitor.mode.width;
-    var height = monitor.mode.height;
+    cursor.x = event.x.clamp(0, monitor.mode.width);
+    cursor.y = event.y.clamp(0, monitor.mode.height);
 
-    cursor["x"] = event.x.clamp(0.0, width.toDouble());
-    cursor["y"] = event.y.clamp(0.0, height.toDouble());
-
-    handlePointerMovement(pointer, event.elapsedTimeMilliseconds);
+    if (isMovingWindow) {
+      handleWindowGrab();
+    } else {
+      handlePointerMovement(pointer, event.elapsedTimeMilliseconds);
+    }
   });
   pointer.setEventHandler("button", (PointerButtonEvent event) {
-    var cursorX = cursor["x"];
-    var cursorY = cursor["y"];
+    Window? currentlyHoveredWindow = getWindowAtPoint(cursor.x, cursor.y);
 
-    if (cursorX == null || cursorY == null) return;
+    if (currentlyHoveredWindow == null) {
+      if (event.isPressed) {
+        blurFocusedWindow();
+        shouldSubmitPointerMoveEvents = false;
+      }
+    } else {
+      if (event.isPressed) {
+        if (focusedWindow != currentlyHoveredWindow) {
+          focusWindow(currentlyHoveredWindow);
 
-    var x = cursorX.toInt();
-    var y = cursorY.toInt();
+          pointer.focusOnWindow(
+            currentlyHoveredWindow,
+            cursor.x - currentlyHoveredWindow.drawingX,
+            cursor.y - currentlyHoveredWindow.drawingY,
+          );
+        }
 
-    Window? currentlyHoveredWindow = getWindowAtPoint(x, y);
+        currentlyHoveredWindow.submitPointerButtonEvent(
+          event.elapsedTimeMilliseconds,
+          event.button,
+          event.isPressed,
+        );
 
-    if (currentlyHoveredWindow != null) {
-      currentlyHoveredWindow.submitPointerButtonEvent(
-        event.elapsedTimeMilliseconds,
-        event.button,
-        event.isPressed,
-      );
+        pointerButtonFocusedWindow = currentlyHoveredWindow;
+      } else {
+        var window = focusedWindow;
+        if (window != null) {
+          window.submitPointerButtonEvent(
+            event.elapsedTimeMilliseconds,
+            event.button,
+            event.isPressed,
+          );
+        }
+      }
+    }
+
+    if (!event.isPressed) {
+      isMovingWindow = false;
+      shouldSubmitPointerMoveEvents = true;
+      pointerButtonFocusedWindow = null;
     }
   });
   pointer.setEventHandler("remove", () {

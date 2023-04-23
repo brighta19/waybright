@@ -21,6 +21,7 @@ enum event_type {
     event_type_window_remove,
     event_type_window_show,
     event_type_window_hide,
+    event_type_window_move,
 
     event_type_input_new,
 
@@ -85,6 +86,7 @@ struct waybright_window {
         struct wl_listener show;
         struct wl_listener hide;
         struct wl_listener remove;
+        struct wl_listener move;
     } listeners;
 
     void(*handle_event)(int type, void* data);

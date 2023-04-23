@@ -9,6 +9,7 @@ class Window {
   static final _eventTypeFromString = {
     'show': enum_event_type.event_type_window_show,
     'hide': enum_event_type.event_type_window_hide,
+    'move': enum_event_type.event_type_window_move,
     'remove': enum_event_type.event_type_window_remove,
   };
 
@@ -64,28 +65,52 @@ class Window {
     }
   }
 
-  // TODO: Add setters for x, y, width, and height
+  // TODO: Add setters for width and height
 
-  /// The horizontal position of this window
-  int get x {
+  /// The horizontal position of this window's drawing area.
+  num drawingX = 0;
+
+  /// The vertical position of this window's drawing area.
+  num drawingY = 0;
+
+  /// The horizontal size of this window's drawing area.
+  int get drawingWidth {
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
-      return windowPtr.ref.wlr_xdg_surface.ref.current.geometry.x;
+      return windowPtr.ref.wlr_xdg_surface.ref.surface.ref.current.width;
     }
     return 0;
   }
 
-  /// The vertical position of this window
-  int get y {
+  /// The vertical size of this window's drawing area.
+  int get drawingHeight {
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
-      return windowPtr.ref.wlr_xdg_surface.ref.current.geometry.y;
+      return windowPtr.ref.wlr_xdg_surface.ref.surface.ref.current.height;
     }
     return 0;
   }
 
-  /// The horizontal size of this window
-  int get width {
+  /// The horizontal position of this window's content.
+  num get contentX {
+    var windowPtr = _windowPtr;
+    if (windowPtr != null) {
+      return drawingX + windowPtr.ref.wlr_xdg_surface.ref.current.geometry.x;
+    }
+    return 0;
+  }
+
+  /// The vertical position of this window's content.
+  num get contentY {
+    var windowPtr = _windowPtr;
+    if (windowPtr != null) {
+      return drawingY + windowPtr.ref.wlr_xdg_surface.ref.current.geometry.y;
+    }
+    return 0;
+  }
+
+  /// The horizontal size of this window's content.
+  int get contentWidth {
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
       return windowPtr.ref.wlr_xdg_surface.ref.current.geometry.width;
@@ -93,8 +118,8 @@ class Window {
     return 0;
   }
 
-  /// The vertical size of this window
-  int get height {
+  /// The vertical size of this window's content.
+  int get contentHeight {
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
       return windowPtr.ref.wlr_xdg_surface.ref.current.geometry.height;
@@ -115,7 +140,7 @@ class Window {
   void blur() {
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
-      return _wblib.waybright_window_focus(windowPtr);
+      return _wblib.waybright_window_blur(windowPtr);
     }
     isFocused = false;
   }
@@ -123,16 +148,16 @@ class Window {
   /// Submits pointer move events to this window.
   void submitPointerMoveEvent(
     int timeElapsedMilliseconds,
-    int windowCursorX,
-    int windowCursorY,
+    num windowCursorX,
+    num windowCursorY,
   ) {
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
       _wblib.waybright_window_submit_pointer_move_event(
         windowPtr,
         timeElapsedMilliseconds,
-        windowCursorX,
-        windowCursorY,
+        windowCursorX.toInt(),
+        windowCursorY.toInt(),
       );
     }
   }

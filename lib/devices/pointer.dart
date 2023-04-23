@@ -113,15 +113,15 @@ class PointerDevice extends InputDevice {
   ///
   /// Although unnecessary, it is safe to call this method on the same focused
   /// window multiple times.
-  void focusOnWindow(Window window, int windowCursorX, int windowCursorY) {
+  void focusOnWindow(Window window, num windowCursorX, num windowCursorY) {
     var pointerPtr = _pointerPtr;
     var windowPtr = window._windowPtr;
     if (pointerPtr != null && windowPtr != null) {
       _wblib.waybright_pointer_focus_on_window(
         pointerPtr,
         windowPtr,
-        windowCursorX,
-        windowCursorY,
+        windowCursorX.toInt(),
+        windowCursorY.toInt(),
       );
     }
   }

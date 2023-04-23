@@ -21,27 +21,30 @@ class Renderer {
   }
 
   /// Sets all pixels to transparent black.
-  void clearRect(int x, int y, int width, int height) {
+  void clearRect(num x, num y, int width, int height) {
     var rendererPtr = _rendererPtr;
     if (rendererPtr != null) {
-      _wblib.waybright_renderer_clear_rect(rendererPtr, x, y, width, height);
+      _wblib.waybright_renderer_clear_rect(
+          rendererPtr, x.toInt(), y.toInt(), width, height);
     }
   }
 
   /// Draws a rectangle filled with the current [fillStyle].
-  void fillRect(int x, int y, int width, int height) {
+  void fillRect(num x, num y, int width, int height) {
     var rendererPtr = _rendererPtr;
     if (rendererPtr != null) {
-      _wblib.waybright_renderer_fill_rect(rendererPtr, x, y, width, height);
+      _wblib.waybright_renderer_fill_rect(
+          rendererPtr, x.toInt(), y.toInt(), width, height);
     }
   }
 
   /// Draws a rectangle.
-  void drawWindow(Window window, int x, int y) {
+  void drawWindow(Window window, num x, num y) {
     var rendererPtr = _rendererPtr;
     var windowPtr = window._windowPtr;
     if (rendererPtr != null && windowPtr != null) {
-      _wblib.waybright_renderer_draw_window(rendererPtr, windowPtr, x, y);
+      _wblib.waybright_renderer_draw_window(
+          rendererPtr, windowPtr, x.toInt(), y.toInt());
     }
   }
 }

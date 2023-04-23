@@ -23993,12 +23993,13 @@ abstract class enum_event_type {
   static const int event_type_window_remove = 4;
   static const int event_type_window_show = 5;
   static const int event_type_window_hide = 6;
-  static const int event_type_input_new = 7;
-  static const int event_type_pointer_move = 8;
-  static const int event_type_pointer_teleport = 9;
-  static const int event_type_pointer_button = 10;
-  static const int event_type_pointer_remove = 11;
-  static const int event_type_keyboard_remove = 12;
+  static const int event_type_window_move = 7;
+  static const int event_type_input_new = 8;
+  static const int event_type_pointer_move = 9;
+  static const int event_type_pointer_teleport = 10;
+  static const int event_type_pointer_button = 11;
+  static const int event_type_pointer_remove = 12;
+  static const int event_type_keyboard_remove = 13;
 }
 
 class struct_waybright extends ffi.Struct {
@@ -24088,6 +24089,8 @@ class UnnamedStruct33 extends ffi.Struct {
   external struct_wl_listener hide1;
 
   external struct_wl_listener remove;
+
+  external struct_wl_listener move;
 }
 
 class struct_waybright_input extends ffi.Struct {
