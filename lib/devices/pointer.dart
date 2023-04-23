@@ -11,16 +11,20 @@ class PointerDevice extends InputDevice {
 
   static void _executeEventHandler(int type, Pointer<Void> data) {
     for (var pointer in _pointerInstances) {
+      var eventPtr = data as Pointer<struct_waybright_pointer_event>;
+      if (pointer._pointerPtr != eventPtr.ref.wb_pointer) continue;
+
       var handleEvent = pointer._eventHandlers[type];
-      if (handleEvent == null) return;
+      if (handleEvent == null) continue;
 
       if (type == enum_event_type.event_type_pointer_move) {
-        var eventPtr = data as Pointer<struct_wlr_event_pointer_motion>;
+        var wlrEventPtr =
+            eventPtr.ref.event as Pointer<struct_wlr_event_pointer_motion>;
 
         var event = PointerMoveEvent(
-          eventPtr.ref.delta_x,
-          eventPtr.ref.delta_y,
-          eventPtr.ref.time_msec,
+          wlrEventPtr.ref.delta_x,
+          wlrEventPtr.ref.delta_y,
+          wlrEventPtr.ref.time_msec,
         );
 
         handleEvent(event);

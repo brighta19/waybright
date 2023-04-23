@@ -6,7 +6,7 @@ LIBS=$(shell pkg-config --libs wayland-server) \
 	$(shell pkg-config --libs cairo) \
 	$(shell pkg-config --libs libdrm)
 
-build/$(EXECUTABLE): build/waybright.so lib/src/generated/waybright_bindings.dart bin/waybright.dart lib/*
+build/$(EXECUTABLE): build/waybright.so lib/src/generated/waybright_bindings.dart bin/waybright.dart lib/* lib/events/* lib/devices/*
 	@mkdir -p build
 	dart compile exe bin/waybright.dart -o build/$(EXECUTABLE)
 

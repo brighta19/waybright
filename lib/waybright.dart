@@ -37,7 +37,7 @@ class Waybright {
   static void _executeEventHandler(int type, Pointer<Void> data) {
     for (var waybright in _waybrightInstances) {
       var handleEvent = waybright._eventHandlers[type];
-      if (handleEvent == null) return;
+      if (handleEvent == null) continue;
 
       if (type == enum_event_type.event_type_monitor_new) {
         var monitorPtr = data as Pointer<struct_waybright_monitor>;

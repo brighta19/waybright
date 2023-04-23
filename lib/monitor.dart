@@ -15,7 +15,7 @@ class Monitor {
       if (monitor._monitorPtr != monitorPtr) continue;
 
       var handleEvent = monitor._eventHandlers[type];
-      if (handleEvent == null) return;
+      if (handleEvent == null) continue;
 
       handleEvent();
 

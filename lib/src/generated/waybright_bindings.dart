@@ -19353,6 +19353,31 @@ class WaybrightLibrary {
       _waybright_window_submit_pointer_move_eventPtr.asFunction<
           void Function(ffi.Pointer<struct_waybright_window>, int, int, int)>();
 
+  void waybright_window_submit_pointer_button_event(
+    ffi.Pointer<struct_waybright_window> wb_window,
+    int time,
+    int button,
+    int pressed,
+  ) {
+    return _waybright_window_submit_pointer_button_event(
+      wb_window,
+      time,
+      button,
+      pressed,
+    );
+  }
+
+  late final _waybright_window_submit_pointer_button_eventPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<struct_waybright_window>,
+              ffi.Int,
+              ffi.Int,
+              ffi.Int)>>('waybright_window_submit_pointer_button_event');
+  late final _waybright_window_submit_pointer_button_event =
+      _waybright_window_submit_pointer_button_eventPtr.asFunction<
+          void Function(ffi.Pointer<struct_waybright_window>, int, int, int)>();
+
   void waybright_pointer_focus_on_window(
     ffi.Pointer<struct_waybright_pointer> wb_pointer,
     ffi.Pointer<struct_waybright_window> wb_window,
@@ -23971,8 +23996,9 @@ abstract class enum_event_type {
   static const int event_type_input_new = 7;
   static const int event_type_pointer_move = 8;
   static const int event_type_pointer_teleport = 9;
-  static const int event_type_pointer_remove = 10;
-  static const int event_type_keyboard_remove = 11;
+  static const int event_type_pointer_button = 10;
+  static const int event_type_pointer_remove = 11;
+  static const int event_type_keyboard_remove = 12;
 }
 
 class struct_waybright extends ffi.Struct {
@@ -24099,6 +24125,8 @@ class UnnamedStruct34 extends ffi.Struct {
 
   external struct_wl_listener teleport;
 
+  external struct_wl_listener button;
+
   external struct_wl_listener remove;
 }
 
@@ -24118,6 +24146,12 @@ class struct_waybright_keyboard extends ffi.Struct {
 
 class UnnamedStruct35 extends ffi.Struct {
   external struct_wl_listener remove;
+}
+
+class struct_waybright_pointer_event extends ffi.Struct {
+  external ffi.Pointer<struct_waybright_pointer> wb_pointer;
+
+  external ffi.Pointer<ffi.Void> event;
 }
 
 const int FP_NAN = 0;

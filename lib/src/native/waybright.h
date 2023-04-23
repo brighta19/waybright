@@ -96,6 +96,11 @@ struct waybright_input {
     struct waybright_keyboard* keyboard;
 };
 
+struct waybright_pointer_event {
+    struct waybright_pointer* wb_pointer;
+    void* event;
+};
+
 struct waybright_pointer {
     struct waybright* wb;
     struct waybright_input* wb_input;

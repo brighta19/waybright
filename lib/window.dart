@@ -18,7 +18,7 @@ class Window {
       if (window._windowPtr != windowPtr) continue;
 
       var handleEvent = window._eventHandlers[type];
-      if (handleEvent == null) return;
+      if (handleEvent == null) continue;
 
       if (type == enum_event_type.event_type_window_show) {
         window.isVisible = true;
@@ -122,7 +122,10 @@ class Window {
 
   /// Submits pointer move events to this window.
   void submitPointerMoveEvent(
-      int windowCursorX, int windowCursorY, int timeElapsedMilliseconds) {
+    int timeElapsedMilliseconds,
+    int windowCursorX,
+    int windowCursorY,
+  ) {
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
       _wblib.waybright_window_submit_pointer_move_event(

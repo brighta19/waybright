@@ -32,6 +32,23 @@ void blurWindow(Window window) {
   focusedWindow = null;
 }
 
+Window? getWindowAtPoint(int x, int y) {
+  for (var window in windows) {
+    var windowX = window.x;
+    var windowY = window.y;
+    var windowWidth = window.width;
+    var windowHeight = window.height;
+
+    if (x >= windowX &&
+        x < windowX + windowWidth &&
+        y >= windowY &&
+        y < windowY + windowHeight) {
+      return window;
+    }
+  }
+  return null;
+}
+
 void initializeMonitor(Monitor monitor) {
   var modes = monitor.modes;
   var preferredMode = monitor.preferredMode;
@@ -169,7 +186,7 @@ void handleNewPointer(PointerDevice pointer) {
 
     var width = monitor.mode.width;
     var height = monitor.mode.height;
-    var speed = 0.3; // my preference
+    var speed = 0.5; // my preference
 
     cursorX = (cursorX + event.deltaX * speed).clamp(0.0, width.toDouble());
     cursorY = (cursorY + event.deltaY * speed).clamp(0.0, height.toDouble());
@@ -177,25 +194,12 @@ void handleNewPointer(PointerDevice pointer) {
     cursor["x"] = cursorX;
     cursor["y"] = cursorY;
 
-    Window? currentlyHoveredWindow;
-    for (var window in windows) {
-      var windowX = window.x;
-      var windowY = window.y;
-      var windowWidth = window.width;
-      var windowHeight = window.height;
+    var x = cursorX.toInt();
+    var y = cursorY.toInt();
 
-      if (cursorX >= windowX &&
-          cursorX < windowX + windowWidth &&
-          cursorY >= windowY &&
-          cursorY < windowY + windowHeight) {
-        currentlyHoveredWindow = window;
-        break;
-      }
-    }
+    Window? currentlyHoveredWindow = getWindowAtPoint(x, y);
 
     if (currentlyHoveredWindow != null) {
-      var x = cursorX.toInt();
-      var y = cursorY.toInt();
       var time = event.elapsedTimeMilliseconds;
 
       if (currentlyHoveredWindow != hoveredWindow) {
@@ -203,7 +207,7 @@ void handleNewPointer(PointerDevice pointer) {
         hoveredWindow = currentlyHoveredWindow;
       }
 
-      currentlyHoveredWindow.submitPointerMoveEvent(x, y, time);
+      currentlyHoveredWindow.submitPointerMoveEvent(time, x, y);
     } else {
       pointer.clearFocus();
 

@@ -199,8 +199,13 @@ void handle_pointer_move_event(struct wl_listener *listener, void *data) {
     struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.move);
     struct wlr_event_pointer_motion* event = data;
 
+    struct waybright_pointer_event wb_pointer_event = {
+        wb_pointer,
+        event
+    };
+
     if (wb_pointer->handle_event)
-        wb_pointer->handle_event(event_type_pointer_move, event);
+        wb_pointer->handle_event(event_type_pointer_move, &wb_pointer_event);
 }
 
 void handle_pointer_remove_event(struct wl_listener* listener, void *data) {
