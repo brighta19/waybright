@@ -49,6 +49,16 @@ Window? getWindowAtPoint(int x, int y) {
   return null;
 }
 
+void drawCursor(Renderer renderer) {
+  var cursorX = cursor["x"]?.toInt() ?? 0;
+  var cursorY = cursor["y"]?.toInt() ?? 0;
+
+  renderer.fillStyle = 0xffffff;
+  renderer.fillRect(cursorX - 2, cursorY - 2, 5, 5);
+  renderer.fillStyle = 0x000000;
+  renderer.fillRect(cursorX - 1, cursorY - 1, 3, 3);
+}
+
 void initializeMonitor(Monitor monitor) {
   var modes = monitor.modes;
   var preferredMode = monitor.preferredMode;
@@ -97,13 +107,7 @@ void initializeMonitor(Monitor monitor) {
         }
       }
 
-      var cursorX = cursor["x"]?.toInt() ?? 0;
-      var cursorY = cursor["y"]?.toInt() ?? 0;
-
-      renderer.fillStyle = 0xffffff;
-      renderer.fillRect(cursorX - 2, cursorY - 2, 5, 5);
-      renderer.fillStyle = 0x000000;
-      renderer.fillRect(cursorX - 1, cursorY - 1, 3, 3);
+      drawCursor(renderer);
     });
   } else {
     var renderer = monitor.renderer;
@@ -111,12 +115,6 @@ void initializeMonitor(Monitor monitor) {
     monitor.setEventHandler("frame", () {
       renderer.fillStyle = 0xffdd66;
       renderer.fillRect(50, 50, 100, 100);
-
-      for (var window in windows) {
-        if (window.isVisible) {
-          renderer.drawWindow(window, 0, 0);
-        }
-      }
     });
   }
 }
@@ -176,6 +174,30 @@ void handleNewWindow(Window window) {
   initializeWindow(window);
 }
 
+void handlePointerMovement(PointerDevice pointer, int elapsedTimeMilliseconds) {
+  var x = cursor["x"]?.toInt();
+  var y = cursor["y"]?.toInt();
+
+  if (x == null || y == null) return;
+
+  Window? currentlyHoveredWindow = getWindowAtPoint(x, y);
+
+  if (currentlyHoveredWindow != null) {
+    var time = elapsedTimeMilliseconds;
+
+    if (currentlyHoveredWindow != hoveredWindow) {
+      pointer.focusOnWindow(currentlyHoveredWindow, x, y);
+      hoveredWindow = currentlyHoveredWindow;
+    }
+
+    currentlyHoveredWindow.submitPointerMoveEvent(time, x, y);
+  } else {
+    pointer.clearFocus();
+
+    hoveredWindow = null;
+  }
+}
+
 void handleNewPointer(PointerDevice pointer) {
   pointer.setEventHandler("move", (PointerMoveEvent event) {
     var monitor = currentMonitor;
@@ -194,25 +216,19 @@ void handleNewPointer(PointerDevice pointer) {
     cursor["x"] = cursorX;
     cursor["y"] = cursorY;
 
-    var x = cursorX.toInt();
-    var y = cursorY.toInt();
+    handlePointerMovement(pointer, event.elapsedTimeMilliseconds);
+  });
+  pointer.setEventHandler("teleport", (PointerTeleportEvent event) {
+    var monitor = currentMonitor;
+    if (monitor == null || event.monitor != monitor) return;
 
-    Window? currentlyHoveredWindow = getWindowAtPoint(x, y);
+    var width = monitor.mode.width;
+    var height = monitor.mode.height;
 
-    if (currentlyHoveredWindow != null) {
-      var time = event.elapsedTimeMilliseconds;
+    cursor["x"] = event.x.clamp(0.0, width.toDouble());
+    cursor["y"] = event.y.clamp(0.0, height.toDouble());
 
-      if (currentlyHoveredWindow != hoveredWindow) {
-        pointer.focusOnWindow(currentlyHoveredWindow, x, y);
-        hoveredWindow = currentlyHoveredWindow;
-      }
-
-      currentlyHoveredWindow.submitPointerMoveEvent(time, x, y);
-    } else {
-      pointer.clearFocus();
-
-      hoveredWindow = null;
-    }
+    handlePointerMovement(pointer, event.elapsedTimeMilliseconds);
   });
   pointer.setEventHandler("button", (PointerButtonEvent event) {
     var cursorX = cursor["x"];
@@ -254,13 +270,13 @@ void handleNewInput(InputNewEvent event) {
 
   if (pointer != null) {
     inputDevices.add(pointer);
-    print("A 🖱️ pointer '${pointer.name}' has been added!");
+    print("A 🖱️ pointer has been added!");
     print("- Name: '${pointer.name}'");
 
     handleNewPointer(pointer);
   } else if (keyboard != null) {
     inputDevices.add(keyboard);
-    print("The ⌨️ keyboard '${keyboard.name}' has been added!");
+    print("A ⌨️ keyboard has been added!");
     print("- Name: '${keyboard.name}'");
 
     handleNewKeyboard(keyboard);

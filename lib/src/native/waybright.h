@@ -25,6 +25,7 @@ enum event_type {
     event_type_input_new,
 
     event_type_pointer_move,
+    event_type_pointer_teleport,
     event_type_pointer_button,
     event_type_pointer_remove,
 
@@ -112,6 +113,7 @@ struct waybright_pointer {
 
     struct {
         struct wl_listener move;
+        struct wl_listener teleport;
         struct wl_listener button;
         struct wl_listener remove;
     } listeners;

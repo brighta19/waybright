@@ -6,6 +6,7 @@ class PointerDevice extends InputDevice {
 
   static final _eventTypeFromString = {
     'move': enum_event_type.event_type_pointer_move,
+    'teleport': enum_event_type.event_type_pointer_teleport,
     'button': enum_event_type.event_type_pointer_button,
     'remove': enum_event_type.event_type_pointer_remove,
   };
@@ -25,6 +26,43 @@ class PointerDevice extends InputDevice {
         var event = PointerMoveEvent(
           wlrEventPtr.ref.delta_x,
           wlrEventPtr.ref.delta_y,
+          wlrEventPtr.ref.time_msec,
+        );
+
+        handleEvent(event);
+      } else if (type == enum_event_type.event_type_pointer_teleport) {
+        var wlrEventPtr = eventPtr.ref.event
+            as Pointer<struct_wlr_event_pointer_motion_absolute>;
+
+        // Imagine a layout where new monitors are added to the right.
+        var outputWidthSum = 0;
+        var maxOutputHeight = 0;
+        for (var monitor in Monitor._monitorInstances) {
+          outputWidthSum += monitor.mode.width;
+          if (monitor.mode.height > maxOutputHeight) {
+            maxOutputHeight = monitor.mode.height;
+          }
+        }
+
+        var x = wlrEventPtr.ref.x * outputWidthSum;
+        var y = wlrEventPtr.ref.y * maxOutputHeight;
+
+        var layoutMonitorX = 0;
+        Monitor? activeMonitor;
+        for (var monitor in Monitor._monitorInstances) {
+          if (x >= layoutMonitorX && x < layoutMonitorX + monitor.mode.width) {
+            activeMonitor = monitor;
+            break;
+          }
+          layoutMonitorX += monitor.mode.width;
+        }
+
+        if (activeMonitor == null) return;
+
+        var event = PointerTeleportEvent(
+          activeMonitor,
+          x - layoutMonitorX,
+          y,
           wlrEventPtr.ref.time_msec,
         );
 

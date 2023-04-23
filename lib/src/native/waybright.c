@@ -208,6 +208,19 @@ void handle_pointer_move_event(struct wl_listener *listener, void *data) {
         wb_pointer->handle_event(event_type_pointer_move, &wb_pointer_event);
 }
 
+void handle_pointer_teleport_event(struct wl_listener *listener, void *data) {
+    struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.teleport);
+    struct wlr_event_pointer_motion_absolute* event = data;
+
+    struct waybright_pointer_event wb_pointer_event = {
+        wb_pointer,
+        event
+    };
+
+    if (wb_pointer->handle_event)
+        wb_pointer->handle_event(event_type_pointer_teleport, &wb_pointer_event);
+}
+
 void handle_pointer_button_event(struct wl_listener *listener, void *data) {
     struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.button);
     struct wlr_event_pointer_button* event = data;
@@ -240,6 +253,8 @@ void handle_pointer_new_event(struct waybright* wb, struct waybright_pointer* wb
 
     wb_pointer->listeners.move.notify = handle_pointer_move_event;
     wl_signal_add(&wlr_pointer->events.motion, &wb_pointer->listeners.move);
+    wb_pointer->listeners.teleport.notify = handle_pointer_teleport_event;
+    wl_signal_add(&wlr_pointer->events.motion_absolute, &wb_pointer->listeners.teleport);
     wb_pointer->listeners.button.notify = handle_pointer_button_event;
     wl_signal_add(&wlr_pointer->events.button, &wb_pointer->listeners.button);
 }
