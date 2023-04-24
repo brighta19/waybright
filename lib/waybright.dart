@@ -2,6 +2,7 @@
 library;
 
 import 'dart:ffi';
+import 'dart:collection';
 import 'package:ffi/ffi.dart';
 import 'src/generated/waybright_bindings.dart';
 
@@ -17,6 +18,7 @@ part './mode.dart';
 part './monitor.dart';
 part './renderer.dart';
 part './window.dart';
+part './windowlist.dart';
 
 final WaybrightLibrary _wblib =
     WaybrightLibrary(DynamicLibrary.open("build/waybright.so"));

@@ -12,7 +12,7 @@ const backgroundColors = [
 ];
 
 var monitors = <Monitor>[];
-var windows = <Window>[];
+var windows = WindowList();
 var inputDevices = <InputDevice>[];
 
 Monitor? currentMonitor;
@@ -36,6 +36,7 @@ void focusWindow(Window window) {
   }
 
   window.focus();
+  windows.moveToFront(window);
   focusedWindow = window;
 }
 
@@ -48,7 +49,8 @@ void blurFocusedWindow() {
 }
 
 Window? getWindowAtPoint(num x, num y) {
-  for (var window in windows) {
+  var list = windows.frontToBackIterable;
+  for (var window in list) {
     var windowX = window.contentX;
     var windowY = window.contentY;
     var windowWidth = window.contentWidth;
@@ -69,6 +71,15 @@ void drawCursor(Renderer renderer) {
   renderer.fillRect(cursor.x - 2, cursor.y - 2, 5, 5);
   renderer.fillStyle = 0x000000;
   renderer.fillRect(cursor.x - 1, cursor.y - 1, 3, 3);
+}
+
+void drawWindows(Renderer renderer) {
+  var list = windows.backToFrontIterable;
+  for (var window in list) {
+    if (window.isVisible) {
+      renderer.drawWindow(window, window.drawingX, window.drawingY);
+    }
+  }
 }
 
 void initializeMonitor(Monitor monitor) {
@@ -113,12 +124,7 @@ void initializeMonitor(Monitor monitor) {
       renderer.fillStyle = 0x6666ff;
       renderer.fillRect(50, 50, 100, 100);
 
-      for (var window in windows) {
-        if (window.isVisible) {
-          renderer.drawWindow(window, window.drawingX, window.drawingY);
-        }
-      }
-
+      drawWindows(renderer);
       drawCursor(renderer);
     });
   } else {
@@ -155,8 +161,13 @@ void initializeWindow(Window window) {
         " wants ${title.isEmpty ? "its 🪟 window" : "the 🪟 window '$title'"}"
         " hidden!");
 
-    if (focusedWindow == window) {
+    if (window == focusedWindow) {
       blurFocusedWindow();
+
+      var nextWindow = windows.getNextWindow(window);
+      if (nextWindow != null) {
+        focusWindow(nextWindow);
+      }
     }
   });
   // The window wants to be moved, which has to be handled manually.
@@ -175,17 +186,18 @@ void initializeWindow(Window window) {
   });
   window.setEventHandler("remove", () {
     windows.remove(window);
+
     print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
         "'s 🪟${window.isPopup ? " popup" : ""} window has been removed!");
 
-    if (window == focusedWindow && windows.isNotEmpty) {
-      focusWindow(windows.last);
+    if (window == focusedWindow) {
+      blurFocusedWindow();
     }
   });
 }
 
 void handleNewWindow(Window window) {
-  windows.add(window);
+  windows.addToFront(window);
 
   final appId = window.appId;
   final title = window.title;

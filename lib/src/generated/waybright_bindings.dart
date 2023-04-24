@@ -24017,6 +24017,9 @@ class struct_waybright extends ffi.Struct {
 
   external ffi.Pointer<struct_wlr_seat> wlr_seat;
 
+  @ffi.Uint32()
+  external int last_pointer_button_serial;
+
   external ffi.Pointer<ffi.Char> socket_name;
 
   external UnnamedStruct31 listeners;

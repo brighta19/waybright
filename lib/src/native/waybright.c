@@ -170,6 +170,10 @@ void handle_window_remove_event(struct wl_listener *listener, void *data) {
 
 void handle_window_move_event(struct wl_listener *listener, void *data) {
     struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.move);
+    struct wlr_xdg_toplevel_move_event* event = data;
+
+    // Accept move requests only if it is a response to pointer button events
+    if (event->serial != wb_window->wb->last_pointer_button_serial) return;
 
     if (wb_window->handle_event)
         wb_window->handle_event(event_type_window_move, wb_window);
@@ -477,7 +481,7 @@ void waybright_window_submit_pointer_button_event(struct waybright_window* wb_wi
     struct wlr_seat* wlr_seat = wb_window->wb->wlr_seat;
 
     int state = pressed ? WLR_BUTTON_PRESSED : WLR_BUTTON_RELEASED;
-    wlr_seat_pointer_notify_button(wlr_seat, time, button, state);
+    wb_window->wb->last_pointer_button_serial = wlr_seat_pointer_notify_button(wlr_seat, time, button, state);
 }
 
 void waybright_pointer_focus_on_window(struct waybright_pointer* wb_pointer, struct waybright_window* wb_window, int sx, int sy) {
