@@ -24357,11 +24357,7 @@ const int _STDC_PREDEF_H = 1;
 
 const int __STDC_IEC_559__ = 1;
 
-const int __STDC_IEC_60559_BFP__ = 201404;
-
 const int __STDC_IEC_559_COMPLEX__ = 1;
-
-const int __STDC_IEC_60559_COMPLEX__ = 201404;
 
 const int __STDC_ISO_10646__ = 201706;
 
@@ -24369,17 +24365,11 @@ const int __GNU_LIBRARY__ = 6;
 
 const int __GLIBC__ = 2;
 
-const int __GLIBC_MINOR__ = 36;
+const int __GLIBC_MINOR__ = 31;
 
 const int _SYS_CDEFS_H = 1;
 
-const int __THROW = 1;
-
-const int __THROWNL = 1;
-
 const int __glibc_c99_flexarr_available = 1;
-
-const int __LDOUBLE_REDIRECTS_TO_FLOAT128_ABI = 0;
 
 const int __HAVE_GENERIC_SELECTION = 0;
 
@@ -24394,8 +24384,6 @@ const int __INO_T_MATCHES_INO64_T = 1;
 const int __RLIM_T_MATCHES_RLIM64_T = 1;
 
 const int __STATFS_MATCHES_STATFS64 = 1;
-
-const int __KERNEL_OLD_TIMEVAL_MATCHES_TIMEVAL64 = 1;
 
 const int __FD_SETSIZE = 1024;
 
@@ -24496,8 +24484,6 @@ const int __GLIBC_USE_LIB_EXT2 = 1;
 const int __GLIBC_USE_IEC_60559_BFP_EXT = 1;
 
 const int __GLIBC_USE_IEC_60559_BFP_EXT_C2X = 1;
-
-const int __GLIBC_USE_IEC_60559_EXT = 1;
 
 const int __GLIBC_USE_IEC_60559_FUNCS_EXT = 1;
 
@@ -25045,11 +25031,11 @@ const int __GNUC_VA_LIST = 1;
 
 const int WAYLAND_VERSION_MAJOR = 1;
 
-const int WAYLAND_VERSION_MINOR = 21;
+const int WAYLAND_VERSION_MINOR = 18;
 
 const int WAYLAND_VERSION_MICRO = 0;
 
-const String WAYLAND_VERSION = '1.21.0';
+const String WAYLAND_VERSION = '1.18.0';
 
 const int _SYS_SYSMACROS_H = 1;
 
@@ -25253,8 +25239,6 @@ const int WL_SURFACE_SET_BUFFER_SCALE_SINCE_VERSION = 3;
 
 const int WL_SURFACE_DAMAGE_BUFFER_SINCE_VERSION = 4;
 
-const int WL_SURFACE_OFFSET_SINCE_VERSION = 5;
-
 const int WL_SEAT_CAPABILITIES = 0;
 
 const int WL_SEAT_NAME = 1;
@@ -25291,8 +25275,6 @@ const int WL_POINTER_AXIS_STOP = 7;
 
 const int WL_POINTER_AXIS_DISCRETE = 8;
 
-const int WL_POINTER_AXIS_VALUE120 = 9;
-
 const int WL_POINTER_ENTER_SINCE_VERSION = 1;
 
 const int WL_POINTER_LEAVE_SINCE_VERSION = 1;
@@ -25310,8 +25292,6 @@ const int WL_POINTER_AXIS_SOURCE_SINCE_VERSION = 5;
 const int WL_POINTER_AXIS_STOP_SINCE_VERSION = 5;
 
 const int WL_POINTER_AXIS_DISCRETE_SINCE_VERSION = 5;
-
-const int WL_POINTER_AXIS_VALUE120_SINCE_VERSION = 8;
 
 const int WL_POINTER_SET_CURSOR_SINCE_VERSION = 1;
 
@@ -25381,10 +25361,6 @@ const int WL_OUTPUT_DONE = 2;
 
 const int WL_OUTPUT_SCALE = 3;
 
-const int WL_OUTPUT_NAME = 4;
-
-const int WL_OUTPUT_DESCRIPTION = 5;
-
 const int WL_OUTPUT_GEOMETRY_SINCE_VERSION = 1;
 
 const int WL_OUTPUT_MODE_SINCE_VERSION = 1;
@@ -25392,10 +25368,6 @@ const int WL_OUTPUT_MODE_SINCE_VERSION = 1;
 const int WL_OUTPUT_DONE_SINCE_VERSION = 2;
 
 const int WL_OUTPUT_SCALE_SINCE_VERSION = 2;
-
-const int WL_OUTPUT_NAME_SINCE_VERSION = 4;
-
-const int WL_OUTPUT_DESCRIPTION_SINCE_VERSION = 4;
 
 const int WL_OUTPUT_RELEASE_SINCE_VERSION = 3;
 
@@ -28907,16 +28879,6 @@ const int XKB_KEY_Uhorn = 16777647;
 
 const int XKB_KEY_uhorn = 16777648;
 
-const int XKB_KEY_combining_tilde = 16777987;
-
-const int XKB_KEY_combining_grave = 16777984;
-
-const int XKB_KEY_combining_acute = 16777985;
-
-const int XKB_KEY_combining_hook = 16777993;
-
-const int XKB_KEY_combining_belowdot = 16778019;
-
 const int XKB_KEY_EcuSign = 16785568;
 
 const int XKB_KEY_ColonSign = 16785569;
@@ -30029,8 +29991,6 @@ const int XKB_KEY_XF86AudioPreset = 269025206;
 
 const int XKB_KEY_XF86RotationLockToggle = 269025207;
 
-const int XKB_KEY_XF86FullScreen = 269025208;
-
 const int XKB_KEY_XF86Switch_VT_1 = 269024769;
 
 const int XKB_KEY_XF86Switch_VT_2 = 269024770;
@@ -30066,280 +30026,6 @@ const int XKB_KEY_XF86Prev_VMode = 269024803;
 const int XKB_KEY_XF86LogWindowTree = 269024804;
 
 const int XKB_KEY_XF86LogGrabInfo = 269024805;
-
-const int XKB_KEY_XF86BrightnessAuto = 268964084;
-
-const int XKB_KEY_XF86DisplayOff = 268964085;
-
-const int XKB_KEY_XF86Info = 268964198;
-
-const int XKB_KEY_XF86AspectRatio = 268964215;
-
-const int XKB_KEY_XF86DVD = 268964229;
-
-const int XKB_KEY_XF86Audio = 268964232;
-
-const int XKB_KEY_XF86ChannelUp = 268964242;
-
-const int XKB_KEY_XF86ChannelDown = 268964243;
-
-const int XKB_KEY_XF86Break = 268964251;
-
-const int XKB_KEY_XF86VideoPhone = 268964256;
-
-const int XKB_KEY_XF86ZoomReset = 268964260;
-
-const int XKB_KEY_XF86Editor = 268964262;
-
-const int XKB_KEY_XF86GraphicsEditor = 268964264;
-
-const int XKB_KEY_XF86Presentation = 268964265;
-
-const int XKB_KEY_XF86Database = 268964266;
-
-const int XKB_KEY_XF86Voicemail = 268964268;
-
-const int XKB_KEY_XF86Addressbook = 268964269;
-
-const int XKB_KEY_XF86DisplayToggle = 268964271;
-
-const int XKB_KEY_XF86SpellCheck = 268964272;
-
-const int XKB_KEY_XF86ContextMenu = 268964278;
-
-const int XKB_KEY_XF86MediaRepeat = 268964279;
-
-const int XKB_KEY_XF8610ChannelsUp = 268964280;
-
-const int XKB_KEY_XF8610ChannelsDown = 268964281;
-
-const int XKB_KEY_XF86Images = 268964282;
-
-const int XKB_KEY_XF86NotificationCenter = 268964284;
-
-const int XKB_KEY_XF86PickupPhone = 268964285;
-
-const int XKB_KEY_XF86HangupPhone = 268964286;
-
-const int XKB_KEY_XF86Fn = 268964304;
-
-const int XKB_KEY_XF86Fn_Esc = 268964305;
-
-const int XKB_KEY_XF86FnRightShift = 268964325;
-
-const int XKB_KEY_XF86Numeric0 = 268964352;
-
-const int XKB_KEY_XF86Numeric1 = 268964353;
-
-const int XKB_KEY_XF86Numeric2 = 268964354;
-
-const int XKB_KEY_XF86Numeric3 = 268964355;
-
-const int XKB_KEY_XF86Numeric4 = 268964356;
-
-const int XKB_KEY_XF86Numeric5 = 268964357;
-
-const int XKB_KEY_XF86Numeric6 = 268964358;
-
-const int XKB_KEY_XF86Numeric7 = 268964359;
-
-const int XKB_KEY_XF86Numeric8 = 268964360;
-
-const int XKB_KEY_XF86Numeric9 = 268964361;
-
-const int XKB_KEY_XF86NumericStar = 268964362;
-
-const int XKB_KEY_XF86NumericPound = 268964363;
-
-const int XKB_KEY_XF86NumericA = 268964364;
-
-const int XKB_KEY_XF86NumericB = 268964365;
-
-const int XKB_KEY_XF86NumericC = 268964366;
-
-const int XKB_KEY_XF86NumericD = 268964367;
-
-const int XKB_KEY_XF86CameraFocus = 268964368;
-
-const int XKB_KEY_XF86WPSButton = 268964369;
-
-const int XKB_KEY_XF86CameraZoomIn = 268964373;
-
-const int XKB_KEY_XF86CameraZoomOut = 268964374;
-
-const int XKB_KEY_XF86CameraUp = 268964375;
-
-const int XKB_KEY_XF86CameraDown = 268964376;
-
-const int XKB_KEY_XF86CameraLeft = 268964377;
-
-const int XKB_KEY_XF86CameraRight = 268964378;
-
-const int XKB_KEY_XF86AttendantOn = 268964379;
-
-const int XKB_KEY_XF86AttendantOff = 268964380;
-
-const int XKB_KEY_XF86AttendantToggle = 268964381;
-
-const int XKB_KEY_XF86LightsToggle = 268964382;
-
-const int XKB_KEY_XF86ALSToggle = 268964400;
-
-const int XKB_KEY_XF86Buttonconfig = 268964416;
-
-const int XKB_KEY_XF86Taskmanager = 268964417;
-
-const int XKB_KEY_XF86Journal = 268964418;
-
-const int XKB_KEY_XF86ControlPanel = 268964419;
-
-const int XKB_KEY_XF86AppSelect = 268964420;
-
-const int XKB_KEY_XF86Screensaver = 268964421;
-
-const int XKB_KEY_XF86VoiceCommand = 268964422;
-
-const int XKB_KEY_XF86Assistant = 268964423;
-
-const int XKB_KEY_XF86BrightnessMin = 268964432;
-
-const int XKB_KEY_XF86BrightnessMax = 268964433;
-
-const int XKB_KEY_XF86KbdInputAssistPrev = 268964448;
-
-const int XKB_KEY_XF86KbdInputAssistNext = 268964449;
-
-const int XKB_KEY_XF86KbdInputAssistPrevgroup = 268964450;
-
-const int XKB_KEY_XF86KbdInputAssistNextgroup = 268964451;
-
-const int XKB_KEY_XF86KbdInputAssistAccept = 268964452;
-
-const int XKB_KEY_XF86KbdInputAssistCancel = 268964453;
-
-const int XKB_KEY_XF86RightUp = 268964454;
-
-const int XKB_KEY_XF86RightDown = 268964455;
-
-const int XKB_KEY_XF86LeftUp = 268964456;
-
-const int XKB_KEY_XF86LeftDown = 268964457;
-
-const int XKB_KEY_XF86RootMenu = 268964458;
-
-const int XKB_KEY_XF86MediaTopMenu = 268964459;
-
-const int XKB_KEY_XF86Numeric11 = 268964460;
-
-const int XKB_KEY_XF86Numeric12 = 268964461;
-
-const int XKB_KEY_XF86AudioDesc = 268964462;
-
-const int XKB_KEY_XF863DMode = 268964463;
-
-const int XKB_KEY_XF86NextFavorite = 268964464;
-
-const int XKB_KEY_XF86StopRecord = 268964465;
-
-const int XKB_KEY_XF86PauseRecord = 268964466;
-
-const int XKB_KEY_XF86VOD = 268964467;
-
-const int XKB_KEY_XF86Unmute = 268964468;
-
-const int XKB_KEY_XF86FastReverse = 268964469;
-
-const int XKB_KEY_XF86SlowReverse = 268964470;
-
-const int XKB_KEY_XF86Data = 268964471;
-
-const int XKB_KEY_XF86OnScreenKeyboard = 268964472;
-
-const int XKB_KEY_XF86PrivacyScreenToggle = 268964473;
-
-const int XKB_KEY_XF86SelectiveScreenshot = 268964474;
-
-const int XKB_KEY_XF86Macro1 = 268964496;
-
-const int XKB_KEY_XF86Macro2 = 268964497;
-
-const int XKB_KEY_XF86Macro3 = 268964498;
-
-const int XKB_KEY_XF86Macro4 = 268964499;
-
-const int XKB_KEY_XF86Macro5 = 268964500;
-
-const int XKB_KEY_XF86Macro6 = 268964501;
-
-const int XKB_KEY_XF86Macro7 = 268964502;
-
-const int XKB_KEY_XF86Macro8 = 268964503;
-
-const int XKB_KEY_XF86Macro9 = 268964504;
-
-const int XKB_KEY_XF86Macro10 = 268964505;
-
-const int XKB_KEY_XF86Macro11 = 268964506;
-
-const int XKB_KEY_XF86Macro12 = 268964507;
-
-const int XKB_KEY_XF86Macro13 = 268964508;
-
-const int XKB_KEY_XF86Macro14 = 268964509;
-
-const int XKB_KEY_XF86Macro15 = 268964510;
-
-const int XKB_KEY_XF86Macro16 = 268964511;
-
-const int XKB_KEY_XF86Macro17 = 268964512;
-
-const int XKB_KEY_XF86Macro18 = 268964513;
-
-const int XKB_KEY_XF86Macro19 = 268964514;
-
-const int XKB_KEY_XF86Macro20 = 268964515;
-
-const int XKB_KEY_XF86Macro21 = 268964516;
-
-const int XKB_KEY_XF86Macro22 = 268964517;
-
-const int XKB_KEY_XF86Macro23 = 268964518;
-
-const int XKB_KEY_XF86Macro24 = 268964519;
-
-const int XKB_KEY_XF86Macro25 = 268964520;
-
-const int XKB_KEY_XF86Macro26 = 268964521;
-
-const int XKB_KEY_XF86Macro27 = 268964522;
-
-const int XKB_KEY_XF86Macro28 = 268964523;
-
-const int XKB_KEY_XF86Macro29 = 268964524;
-
-const int XKB_KEY_XF86Macro30 = 268964525;
-
-const int XKB_KEY_XF86MacroRecordStart = 268964528;
-
-const int XKB_KEY_XF86MacroRecordStop = 268964529;
-
-const int XKB_KEY_XF86MacroPresetCycle = 268964530;
-
-const int XKB_KEY_XF86MacroPreset1 = 268964531;
-
-const int XKB_KEY_XF86MacroPreset2 = 268964532;
-
-const int XKB_KEY_XF86MacroPreset3 = 268964533;
-
-const int XKB_KEY_XF86KbdLcdMenu1 = 268964536;
-
-const int XKB_KEY_XF86KbdLcdMenu2 = 268964537;
-
-const int XKB_KEY_XF86KbdLcdMenu3 = 268964538;
-
-const int XKB_KEY_XF86KbdLcdMenu4 = 268964539;
-
-const int XKB_KEY_XF86KbdLcdMenu5 = 268964540;
 
 const int XKB_KEY_SunFA_Grave = 268828416;
 

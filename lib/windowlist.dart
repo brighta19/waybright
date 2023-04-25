@@ -21,7 +21,9 @@ class _WindowListIterator implements Iterator<Window> {
 
   @override
   bool moveNext() {
-    if (_list.isEmpty || (_visitedFirst && identical(_next, _list.first))) {
+    if (_list.isEmpty ||
+        (_visitedFirst && identical(_next, _list.first)) ||
+        _next == null) {
       _current = null;
       return false;
     }

@@ -263,7 +263,7 @@ void handlePointerMovement(PointerDevice pointer, int elapsedTimeMilliseconds) {
       ),
     );
   } else {
-    if (pointer.focusedWindow == currentlyHoveredWindow) {
+    if (pointer.focusedWindow != null) {
       pointer.clearFocus();
     }
 
@@ -317,6 +317,12 @@ void handleNewPointer(PointerDevice pointer) {
       if (event.isPressed) {
         blurFocusedWindow();
         shouldSubmitPointerMoveEvents = false;
+        print("Removed 🪟 window focus.");
+      } else {
+        var window = pointerButtonFocusedWindow;
+        if (window != null) {
+          window.submitPointerButtonEvent(event);
+        }
       }
     } else {
       if (event.isPressed) {
