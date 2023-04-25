@@ -40,13 +40,13 @@ void focusWindow(Window window) {
   print("Redirecting 🪟 window focus...");
 
   if (focusedWindow != null) {
-    focusedWindow?.blur();
+    focusedWindow?.isFocused = false;
     forEachKeyboard((keyboard) {
       if (keyboard.focusedWindow == window) keyboard.clearFocus();
     });
   }
 
-  window.focus();
+  window.isFocused = true;
   forEachKeyboard((keyboard) => keyboard.focusOnWindow(window));
   windows.moveToFront(window);
   focusedWindow = window;
@@ -56,7 +56,7 @@ void blurFocusedWindow() {
   var window = focusedWindow;
   if (window == null) return;
 
-  window.blur();
+  window.isFocused = false;
   forEachKeyboard((keyboard) {
     if (keyboard.focusedWindow == window) keyboard.clearFocus();
   });
@@ -198,6 +198,28 @@ void initializeWindow(Window window) {
     windowDrawingPositionAtGrab.y = window.drawingY;
 
     focusWindow(window);
+  });
+  // The window wants to be maximize, which has to be handled manually.
+  window.setEventHandler("maximize", () {
+    print("${appId.isEmpty ? "An application" : "Application '$appId'"}"
+        " wants ${title.isEmpty ? "its 🪟 window" : "the 🪟 window '$title'"}"
+        " ${window.isMaximized ? "un" : ""}maximized!");
+
+    if (window.isMaximized) {
+      window.drawingX = window.drawingY = 0;
+      window.isMaximized = false;
+      window.submitNewSize(width: 500, height: 300);
+    } else {
+      var monitor = currentMonitor;
+      if (monitor == null) return;
+
+      var width = monitor.mode.width;
+      var height = monitor.mode.height;
+
+      window.drawingX = window.drawingY = 0;
+      window.isMaximized = true;
+      window.submitNewSize(width: width, height: height);
+    }
   });
   window.setEventHandler("remove", () {
     windows.remove(window);

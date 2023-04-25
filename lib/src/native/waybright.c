@@ -179,6 +179,14 @@ void handle_window_move_event(struct wl_listener *listener, void *data) {
         wb_window->handle_event(event_type_window_move, wb_window);
 }
 
+void handle_window_maximize_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.maximize);
+
+
+    if (wb_window->handle_event)
+        wb_window->handle_event(event_type_window_maximize, wb_window);
+}
+
 void handle_window_new_event(struct wl_listener *listener, void *data) {
     struct waybright* wb = wl_container_of(listener, wb, listeners.window_new);
     struct wlr_xdg_surface *wlr_xdg_surface = data;
@@ -202,6 +210,8 @@ void handle_window_new_event(struct wl_listener *listener, void *data) {
 
     wb_window->listeners.move.notify = handle_window_move_event;
     wl_signal_add(&wlr_xdg_toplevel->events.request_move, &wb_window->listeners.move);
+    wb_window->listeners.maximize.notify = handle_window_maximize_event;
+    wl_signal_add(&wlr_xdg_toplevel->events.request_maximize, &wb_window->listeners.maximize);
 
     // More events coming soon to a town near you!
 
@@ -516,14 +526,6 @@ void waybright_monitor_set_background_color(struct waybright_monitor* wb_monitor
 
 int waybright_monitor_get_background_color(struct waybright_monitor* wb_monitor) {
     return get_color_from_array(wb_monitor->background_color);
-}
-
-void waybright_window_focus(struct waybright_window* wb_window) {
-    wlr_xdg_toplevel_set_activated(wb_window->wlr_xdg_surface, true);
-}
-
-void waybright_window_blur(struct waybright_window* wb_window) {
-    wlr_xdg_toplevel_set_activated(wb_window->wlr_xdg_surface, false);
 }
 
 void waybright_window_submit_pointer_move_event(struct waybright_window* wb_window, int time, int sx, int sy) {

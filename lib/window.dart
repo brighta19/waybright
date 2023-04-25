@@ -9,8 +9,9 @@ class Window {
   static final _eventTypeFromString = {
     'show': enum_event_type.event_type_window_show,
     'hide': enum_event_type.event_type_window_hide,
-    'move': enum_event_type.event_type_window_move,
     'remove': enum_event_type.event_type_window_remove,
+    'move': enum_event_type.event_type_window_move,
+    'maximize': enum_event_type.event_type_window_maximize,
   };
 
   static void _executeEventHandler(int type, Pointer<Void> data) {
@@ -47,11 +48,10 @@ class Window {
   /// Whether this window is visible.
   bool isVisible = false;
 
-  /// Whether this window is focused.
-  bool isFocused = false;
-
   final Map<int, Function> _eventHandlers = {};
   Pointer<struct_waybright_window>? _windowPtr;
+  bool _isMaximized = false;
+  bool _isFocused = false;
 
   Window(this.isPopup) {
     _windowInstances.add(this);
@@ -64,8 +64,6 @@ class Window {
       _eventHandlers[type] = handler;
     }
   }
-
-  // TODO: Add setters for width and height
 
   /// The horizontal position of this window's drawing area.
   num drawingX = 0;
@@ -127,22 +125,40 @@ class Window {
     return 0;
   }
 
-  /// Applies focus to this window.
-  void focus() {
+  /// Whether this window is considered maximized.
+  bool get isMaximized => _isMaximized;
+  set isMaximized(bool value) {
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
-      return _wblib.waybright_window_focus(windowPtr);
+      _wblib.wlr_xdg_toplevel_set_maximized(
+          windowPtr.ref.wlr_xdg_surface, value);
+      _isMaximized = value;
     }
-    isFocused = true;
   }
 
-  /// Removes focus from this window.
-  void blur() {
+  /// Whether this window is focused.
+  bool get isFocused => _isFocused;
+  set isFocused(bool value) {
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
-      return _wblib.waybright_window_blur(windowPtr);
+      _wblib.wlr_xdg_toplevel_set_activated(
+          windowPtr.ref.wlr_xdg_surface, value);
+      _isFocused = true;
     }
-    isFocused = false;
+  }
+
+  /// Submits a new size for this window. The window itself may choose a
+  /// accept this size or choose a different size. An example is forcing a
+  /// minimum size.
+  void submitNewSize({int? width, int? height}) {
+    var windowPtr = _windowPtr;
+    if (windowPtr != null) {
+      var width0 = width ?? contentWidth;
+      var height0 = height ?? contentHeight;
+
+      _wblib.wlr_xdg_toplevel_set_size(
+          windowPtr.ref.wlr_xdg_surface, width0, height0);
+    }
   }
 
   /// Submits pointer movement events to this window.

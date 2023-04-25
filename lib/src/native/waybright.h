@@ -23,6 +23,7 @@ enum event_type {
     event_type_window_show,
     event_type_window_hide,
     event_type_window_move,
+    event_type_window_maximize,
 
     event_type_input_new,
 
@@ -92,6 +93,7 @@ struct waybright_window {
         struct wl_listener hide;
         struct wl_listener remove;
         struct wl_listener move;
+        struct wl_listener maximize;
     } listeners;
 
     void(*handle_event)(int type, void* data);
@@ -168,8 +170,6 @@ void waybright_monitor_disable(struct waybright_monitor* wb_monitor);
 void waybright_monitor_set_background_color(struct waybright_monitor* wb_monitor, int color);
 int waybright_monitor_get_background_color(struct waybright_monitor* wb_monitor);
 
-void waybright_window_focus(struct waybright_window* wb_window);
-void waybright_window_blur(struct waybright_window* wb_window);
 void waybright_window_submit_pointer_move_event(struct waybright_window* wb_window, int time, int sx, int sy);
 void waybright_window_submit_pointer_button_event(struct waybright_window* wb_window, int time, int button, int pressed);
 void waybright_window_submit_pointer_axis_event(struct waybright_window* wb_window, int time, int orientation, double delta, int delta_discrete, int source);
