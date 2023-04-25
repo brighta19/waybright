@@ -12,6 +12,8 @@ part './events/pointer_move.dart';
 part './events/pointer_button.dart';
 part './events/pointer_teleport.dart';
 part './devices/pointer.dart';
+part './events/keyboard_key.dart';
+part './events/keyboard_modifiers.dart';
 part './devices/keyboard.dart';
 part './input_device.dart';
 part './socket.dart';
@@ -94,6 +96,15 @@ class Waybright {
 
           inputEvent.keyboard = keyboard;
         }
+
+        int capabilities = enum_wl_seat_capability.WL_SEAT_CAPABILITY_POINTER;
+        if (KeyboardDevice._keyboardInstances.isNotEmpty) {
+          capabilities |= enum_wl_seat_capability.WL_SEAT_CAPABILITY_KEYBOARD;
+        }
+        _wblib.wlr_seat_set_capabilities(
+          waybright._wbPtr.ref.wlr_seat,
+          capabilities,
+        );
 
         handleEvent(inputEvent);
       }

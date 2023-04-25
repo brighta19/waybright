@@ -19378,6 +19378,48 @@ class WaybrightLibrary {
       _waybright_window_submit_pointer_button_eventPtr.asFunction<
           void Function(ffi.Pointer<struct_waybright_window>, int, int, int)>();
 
+  void waybright_window_submit_keyboard_key_event(
+    ffi.Pointer<struct_waybright_window> wb_window,
+    int time,
+    int keyCode,
+    int pressed,
+  ) {
+    return _waybright_window_submit_keyboard_key_event(
+      wb_window,
+      time,
+      keyCode,
+      pressed,
+    );
+  }
+
+  late final _waybright_window_submit_keyboard_key_eventPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_waybright_window>, ffi.Int,
+              ffi.Int, ffi.Int)>>('waybright_window_submit_keyboard_key_event');
+  late final _waybright_window_submit_keyboard_key_event =
+      _waybright_window_submit_keyboard_key_eventPtr.asFunction<
+          void Function(ffi.Pointer<struct_waybright_window>, int, int, int)>();
+
+  void waybright_window_submit_keyboard_modifiers_event(
+    ffi.Pointer<struct_waybright_window> wb_window,
+    ffi.Pointer<struct_waybright_keyboard> wb_keyboard,
+  ) {
+    return _waybright_window_submit_keyboard_modifiers_event(
+      wb_window,
+      wb_keyboard,
+    );
+  }
+
+  late final _waybright_window_submit_keyboard_modifiers_eventPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_waybright_window>,
+                  ffi.Pointer<struct_waybright_keyboard>)>>(
+      'waybright_window_submit_keyboard_modifiers_event');
+  late final _waybright_window_submit_keyboard_modifiers_event =
+      _waybright_window_submit_keyboard_modifiers_eventPtr.asFunction<
+          void Function(ffi.Pointer<struct_waybright_window>,
+              ffi.Pointer<struct_waybright_keyboard>)>();
+
   void waybright_pointer_focus_on_window(
     ffi.Pointer<struct_waybright_pointer> wb_pointer,
     ffi.Pointer<struct_waybright_window> wb_window,
@@ -19418,6 +19460,42 @@ class WaybrightLibrary {
       'waybright_pointer_clear_focus');
   late final _waybright_pointer_clear_focus = _waybright_pointer_clear_focusPtr
       .asFunction<void Function(ffi.Pointer<struct_waybright_pointer>)>();
+
+  void waybright_keyboard_focus_on_window(
+    ffi.Pointer<struct_waybright_keyboard> wb_keyboard,
+    ffi.Pointer<struct_waybright_window> wb_window,
+  ) {
+    return _waybright_keyboard_focus_on_window(
+      wb_keyboard,
+      wb_window,
+    );
+  }
+
+  late final _waybright_keyboard_focus_on_windowPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_waybright_keyboard>,
+                  ffi.Pointer<struct_waybright_window>)>>(
+      'waybright_keyboard_focus_on_window');
+  late final _waybright_keyboard_focus_on_window =
+      _waybright_keyboard_focus_on_windowPtr.asFunction<
+          void Function(ffi.Pointer<struct_waybright_keyboard>,
+              ffi.Pointer<struct_waybright_window>)>();
+
+  void waybright_keyboard_clear_focus(
+    ffi.Pointer<struct_waybright_keyboard> wb_keyboard,
+  ) {
+    return _waybright_keyboard_clear_focus(
+      wb_keyboard,
+    );
+  }
+
+  late final _waybright_keyboard_clear_focusPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_waybright_keyboard>)>>(
+      'waybright_keyboard_clear_focus');
+  late final _waybright_keyboard_clear_focus =
+      _waybright_keyboard_clear_focusPtr
+          .asFunction<void Function(ffi.Pointer<struct_waybright_keyboard>)>();
 }
 
 class struct___fsid_t extends ffi.Struct {
@@ -23999,7 +24077,9 @@ abstract class enum_event_type {
   static const int event_type_pointer_teleport = 10;
   static const int event_type_pointer_button = 11;
   static const int event_type_pointer_remove = 12;
-  static const int event_type_keyboard_remove = 13;
+  static const int event_type_keyboard_key = 13;
+  static const int event_type_keyboard_modifiers = 14;
+  static const int event_type_keyboard_remove = 15;
 }
 
 class struct_waybright extends ffi.Struct {
@@ -24151,11 +24231,21 @@ class struct_waybright_keyboard extends ffi.Struct {
 }
 
 class UnnamedStruct35 extends ffi.Struct {
+  external struct_wl_listener key;
+
+  external struct_wl_listener modifiers;
+
   external struct_wl_listener remove;
 }
 
 class struct_waybright_pointer_event extends ffi.Struct {
   external ffi.Pointer<struct_waybright_pointer> wb_pointer;
+
+  external ffi.Pointer<ffi.Void> event;
+}
+
+class struct_waybright_keyboard_event extends ffi.Struct {
+  external ffi.Pointer<struct_waybright_keyboard> wb_keyboard;
 
   external ffi.Pointer<ffi.Void> event;
 }

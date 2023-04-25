@@ -97,7 +97,7 @@ class PointerDevice extends InputDevice {
   Pointer<struct_waybright_pointer>? _pointerPtr;
   final Map<int, Function> _eventHandlers = {};
 
-  PointerDevice() {
+  PointerDevice() : super(InputDeviceType.pointer) {
     _pointerInstances.add(this);
   }
 

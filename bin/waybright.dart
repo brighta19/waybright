@@ -28,15 +28,26 @@ var cursor = Vector(0.0, 0.0);
 var windowDrawingPositionAtGrab = Vector(0.0, 0.0);
 var cursorPositionAtGrab = Vector(0.0, 0.0);
 
+void forEachKeyboard(Function(KeyboardDevice keyboard) callback) {
+  for (var inputDevice in inputDevices) {
+    if (inputDevice.type != InputDeviceType.keyboard) continue;
+    callback(inputDevice as KeyboardDevice);
+  }
+}
+
 void focusWindow(Window window) {
   if (focusedWindow == window) return;
   print("Redirecting 🪟 window focus...");
 
   if (focusedWindow != null) {
     focusedWindow?.blur();
+    forEachKeyboard((keyboard) {
+      if (keyboard.focusedWindow == window) keyboard.clearFocus();
+    });
   }
 
   window.focus();
+  forEachKeyboard((keyboard) => keyboard.focusOnWindow(window));
   windows.moveToFront(window);
   focusedWindow = window;
 }
@@ -46,6 +57,9 @@ void blurFocusedWindow() {
   if (window == null) return;
 
   window.blur();
+  forEachKeyboard((keyboard) {
+    if (keyboard.focusedWindow == window) keyboard.clearFocus();
+  });
   focusedWindow = null;
 }
 
@@ -341,6 +355,18 @@ void handleNewPointer(PointerDevice pointer) {
 }
 
 void handleNewKeyboard(KeyboardDevice keyboard) {
+  keyboard.setEventHandler("key", (KeyboardKeyEvent event) {
+    var window = focusedWindow;
+    if (window == null) return;
+
+    window.submitKeyboardKeyEvent(event);
+  });
+  keyboard.setEventHandler("modifiers", (KeyboardModifiersEvent event) {
+    var window = focusedWindow;
+    if (window == null) return;
+
+    window.submitKeyboardModifiersEvent(event);
+  });
   keyboard.setEventHandler("remove", () {
     inputDevices.remove(keyboard);
     print("A ⌨️ keyboard has been removed!");

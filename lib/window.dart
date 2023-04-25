@@ -170,4 +170,27 @@ class Window {
       );
     }
   }
+
+  void submitKeyboardKeyEvent(KeyboardKeyEvent event) {
+    var windowPtr = _windowPtr;
+    if (windowPtr != null) {
+      _wblib.waybright_window_submit_keyboard_key_event(
+        windowPtr,
+        event.elapsedTimeMilliseconds,
+        event.keyCode,
+        event.isPressed ? 1 : 0,
+      );
+    }
+  }
+
+  void submitKeyboardModifiersEvent(KeyboardModifiersEvent event) {
+    var windowPtr = _windowPtr;
+    var keyboardPtr = event.keyboard._keyboardPtr;
+    if (windowPtr != null && keyboardPtr != null) {
+      _wblib.waybright_window_submit_keyboard_modifiers_event(
+        windowPtr,
+        keyboardPtr,
+      );
+    }
+  }
 }

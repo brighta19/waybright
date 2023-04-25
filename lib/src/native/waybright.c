@@ -282,11 +282,53 @@ void handle_keyboard_remove_event(struct wl_listener* listener, void *data) {
     waybright_keyboard_destroy(wb_keyboard);
 }
 
+void handle_keyboard_key_event(struct wl_listener* listener, void *data) {
+    struct waybright_keyboard* wb_keyboard = wl_container_of(listener, wb_keyboard, listeners.key);
+	struct wlr_keyboard_key_event* event = data;
+
+    struct waybright_keyboard_event wb_keyboard_event = {
+        wb_keyboard,
+        event
+    };
+
+    if (wb_keyboard->handle_event)
+        wb_keyboard->handle_event(event_type_keyboard_key, &wb_keyboard_event);
+}
+
+void handle_keyboard_modifiers_event(struct wl_listener* listener, void *data) {
+    struct waybright_keyboard* wb_keyboard = wl_container_of(listener, wb_keyboard, listeners.modifiers);
+	struct wlr_keyboard_modifiers_event* event = data;
+
+    struct waybright_keyboard_event wb_keyboard_event = {
+        wb_keyboard,
+        event
+    };
+
+    if (wb_keyboard->handle_event)
+        wb_keyboard->handle_event(event_type_keyboard_modifiers, &wb_keyboard_event);
+}
+
 void handle_keyboard_new_event(struct waybright* wb, struct waybright_keyboard* wb_keyboard) {
     struct wlr_input_device* wlr_input_device = wb_keyboard->wb_input->wlr_input_device;
+    struct wlr_keyboard* wlr_keyboard = wb_keyboard->wlr_keyboard;
+
+	struct xkb_context *context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+	struct xkb_keymap *keymap = xkb_keymap_new_from_names(context, NULL,
+		XKB_KEYMAP_COMPILE_NO_FLAGS);
+
+	wlr_keyboard_set_keymap(wlr_keyboard, keymap);
+	xkb_keymap_unref(keymap);
+	xkb_context_unref(context);
+	wlr_keyboard_set_repeat_info(wlr_keyboard, 25, 600);
 
     wb_keyboard->listeners.remove.notify = handle_keyboard_remove_event;
     wl_signal_add(&wlr_input_device->events.destroy, &wb_keyboard->listeners.remove);
+    wb_keyboard->listeners.key.notify = handle_keyboard_key_event;
+    wl_signal_add(&wlr_keyboard->events.key, &wb_keyboard->listeners.key);
+    wb_keyboard->listeners.modifiers.notify = handle_keyboard_modifiers_event;
+    wl_signal_add(&wlr_keyboard->events.modifiers, &wb_keyboard->listeners.modifiers);
+
+	wlr_seat_set_keyboard(wb->wlr_seat, wlr_input_device);
 }
 
 void handle_input_new_event(struct wl_listener *listener, void *data) {
@@ -325,8 +367,6 @@ void handle_input_new_event(struct wl_listener *listener, void *data) {
 
     if (wb->handle_event)
         wb->handle_event(event_type_input_new, wb_input);
-
-    wlr_seat_set_capabilities(wb->wlr_seat, WL_SEAT_CAPABILITY_POINTER); // add keyboards later
 }
 
 int waybright_init(struct waybright* wb) {
@@ -484,6 +524,19 @@ void waybright_window_submit_pointer_button_event(struct waybright_window* wb_wi
     wb_window->wb->last_pointer_button_serial = wlr_seat_pointer_notify_button(wlr_seat, time, button, state);
 }
 
+void waybright_window_submit_keyboard_key_event(struct waybright_window* wb_window, int time, int keyCode, int pressed) {
+    struct wlr_seat* wlr_seat = wb_window->wb->wlr_seat;
+
+    int state = pressed ? WL_KEYBOARD_KEY_STATE_PRESSED : WL_KEYBOARD_KEY_STATE_RELEASED;
+    wlr_seat_keyboard_notify_key(wlr_seat, time, keyCode, state);
+}
+
+void waybright_window_submit_keyboard_modifiers_event(struct waybright_window* wb_window, struct waybright_keyboard* wb_keyboard) {
+    struct wlr_seat* wlr_seat = wb_window->wb->wlr_seat;
+
+    wlr_seat_keyboard_notify_modifiers(wlr_seat, &wb_keyboard->wlr_keyboard->modifiers);
+}
+
 void waybright_pointer_focus_on_window(struct waybright_pointer* wb_pointer, struct waybright_window* wb_window, int sx, int sy) {
     struct wlr_seat* wlr_seat = wb_pointer->wb->wlr_seat;
     struct wlr_surface* wlr_surface = wb_window->wlr_xdg_surface->surface;
@@ -495,4 +548,23 @@ void waybright_pointer_clear_focus(struct waybright_pointer* wb_pointer) {
     struct wlr_seat* wlr_seat = wb_pointer->wb->wlr_seat;
 
     wlr_seat_pointer_clear_focus(wlr_seat);
+}
+
+void waybright_keyboard_focus_on_window(struct waybright_keyboard* wb_keyboard, struct waybright_window* wb_window) {
+    struct wlr_seat* wlr_seat = wb_keyboard->wb->wlr_seat;
+    struct wlr_keyboard* wlr_keyboard = wb_keyboard->wlr_keyboard;
+    struct wlr_surface* wlr_surface = wb_window->wlr_xdg_surface->surface;
+
+    wlr_seat_keyboard_notify_enter(
+        wlr_seat, wlr_surface,
+        wlr_keyboard->keycodes,
+        wlr_keyboard->num_keycodes,
+        &wlr_keyboard->modifiers
+    );
+}
+
+void waybright_keyboard_clear_focus(struct waybright_keyboard* wb_keyboard) {
+    struct wlr_seat* wlr_seat = wb_keyboard->wb->wlr_seat;
+
+    wlr_seat_keyboard_clear_focus(wlr_seat);
 }
