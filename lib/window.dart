@@ -145,36 +145,28 @@ class Window {
     isFocused = false;
   }
 
-  /// Submits pointer move events to this window.
-  void submitPointerMoveEvent(
-    int timeElapsedMilliseconds,
-    num windowCursorX,
-    num windowCursorY,
-  ) {
+  /// Submits pointer movement events to this window.
+  void submitPointerMovementEvent(PointerMovementEvent event) {
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
       _wblib.waybright_window_submit_pointer_move_event(
         windowPtr,
-        timeElapsedMilliseconds,
-        windowCursorX.toInt(),
-        windowCursorY.toInt(),
+        event.elapsedTimeMilliseconds,
+        event.windowCursorX.toInt(),
+        event.windowCursorY.toInt(),
       );
     }
   }
 
   /// Submits pointer button events to this window.
-  void submitPointerButtonEvent(
-    int timeElapsedMilliseconds,
-    int button,
-    bool isPressed,
-  ) {
+  void submitPointerButtonEvent(PointerButtonEvent event) {
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
       _wblib.waybright_window_submit_pointer_button_event(
         windowPtr,
-        timeElapsedMilliseconds,
-        button,
-        isPressed ? 1 : 0,
+        event.elapsedTimeMilliseconds,
+        event.button,
+        event.isPressed ? 1 : 0,
       );
     }
   }

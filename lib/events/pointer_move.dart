@@ -2,6 +2,9 @@ part of '../waybright.dart';
 
 /// A pointer move event.
 class PointerMoveEvent {
+  /// The pointer.
+  PointerDevice pointer;
+
   /// The x-distance a pointer had moved.
   double deltaX;
 
@@ -11,5 +14,10 @@ class PointerMoveEvent {
   /// The time elapsed in milliseconds.
   int elapsedTimeMilliseconds;
 
-  PointerMoveEvent(this.deltaX, this.deltaY, this.elapsedTimeMilliseconds);
+  PointerMoveEvent(
+    this.pointer,
+    this.deltaX,
+    this.deltaY,
+    this.elapsedTimeMilliseconds,
+  );
 }

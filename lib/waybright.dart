@@ -7,6 +7,7 @@ import 'package:ffi/ffi.dart';
 import 'src/generated/waybright_bindings.dart';
 
 part './events/input_new.dart';
+part 'events/pointer_movement.dart';
 part './events/pointer_move.dart';
 part './events/pointer_button.dart';
 part './events/pointer_teleport.dart';

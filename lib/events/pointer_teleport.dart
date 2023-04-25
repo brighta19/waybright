@@ -2,6 +2,9 @@ part of '../waybright.dart';
 
 /// A pointer teleport event.
 class PointerTeleportEvent {
+  /// The pointer.
+  PointerDevice pointer;
+
   /// The monitor that the pointer teleported to.
   Monitor monitor;
 
@@ -15,6 +18,7 @@ class PointerTeleportEvent {
   int elapsedTimeMilliseconds;
 
   PointerTeleportEvent(
+    this.pointer,
     this.monitor,
     this.x,
     this.y,

@@ -30,6 +30,7 @@ var cursorPositionAtGrab = Vector(0.0, 0.0);
 
 void focusWindow(Window window) {
   if (focusedWindow == window) return;
+  print("Redirecting 🪟 window focus...");
 
   if (focusedWindow != null) {
     focusedWindow?.blur();
@@ -217,10 +218,13 @@ void handlePointerMovement(PointerDevice pointer, int elapsedTimeMilliseconds) {
 
   var buttonFocusedWindow = pointerButtonFocusedWindow;
   if (buttonFocusedWindow != null) {
-    buttonFocusedWindow.submitPointerMoveEvent(
-      elapsedTimeMilliseconds,
-      cursor.x - buttonFocusedWindow.drawingX,
-      cursor.y - buttonFocusedWindow.drawingY,
+    buttonFocusedWindow.submitPointerMovementEvent(
+      PointerMovementEvent(
+        pointer,
+        cursor.x - buttonFocusedWindow.drawingX,
+        cursor.y - buttonFocusedWindow.drawingY,
+        elapsedTimeMilliseconds,
+      ),
     );
     return;
   }
@@ -236,13 +240,18 @@ void handlePointerMovement(PointerDevice pointer, int elapsedTimeMilliseconds) {
       hoveredWindow = currentlyHoveredWindow;
     }
 
-    currentlyHoveredWindow.submitPointerMoveEvent(
-      elapsedTimeMilliseconds,
-      cursor.x - currentlyHoveredWindow.drawingX,
-      cursor.y - currentlyHoveredWindow.drawingY,
+    currentlyHoveredWindow.submitPointerMovementEvent(
+      PointerMovementEvent(
+        pointer,
+        cursor.x - currentlyHoveredWindow.drawingX,
+        cursor.y - currentlyHoveredWindow.drawingY,
+        elapsedTimeMilliseconds,
+      ),
     );
   } else {
-    pointer.clearFocus();
+    if (pointer.focusedWindow == currentlyHoveredWindow) {
+      pointer.clearFocus();
+    }
 
     hoveredWindow = null;
   }
@@ -307,21 +316,13 @@ void handleNewPointer(PointerDevice pointer) {
           );
         }
 
-        currentlyHoveredWindow.submitPointerButtonEvent(
-          event.elapsedTimeMilliseconds,
-          event.button,
-          event.isPressed,
-        );
+        currentlyHoveredWindow.submitPointerButtonEvent(event);
 
         pointerButtonFocusedWindow = currentlyHoveredWindow;
       } else {
         var window = focusedWindow;
         if (window != null) {
-          window.submitPointerButtonEvent(
-            event.elapsedTimeMilliseconds,
-            event.button,
-            event.isPressed,
-          );
+          window.submitPointerButtonEvent(event);
         }
       }
     }

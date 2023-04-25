@@ -24,6 +24,7 @@ class PointerDevice extends InputDevice {
             eventPtr.ref.event as Pointer<struct_wlr_event_pointer_motion>;
 
         var event = PointerMoveEvent(
+          pointer,
           wlrEventPtr.ref.delta_x,
           wlrEventPtr.ref.delta_y,
           wlrEventPtr.ref.time_msec,
@@ -60,6 +61,7 @@ class PointerDevice extends InputDevice {
         if (activeMonitor == null) return;
 
         var event = PointerTeleportEvent(
+          pointer,
           activeMonitor,
           x - layoutMonitorX,
           y,
@@ -72,6 +74,7 @@ class PointerDevice extends InputDevice {
             eventPtr.ref.event as Pointer<struct_wlr_event_pointer_button>;
 
         var event = PointerButtonEvent(
+          pointer,
           wlrEventPtr.ref.button,
           wlrEventPtr.ref.state == enum_wlr_button_state.WLR_BUTTON_PRESSED,
           wlrEventPtr.ref.time_msec,
@@ -87,6 +90,9 @@ class PointerDevice extends InputDevice {
 
   /// This pointer's name.
   String name = "unknown-pointer";
+
+  /// The window this pointer is focusing on.
+  Window? focusedWindow;
 
   Pointer<struct_waybright_pointer>? _pointerPtr;
   final Map<int, Function> _eventHandlers = {};
@@ -123,6 +129,7 @@ class PointerDevice extends InputDevice {
         windowCursorX.toInt(),
         windowCursorY.toInt(),
       );
+      focusedWindow = window;
     }
   }
 
@@ -131,6 +138,7 @@ class PointerDevice extends InputDevice {
     var pointerPtr = _pointerPtr;
     if (pointerPtr != null) {
       _wblib.waybright_pointer_clear_focus(pointerPtr);
+      focusedWindow = null;
     }
   }
 }
