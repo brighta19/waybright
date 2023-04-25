@@ -235,6 +235,19 @@ void handle_pointer_teleport_event(struct wl_listener *listener, void *data) {
         wb_pointer->handle_event(event_type_pointer_teleport, &wb_pointer_event);
 }
 
+void handle_pointer_axis_event(struct wl_listener *listener, void *data) {
+    struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.axis);
+    struct wlr_event_pointer_motion_absolute* event = data;
+
+    struct waybright_pointer_event wb_pointer_event = {
+        wb_pointer,
+        event
+    };
+
+    if (wb_pointer->handle_event)
+        wb_pointer->handle_event(event_type_pointer_axis, &wb_pointer_event);
+}
+
 void handle_pointer_button_event(struct wl_listener *listener, void *data) {
     struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.button);
     struct wlr_event_pointer_button* event = data;
@@ -271,6 +284,8 @@ void handle_pointer_new_event(struct waybright* wb, struct waybright_pointer* wb
     wl_signal_add(&wlr_pointer->events.motion_absolute, &wb_pointer->listeners.teleport);
     wb_pointer->listeners.button.notify = handle_pointer_button_event;
     wl_signal_add(&wlr_pointer->events.button, &wb_pointer->listeners.button);
+    wb_pointer->listeners.axis.notify = handle_pointer_axis_event;
+    wl_signal_add(&wlr_pointer->events.axis, &wb_pointer->listeners.axis);
 }
 
 void handle_keyboard_remove_event(struct wl_listener* listener, void *data) {
@@ -522,6 +537,12 @@ void waybright_window_submit_pointer_button_event(struct waybright_window* wb_wi
 
     int state = pressed ? WLR_BUTTON_PRESSED : WLR_BUTTON_RELEASED;
     wb_window->wb->last_pointer_button_serial = wlr_seat_pointer_notify_button(wlr_seat, time, button, state);
+}
+
+void waybright_window_submit_pointer_axis_event(struct waybright_window* wb_window, int time, int orientation, double delta, int delta_discrete, int source) {
+    struct wlr_seat* wlr_seat = wb_window->wb->wlr_seat;
+
+	wlr_seat_pointer_notify_axis(wlr_seat, time, orientation, delta, delta_discrete, source);
 }
 
 void waybright_window_submit_keyboard_key_event(struct waybright_window* wb_window, int time, int keyCode, int pressed) {

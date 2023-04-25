@@ -347,6 +347,13 @@ void handleNewPointer(PointerDevice pointer) {
       pointerButtonFocusedWindow = null;
     }
   });
+  pointer.setEventHandler("axis", (PointerAxisEvent event) {
+    Window? currentlyHoveredWindow = getWindowAtPoint(cursor.x, cursor.y);
+
+    if (currentlyHoveredWindow != null) {
+      currentlyHoveredWindow.submitPointerAxisEvent(event);
+    }
+  });
   pointer.setEventHandler("remove", () {
     inputDevices.remove(pointer);
     print("A 🖱️ pointer has been removed!");

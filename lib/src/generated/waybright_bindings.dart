@@ -19378,6 +19378,38 @@ class WaybrightLibrary {
       _waybright_window_submit_pointer_button_eventPtr.asFunction<
           void Function(ffi.Pointer<struct_waybright_window>, int, int, int)>();
 
+  void waybright_window_submit_pointer_axis_event(
+    ffi.Pointer<struct_waybright_window> wb_window,
+    int time,
+    int orientation,
+    double delta,
+    int delta_discrete,
+    int source,
+  ) {
+    return _waybright_window_submit_pointer_axis_event(
+      wb_window,
+      time,
+      orientation,
+      delta,
+      delta_discrete,
+      source,
+    );
+  }
+
+  late final _waybright_window_submit_pointer_axis_eventPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<struct_waybright_window>,
+              ffi.Int,
+              ffi.Int,
+              ffi.Double,
+              ffi.Int,
+              ffi.Int)>>('waybright_window_submit_pointer_axis_event');
+  late final _waybright_window_submit_pointer_axis_event =
+      _waybright_window_submit_pointer_axis_eventPtr.asFunction<
+          void Function(ffi.Pointer<struct_waybright_window>, int, int, double,
+              int, int)>();
+
   void waybright_window_submit_keyboard_key_event(
     ffi.Pointer<struct_waybright_window> wb_window,
     int time,
@@ -24076,10 +24108,11 @@ abstract class enum_event_type {
   static const int event_type_pointer_move = 9;
   static const int event_type_pointer_teleport = 10;
   static const int event_type_pointer_button = 11;
-  static const int event_type_pointer_remove = 12;
-  static const int event_type_keyboard_key = 13;
-  static const int event_type_keyboard_modifiers = 14;
-  static const int event_type_keyboard_remove = 15;
+  static const int event_type_pointer_axis = 12;
+  static const int event_type_pointer_remove = 13;
+  static const int event_type_keyboard_key = 14;
+  static const int event_type_keyboard_modifiers = 15;
+  static const int event_type_keyboard_remove = 16;
 }
 
 class struct_waybright extends ffi.Struct {
@@ -24212,6 +24245,8 @@ class UnnamedStruct34 extends ffi.Struct {
   external struct_wl_listener teleport;
 
   external struct_wl_listener button;
+
+  external struct_wl_listener axis;
 
   external struct_wl_listener remove;
 }

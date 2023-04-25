@@ -1,5 +1,17 @@
 part of '../waybright.dart';
 
+enum PointerAxisSource {
+  wheel,
+  finger,
+  continuous,
+  wheelTilt,
+}
+
+enum PointerAxisOrientation {
+  vertical,
+  horizontal,
+}
+
 /// A pointer device.
 class PointerDevice extends InputDevice {
   static final _pointerInstances = <PointerDevice>[];
@@ -8,6 +20,7 @@ class PointerDevice extends InputDevice {
     'move': enum_event_type.event_type_pointer_move,
     'teleport': enum_event_type.event_type_pointer_teleport,
     'button': enum_event_type.event_type_pointer_button,
+    'axis': enum_event_type.event_type_pointer_axis,
     'remove': enum_event_type.event_type_pointer_remove,
   };
 
@@ -77,6 +90,51 @@ class PointerDevice extends InputDevice {
           pointer,
           wlrEventPtr.ref.button,
           wlrEventPtr.ref.state == enum_wlr_button_state.WLR_BUTTON_PRESSED,
+          wlrEventPtr.ref.time_msec,
+        );
+
+        handleEvent(event);
+      } else if (type == enum_event_type.event_type_pointer_axis) {
+        var wlrEventPtr =
+            eventPtr.ref.event as Pointer<struct_wlr_event_pointer_axis>;
+
+        PointerAxisSource source;
+        switch (wlrEventPtr.ref.source) {
+          case enum_wlr_axis_source.WLR_AXIS_SOURCE_WHEEL:
+            source = PointerAxisSource.wheel;
+            break;
+          case enum_wlr_axis_source.WLR_AXIS_SOURCE_FINGER:
+            source = PointerAxisSource.finger;
+
+            break;
+          case enum_wlr_axis_source.WLR_AXIS_SOURCE_CONTINUOUS:
+            source = PointerAxisSource.continuous;
+            break;
+          case enum_wlr_axis_source.WLR_AXIS_SOURCE_WHEEL_TILT:
+            source = PointerAxisSource.wheelTilt;
+            break;
+          default:
+            source = PointerAxisSource.wheel;
+        }
+
+        PointerAxisOrientation orientation;
+        switch (wlrEventPtr.ref.orientation) {
+          case enum_wlr_axis_orientation.WLR_AXIS_ORIENTATION_VERTICAL:
+            orientation = PointerAxisOrientation.vertical;
+            break;
+          case enum_wlr_axis_orientation.WLR_AXIS_ORIENTATION_HORIZONTAL:
+            orientation = PointerAxisOrientation.horizontal;
+            break;
+          default:
+            orientation = PointerAxisOrientation.vertical;
+        }
+
+        var event = PointerAxisEvent(
+          pointer,
+          wlrEventPtr.ref.delta,
+          wlrEventPtr.ref.delta_discrete,
+          source,
+          orientation,
           wlrEventPtr.ref.time_msec,
         );
 

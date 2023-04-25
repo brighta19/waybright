@@ -171,6 +171,48 @@ class Window {
     }
   }
 
+  /// Submits pointer axis events to this window.
+  void submitPointerAxisEvent(PointerAxisEvent event) {
+    var windowPtr = _windowPtr;
+    if (windowPtr != null) {
+      int source;
+      switch (event.source) {
+        case PointerAxisSource.wheel:
+          source = enum_wlr_axis_source.WLR_AXIS_SOURCE_WHEEL;
+          break;
+        case PointerAxisSource.finger:
+          source = enum_wlr_axis_source.WLR_AXIS_SOURCE_FINGER;
+          break;
+        case PointerAxisSource.continuous:
+          source = enum_wlr_axis_source.WLR_AXIS_SOURCE_CONTINUOUS;
+          break;
+        case PointerAxisSource.wheelTilt:
+          source = enum_wlr_axis_source.WLR_AXIS_SOURCE_WHEEL_TILT;
+          break;
+      }
+
+      int orientation;
+      switch (event.orientation) {
+        case PointerAxisOrientation.vertical:
+          orientation = enum_wlr_axis_orientation.WLR_AXIS_ORIENTATION_VERTICAL;
+          break;
+        case PointerAxisOrientation.horizontal:
+          orientation =
+              enum_wlr_axis_orientation.WLR_AXIS_ORIENTATION_HORIZONTAL;
+          break;
+      }
+
+      _wblib.waybright_window_submit_pointer_axis_event(
+        windowPtr,
+        event.elapsedTimeMilliseconds,
+        orientation,
+        event.delta,
+        event.notches,
+        source,
+      );
+    }
+  }
+
   void submitKeyboardKeyEvent(KeyboardKeyEvent event) {
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
