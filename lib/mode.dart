@@ -17,7 +17,5 @@ class Mode {
   Mode(this.width, this.height, this.refreshRate);
 
   @override
-  String toString() {
-    return "(${width}x$height @ ${refreshRate}mHz)";
-  }
+  String toString() => "(${width}x$height @ ${refreshRate}mHz)";
 }

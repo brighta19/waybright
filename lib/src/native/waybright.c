@@ -182,7 +182,6 @@ void handle_window_move_event(struct wl_listener *listener, void *data) {
 void handle_window_maximize_event(struct wl_listener *listener, void *data) {
     struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.maximize);
 
-
     if (wb_window->handle_event)
         wb_window->handle_event(event_type_window_maximize, wb_window);
 }

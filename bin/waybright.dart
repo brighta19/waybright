@@ -22,6 +22,8 @@ Window? hoveredWindow;
 Window? pointerButtonFocusedWindow;
 
 var isMovingWindow = false;
+var isMaximizingWindow = false;
+var isUnmaximizingWindow = false;
 var shouldSubmitPointerMoveEvents = true;
 
 var cursor = Vector(0.0, 0.0);
@@ -40,25 +42,25 @@ void focusWindow(Window window) {
   print("Redirecting 🪟 window focus...");
 
   if (focusedWindow != null) {
-    focusedWindow?.isFocused = false;
+    focusedWindow?.unfocus();
     forEachKeyboard((keyboard) {
       if (keyboard.focusedWindow == window) keyboard.clearFocus();
     });
   }
 
-  window.isFocused = true;
+  window.focus();
   forEachKeyboard((keyboard) => keyboard.focusOnWindow(window));
   windows.moveToFront(window);
   focusedWindow = window;
 }
 
-void blurFocusedWindow() {
-  var window = focusedWindow;
-  if (window == null) return;
+void unfocusWindow() {
+  if (focusedWindow == null) return;
+  print("Unfocusing 🪟 window...");
 
-  window.isFocused = false;
+  focusedWindow?.unfocus();
   forEachKeyboard((keyboard) {
-    if (keyboard.focusedWindow == window) keyboard.clearFocus();
+    if (keyboard.focusedWindow == focusedWindow) keyboard.clearFocus();
   });
   focusedWindow = null;
 }
@@ -97,6 +99,51 @@ void drawWindows(Renderer renderer) {
   }
 }
 
+/// Hacky way to (un)maximize a window.
+void handleUpdates() {
+  var monitor = currentMonitor;
+  if (monitor == null) return;
+
+  var monitorWidth = monitor.mode.width;
+  var monitorHeight = monitor.mode.height;
+
+  if (isMaximizingWindow) {
+    var window = focusedWindow;
+    if (window != null && window.isMaximized) {
+      isMaximizingWindow = false;
+      window.drawingX = 0;
+      window.drawingY = 0;
+      print("Maximized 🪟 window!");
+    }
+  } else if (isUnmaximizingWindow) {
+    var window = focusedWindow;
+    if (window != null && !window.isMaximized) {
+      isUnmaximizingWindow = false;
+      var width = monitorWidth * 0.5;
+      var height = monitorHeight * 0.5;
+
+      window.drawingX = (monitorWidth - width) / 2;
+      window.drawingY = (monitorHeight - height) / 3;
+      print("Unmaximized 🪟 window!");
+    }
+  }
+}
+
+void handleCurrentMonitorFrame() {
+  var monitor = currentMonitor;
+  if (monitor == null) return;
+
+  handleUpdates();
+
+  var renderer = monitor.renderer;
+
+  renderer.fillStyle = 0x6666ff;
+  renderer.fillRect(50, 50, 100, 100);
+
+  drawWindows(renderer);
+  drawCursor(renderer);
+}
+
 void initializeMonitor(Monitor monitor) {
   var modes = monitor.modes;
   var preferredMode = monitor.preferredMode;
@@ -133,15 +180,7 @@ void initializeMonitor(Monitor monitor) {
     cursor.x = monitor.mode.width / 2;
     cursor.y = monitor.mode.height / 2;
 
-    var renderer = monitor.renderer;
-
-    monitor.setEventHandler("frame", () {
-      renderer.fillStyle = 0x6666ff;
-      renderer.fillRect(50, 50, 100, 100);
-
-      drawWindows(renderer);
-      drawCursor(renderer);
-    });
+    monitor.setEventHandler("frame", handleCurrentMonitorFrame);
   } else {
     var renderer = monitor.renderer;
 
@@ -177,7 +216,7 @@ void initializeWindow(Window window) {
         " hidden!");
 
     if (window == focusedWindow) {
-      blurFocusedWindow();
+      unfocusWindow();
 
       var nextWindow = windows.getNextWindow(window);
       if (nextWindow != null) {
@@ -191,11 +230,13 @@ void initializeWindow(Window window) {
         " wants ${title.isEmpty ? "its 🪟 window" : "the 🪟 window '$title'"}"
         " moved!");
 
-    isMovingWindow = true;
-    cursorPositionAtGrab.x = cursor.x;
-    cursorPositionAtGrab.y = cursor.y;
-    windowDrawingPositionAtGrab.x = window.drawingX;
-    windowDrawingPositionAtGrab.y = window.drawingY;
+    if (!window.isMaximized) {
+      isMovingWindow = true;
+      cursorPositionAtGrab.x = cursor.x;
+      cursorPositionAtGrab.y = cursor.y;
+      windowDrawingPositionAtGrab.x = window.drawingX;
+      windowDrawingPositionAtGrab.y = window.drawingY;
+    }
 
     focusWindow(window);
   });
@@ -205,20 +246,22 @@ void initializeWindow(Window window) {
         " wants ${title.isEmpty ? "its 🪟 window" : "the 🪟 window '$title'"}"
         " ${window.isMaximized ? "un" : ""}maximized!");
 
+    var monitor = currentMonitor;
+    if (monitor == null) return;
+
+    var monitorWidth = monitor.mode.width;
+    var monitorHeight = monitor.mode.height;
+
     if (window.isMaximized) {
-      window.drawingX = window.drawingY = 0;
-      window.isMaximized = false;
-      window.submitNewSize(width: 500, height: 300);
+      isUnmaximizingWindow = true;
+      window.unmaximize();
+      var width = monitorWidth * 0.5;
+      var height = monitorHeight * 0.5;
+      window.submitNewSize(width: width.toInt(), height: height.toInt());
     } else {
-      var monitor = currentMonitor;
-      if (monitor == null) return;
-
-      var width = monitor.mode.width;
-      var height = monitor.mode.height;
-
-      window.drawingX = window.drawingY = 0;
-      window.isMaximized = true;
-      window.submitNewSize(width: width, height: height);
+      isMaximizingWindow = true;
+      window.maximize();
+      window.submitNewSize(width: monitorWidth, height: monitorHeight);
     }
   });
   window.setEventHandler("remove", () {
@@ -228,7 +271,7 @@ void initializeWindow(Window window) {
         "'s 🪟${window.isPopup ? " popup" : ""} window has been removed!");
 
     if (window == focusedWindow) {
-      blurFocusedWindow();
+      unfocusWindow();
     }
   });
 }
@@ -337,7 +380,7 @@ void handleNewPointer(PointerDevice pointer) {
 
     if (currentlyHoveredWindow == null) {
       if (event.isPressed) {
-        blurFocusedWindow();
+        unfocusWindow();
         shouldSubmitPointerMoveEvents = false;
         print("Removed 🪟 window focus.");
       } else {

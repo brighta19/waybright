@@ -27,15 +27,15 @@ enum event_type {
 
     event_type_input_new,
 
+    event_type_pointer_remove,
     event_type_pointer_move,
     event_type_pointer_teleport,
     event_type_pointer_button,
     event_type_pointer_axis,
-    event_type_pointer_remove,
 
+    event_type_keyboard_remove,
     event_type_keyboard_key,
     event_type_keyboard_modifiers,
-    event_type_keyboard_remove,
 };
 
 struct waybright {
@@ -89,9 +89,9 @@ struct waybright_window {
     int is_popup;
 
     struct {
+        struct wl_listener remove;
         struct wl_listener show;
         struct wl_listener hide;
-        struct wl_listener remove;
         struct wl_listener move;
         struct wl_listener maximize;
     } listeners;
@@ -121,11 +121,11 @@ struct waybright_pointer {
     double y;
 
     struct {
+        struct wl_listener remove;
         struct wl_listener move;
         struct wl_listener teleport;
         struct wl_listener button;
         struct wl_listener axis;
-        struct wl_listener remove;
     } listeners;
 
     void(*handle_event)(int type, void* data);
@@ -142,9 +142,9 @@ struct waybright_keyboard {
     struct wlr_keyboard* wlr_keyboard;
 
     struct {
+        struct wl_listener remove;
         struct wl_listener key;
         struct wl_listener modifiers;
-        struct wl_listener remove;
     } listeners;
 
     void(*handle_event)(int type, void* data);

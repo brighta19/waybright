@@ -17,11 +17,11 @@ class PointerDevice extends InputDevice {
   static final _pointerInstances = <PointerDevice>[];
 
   static final _eventTypeFromString = {
+    'remove': enum_event_type.event_type_pointer_remove,
     'move': enum_event_type.event_type_pointer_move,
     'teleport': enum_event_type.event_type_pointer_teleport,
     'button': enum_event_type.event_type_pointer_button,
     'axis': enum_event_type.event_type_pointer_axis,
-    'remove': enum_event_type.event_type_pointer_remove,
   };
 
   static void _executeEventHandler(int type, Pointer<Void> data) {
@@ -32,7 +32,10 @@ class PointerDevice extends InputDevice {
       var handleEvent = pointer._eventHandlers[type];
       if (handleEvent == null) continue;
 
-      if (type == enum_event_type.event_type_pointer_move) {
+      if (type == enum_event_type.event_type_pointer_remove) {
+        handleEvent();
+        _pointerInstances.remove(pointer);
+      } else if (type == enum_event_type.event_type_pointer_move) {
         var wlrEventPtr =
             eventPtr.ref.event as Pointer<struct_wlr_event_pointer_motion>;
 
@@ -139,9 +142,6 @@ class PointerDevice extends InputDevice {
         );
 
         handleEvent(event);
-      } else if (type == enum_event_type.event_type_pointer_remove) {
-        handleEvent();
-        _pointerInstances.remove(pointer);
       }
     }
   }

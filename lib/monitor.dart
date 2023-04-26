@@ -52,9 +52,7 @@ class Monitor {
   }
 
   /// Whether this monitor is allowed to render or not.
-  get isEnabled {
-    return _isEnabled;
-  }
+  get isEnabled => _isEnabled;
 
   /// This monitor's modes (resolution + refresh rate).
   List<Mode> get modes {
@@ -107,10 +105,7 @@ class Monitor {
   }
 
   /// This monitor's resolution and refresh rate.
-  Mode get mode {
-    return _mode;
-  }
-
+  Mode get mode => _mode;
   set mode(Mode mode) {
     var monitorPtr = _monitorPtr;
     var outputModePtr = mode._outputModePtr;
@@ -127,7 +122,6 @@ class Monitor {
     if (monitorPtr != null) {
       _wblib.waybright_monitor_enable(monitorPtr);
     }
-
     _isEnabled = true;
   }
 
@@ -137,7 +131,6 @@ class Monitor {
     if (monitorPtr != null) {
       _wblib.waybright_monitor_disable(monitorPtr);
     }
-
     _isEnabled = false;
   }
 

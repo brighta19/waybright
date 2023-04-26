@@ -4,3 +4,4 @@
 .dart_tool/
 build/
 doc/
+logs/
