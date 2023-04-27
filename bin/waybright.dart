@@ -84,9 +84,20 @@ Window? getWindowAtPoint(num x, num y) {
 }
 
 void drawCursor(Renderer renderer) {
-  renderer.fillStyle = 0xffffff;
+  var borderColor = hoveredWindow == null ? 0xffffff : 0x000000;
+
+  int color;
+  if (focusedWindow != null && hoveredWindow == focusedWindow) {
+    color = 0x88ff88;
+  } else if (hoveredWindow != null) {
+    color = 0xffaa88;
+  } else {
+    color = 0x000000;
+  }
+
+  renderer.fillStyle = borderColor;
   renderer.fillRect(cursor.x - 2, cursor.y - 2, 5, 5);
-  renderer.fillStyle = 0x000000;
+  renderer.fillStyle = color;
   renderer.fillRect(cursor.x - 1, cursor.y - 1, 3, 3);
 }
 

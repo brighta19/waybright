@@ -25,7 +25,8 @@ class PointerDevice extends InputDevice {
   };
 
   static void _executeEventHandler(int type, Pointer<Void> data) {
-    for (var pointer in _pointerInstances) {
+    var pointers = _pointerInstances.toList();
+    for (var pointer in pointers) {
       var eventPtr = data as Pointer<struct_waybright_pointer_event>;
       if (pointer._pointerPtr != eventPtr.ref.wb_pointer) continue;
 

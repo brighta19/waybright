@@ -409,7 +409,8 @@ int waybright_init(struct waybright* wb) {
     if (!wb->wlr_renderer)
         return 1;
 
-    wlr_renderer_init_wl_display(wb->wlr_renderer, wb->wl_display);
+    if (!wlr_renderer_init_wl_display(wb->wlr_renderer, wb->wl_display))
+        return 1;
 
     wb->wlr_allocator = wlr_allocator_autocreate(wb->wlr_backend, wb->wlr_renderer);
     if (!wb->wlr_allocator)

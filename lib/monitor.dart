@@ -10,7 +10,8 @@ class Monitor {
   };
 
   static void _executeEventHandler(int type, Pointer<Void> data) {
-    for (var monitor in _monitorInstances) {
+    var monitors = _monitorInstances.toList();
+    for (var monitor in monitors) {
       var monitorPtr = data as Pointer<struct_waybright_monitor>;
       if (monitor._monitorPtr != monitorPtr) continue;
 

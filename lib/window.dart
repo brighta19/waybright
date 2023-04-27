@@ -15,7 +15,8 @@ class Window {
   };
 
   static void _executeEventHandler(int type, Pointer<Void> data) {
-    for (var window in _windowInstances) {
+    var windows = _windowInstances.toList();
+    for (var window in windows) {
       var windowPtr = data as Pointer<struct_waybright_window>;
       if (window._windowPtr != windowPtr) continue;
 

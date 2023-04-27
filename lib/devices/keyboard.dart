@@ -11,7 +11,8 @@ class KeyboardDevice extends InputDevice {
   };
 
   static void _executeEventHandler(int type, Pointer<Void> data) {
-    for (var keyboard in _keyboardInstances) {
+    var keyboards = _keyboardInstances.toList();
+    for (var keyboard in keyboards) {
       var eventPtr = data as Pointer<struct_waybright_keyboard_event>;
       if (keyboard._keyboardPtr != eventPtr.ref.wb_keyboard) continue;
 
