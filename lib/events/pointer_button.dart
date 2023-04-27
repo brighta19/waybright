@@ -3,21 +3,24 @@ part of '../waybright.dart';
 /// A pointer button event.
 class PointerButtonEvent {
   /// The pointer.
-  PointerDevice pointer;
+  final PointerDevice pointer;
 
   /// The number of the button whose state has been changed.
-  int button;
+  final InputDeviceButton button;
+
+  /// The button's code.
+  final int code;
 
   /// Whether the button is pressed or not.
-  bool isPressed;
+  final bool isPressed;
 
   /// The time elapsed in milliseconds.
-  int elapsedTimeMilliseconds;
+  final int elapsedTimeMilliseconds;
 
   PointerButtonEvent(
     this.pointer,
-    this.button,
+    this.code,
     this.isPressed,
     this.elapsedTimeMilliseconds,
-  );
+  ) : button = InputDeviceButton.values[code];
 }

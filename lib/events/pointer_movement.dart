@@ -3,16 +3,16 @@ part of '../waybright.dart';
 /// A pointer movement event.
 class PointerMovementEvent {
   /// The pointer.
-  PointerDevice pointer;
+  final PointerDevice pointer;
 
   /// The cursor's x distance relative to the window's position.
-  num windowCursorX;
+  final num windowCursorX;
 
   /// The cursor's y distance relative to the window's position.
-  num windowCursorY;
+  final num windowCursorY;
 
   /// The time elapsed in milliseconds.
-  int elapsedTimeMilliseconds;
+  final int elapsedTimeMilliseconds;
 
   PointerMovementEvent(
     this.pointer,

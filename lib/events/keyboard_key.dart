@@ -3,21 +3,24 @@ part of '../waybright.dart';
 /// A keyboard key event.
 class KeyboardKeyEvent {
   /// The keyboard.
-  KeyboardDevice keyboard;
+  final KeyboardDevice keyboard;
+
+  /// The key.
+  final InputDeviceButton key;
 
   /// The key's code.
-  int keyCode;
+  final int code;
 
   /// Whether the button is pressed or not.
-  bool isPressed;
+  final bool isPressed;
 
   /// The time elapsed in milliseconds.
-  int elapsedTimeMilliseconds;
+  final int elapsedTimeMilliseconds;
 
   KeyboardKeyEvent(
     this.keyboard,
-    this.keyCode,
+    this.code,
     this.isPressed,
     this.elapsedTimeMilliseconds,
-  );
+  ) : key = InputDeviceButton.values[code];
 }

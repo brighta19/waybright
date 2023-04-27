@@ -3,22 +3,22 @@ part of '../waybright.dart';
 /// A pointer axis event.
 class PointerAxisEvent {
   /// The pointer.
-  PointerDevice pointer;
+  final PointerDevice pointer;
 
   /// The distance the axis had moved.
-  double delta;
+  final double delta;
 
   /// The amount of notches the axis had moved.
-  int notches;
+  final int notches;
 
   /// The source of the axis event.
-  PointerAxisSource source;
+  final PointerAxisSource source;
 
   /// The axis orientation.
-  PointerAxisOrientation orientation;
+  final PointerAxisOrientation orientation;
 
   /// The time elapsed in milliseconds.
-  int elapsedTimeMilliseconds;
+  final int elapsedTimeMilliseconds;
 
   PointerAxisEvent(
     this.pointer,

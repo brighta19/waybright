@@ -30,6 +30,13 @@ var cursor = Vector(0.0, 0.0);
 var windowDrawingPositionAtGrab = Vector(0.0, 0.0);
 var cursorPositionAtGrab = Vector(0.0, 0.0);
 
+var isLeftAltKeyPressed = false;
+var isLeftShiftKeyPressed = false;
+var windowSwitchIndex = 0;
+var isSwitchingWindows = false;
+var hasSwitchedWindows = false;
+var tempWindowList = <Window>[];
+
 void forEachKeyboard(Function(KeyboardDevice keyboard) callback) {
   for (var inputDevice in inputDevices) {
     if (inputDevice.type != InputDeviceType.keyboard) continue;
@@ -481,10 +488,44 @@ void handleNewPointer(PointerDevice pointer) {
 
 void handleNewKeyboard(KeyboardDevice keyboard) {
   keyboard.setEventHandler("key", (KeyboardKeyEvent event) {
-    var window = focusedWindow;
-    if (window == null) return;
+    if (event.key == InputDeviceButton.altLeft) {
+      isLeftAltKeyPressed = event.isPressed;
+      if (!isLeftAltKeyPressed) {
+        isSwitchingWindows = false;
+      }
+    } else if (event.key == InputDeviceButton.shiftLeft) {
+      isLeftShiftKeyPressed = event.isPressed;
+    } else if (event.key == InputDeviceButton.tab) {
+      if (event.isPressed) {
+        if (isLeftAltKeyPressed) {
+          if (!isSwitchingWindows) {
+            isSwitchingWindows = true;
+            windowSwitchIndex = 0;
+            tempWindowList = windows.frontToBackIterable.toList();
+          }
 
-    window.submitKeyboardKeyEvent(event);
+          if (focusedWindow != null) {
+            var direction = isLeftShiftKeyPressed ? -1 : 1;
+            windowSwitchIndex =
+                (windowSwitchIndex + direction) % windows.length;
+          }
+
+          if (windows.isNotEmpty) {
+            var index = 0;
+            for (var window in tempWindowList) {
+              if (index == windowSwitchIndex) {
+                focusWindow(window);
+                break;
+              }
+
+              index++;
+            }
+          }
+        }
+      }
+    }
+
+    focusedWindow?.submitKeyboardKeyEvent(event);
   });
   keyboard.setEventHandler("modifiers", (KeyboardModifiersEvent event) {
     var window = focusedWindow;

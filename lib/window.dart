@@ -173,7 +173,7 @@ class Window {
       _wblib.waybright_window_submit_pointer_button_event(
         windowPtr,
         event.elapsedTimeMilliseconds,
-        event.button,
+        event.code,
         event.isPressed ? 1 : 0,
       );
     }
@@ -228,7 +228,7 @@ class Window {
       _wblib.waybright_window_submit_keyboard_key_event(
         windowPtr,
         event.elapsedTimeMilliseconds,
-        event.keyCode,
+        event.code,
         event.isPressed ? 1 : 0,
       );
     }
