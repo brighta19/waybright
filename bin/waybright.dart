@@ -101,12 +101,48 @@ void drawCursor(Renderer renderer) {
   renderer.fillRect(cursor.x - 1, cursor.y - 1, 3, 3);
 }
 
+void drawBorder(Renderer renderer, num x, num y, int width, int height,
+    int color, int borderWidth) {
+  renderer.fillStyle = color;
+
+  var x0 = x - borderWidth;
+  var y0 = y - borderWidth;
+  var width0 = width + borderWidth * 2;
+  var height0 = height + borderWidth * 2;
+
+  renderer.fillRect(x0, y0, width0, borderWidth);
+  renderer.fillRect(x0, y0 + height0 - borderWidth, width0, borderWidth);
+  renderer.fillRect(x0, y0, borderWidth, height0);
+  renderer.fillRect(x0 + width0 - borderWidth, y0, borderWidth, height0);
+}
+
 void drawWindows(Renderer renderer) {
+  var numberOfWindows = windows.length;
+  var addend = 0xff ~/ (numberOfWindows - 1).clamp(1, 0xff);
+
+  var red = 0x00;
+  var blue = 0xff;
+  var borderWidth = 2;
+
   var list = windows.backToFrontIterable;
   for (var window in list) {
     if (window.isVisible) {
+      if (!window.isMaximized) {
+        var borderColor = numberOfWindows == 1 ? 0xff0000 : (red << 16) | blue;
+        drawBorder(
+          renderer,
+          window.contentX,
+          window.contentY,
+          window.contentWidth,
+          window.contentHeight,
+          borderColor,
+          borderWidth,
+        );
+      }
       renderer.drawWindow(window, window.drawingX, window.drawingY);
     }
+    blue -= addend;
+    red += addend;
   }
 }
 

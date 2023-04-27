@@ -82,9 +82,16 @@ class _WindowListIterable extends Iterable<Window> {
 class WindowList {
   final _linkedList = LinkedList<_WindowEntryItem>();
   final _hashMap = HashMap<Window, _WindowEntryItem>();
+  var _length = 0;
 
   /// Whether this list has no elements.
   bool get isEmpty => _linkedList.isEmpty;
+
+  /// Whether this list has at least one element.
+  bool get isNotEmpty => _linkedList.isNotEmpty;
+
+  /// The number of elements in this list.
+  int get length => _length;
 
   _WindowEntryItem? get _first => isEmpty ? null : _linkedList.first;
   _WindowEntryItem? get _last => isEmpty ? null : _linkedList.last;
@@ -126,6 +133,7 @@ class WindowList {
     var windowEntryItem = _WindowEntryItem(window);
     _linkedList.add(windowEntryItem);
     _hashMap[window] = windowEntryItem;
+    _length++;
   }
 
   /// Removes [window] from this list.
@@ -136,6 +144,7 @@ class WindowList {
     if (windowEntryItem != null) {
       _linkedList.remove(windowEntryItem);
       _hashMap.remove(window);
+      _length--;
       return true;
     }
     return false;
