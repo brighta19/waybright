@@ -10,8 +10,8 @@ class Vector {
 }
 
 const backgroundColors = [
-  0x88ffcc,
-  0xffaaaa,
+  0x88ffccff,
+  0xffaaaaff,
 ];
 
 var monitors = <Monitor>[];
@@ -22,12 +22,11 @@ Monitor? currentMonitor;
 
 Window? focusedWindow;
 Window? hoveredWindow;
-Window? pointerButtonFocusedWindow;
 
-var isMovingWindow = false;
-var isMaximizingWindow = false;
-var isUnmaximizingWindow = false;
-var shouldSubmitPointerMoveEvents = true;
+var isFocusedWindowFocusedFromPointer = false;
+var isMovingFocusedWindow = false;
+var isMaximizingFocusedWindow = false;
+var isUnmaximizingFocusedWindow = false;
 
 var cursor = Vector(0.0, 0.0);
 var windowDrawingPositionAtGrab = Vector(0.0, 0.0);
@@ -41,6 +40,10 @@ var hasSwitchedWindows = false;
 var tempWindowList = <Window>[];
 
 var readyToQuit = false;
+
+get shouldSubmitPointerMoveEvents {
+  return !isSwitchingWindows;
+}
 
 void forEachKeyboard(Function(KeyboardDevice keyboard) callback) {
   for (var inputDevice in inputDevices) {
@@ -96,15 +99,15 @@ Window? getWindowAtPoint(num x, num y) {
 }
 
 void drawCursor(Renderer renderer) {
-  var borderColor = hoveredWindow == null ? 0xffffff : 0x000000;
+  var borderColor = hoveredWindow == null ? 0xffffffff : 0x000000ff;
 
   int color;
   if (focusedWindow != null && hoveredWindow == focusedWindow) {
-    color = 0x88ff88;
+    color = 0x88ff88ff;
   } else if (hoveredWindow != null) {
-    color = 0xffaa88;
+    color = 0xffaa88ff;
   } else {
-    color = 0x000000;
+    color = 0x000000ff;
   }
 
   renderer.fillStyle = borderColor;
@@ -140,7 +143,9 @@ void drawWindows(Renderer renderer) {
   for (var window in list) {
     if (window.isVisible) {
       if (!window.isMaximized) {
-        var borderColor = numberOfWindows == 1 ? 0xff0000 : (red << 16) | blue;
+        var borderColor = numberOfWindows == 1
+            ? 0xff0000ff
+            : (red << 24) | (blue << 8) | 0x77;
         drawBorder(
           renderer,
           window.contentX,
@@ -166,18 +171,18 @@ void handleUpdates() {
   var monitorWidth = monitor.mode.width;
   var monitorHeight = monitor.mode.height;
 
-  if (isMaximizingWindow) {
+  if (isMaximizingFocusedWindow) {
     var window = focusedWindow;
     if (window != null && window.isMaximized) {
-      isMaximizingWindow = false;
+      isMaximizingFocusedWindow = false;
       window.drawingX = 0;
       window.drawingY = 0;
       print("Maximized 🪟 window!");
     }
-  } else if (isUnmaximizingWindow) {
+  } else if (isUnmaximizingFocusedWindow) {
     var window = focusedWindow;
     if (window != null && !window.isMaximized) {
-      isUnmaximizingWindow = false;
+      isUnmaximizingFocusedWindow = false;
       var width = monitorWidth * 0.5;
       var height = monitorHeight * 0.5;
 
@@ -196,7 +201,7 @@ void handleCurrentMonitorFrame() {
 
   var renderer = monitor.renderer;
 
-  renderer.fillStyle = 0x6666ff;
+  renderer.fillStyle = 0x6666ffff;
   renderer.fillRect(50, 50, 100, 100);
 
   drawWindows(renderer);
@@ -244,7 +249,7 @@ void initializeMonitor(Monitor monitor) {
     var renderer = monitor.renderer;
 
     monitor.setEventHandler("frame", () {
-      renderer.fillStyle = 0xffdd66;
+      renderer.fillStyle = 0xffdd66ff;
       renderer.fillRect(50, 50, 100, 100);
     });
   }
@@ -290,7 +295,7 @@ void initializeWindow(Window window) {
         " moved!");
 
     if (!window.isMaximized) {
-      isMovingWindow = true;
+      isMovingFocusedWindow = true;
       cursorPositionAtGrab.x = cursor.x;
       cursorPositionAtGrab.y = cursor.y;
       windowDrawingPositionAtGrab.x = window.drawingX;
@@ -312,13 +317,13 @@ void initializeWindow(Window window) {
     var monitorHeight = monitor.mode.height;
 
     if (window.isMaximized) {
-      isUnmaximizingWindow = true;
+      isUnmaximizingFocusedWindow = true;
       window.unmaximize();
       var width = monitorWidth * 0.5;
       var height = monitorHeight * 0.5;
       window.submitNewSize(width: width.toInt(), height: height.toInt());
     } else {
-      isMaximizingWindow = true;
+      isMaximizingFocusedWindow = true;
       window.maximize();
       window.submitNewSize(width: monitorWidth, height: monitorHeight);
     }
@@ -354,13 +359,13 @@ void handleNewWindow(Window window) {
 void handlePointerMovement(PointerDevice pointer, int elapsedTimeMilliseconds) {
   if (!shouldSubmitPointerMoveEvents) return;
 
-  var buttonFocusedWindow = pointerButtonFocusedWindow;
-  if (buttonFocusedWindow != null) {
-    buttonFocusedWindow.submitPointerMovementEvent(
+  var window = focusedWindow;
+  if (isFocusedWindowFocusedFromPointer && window != null) {
+    window.submitPointerMovementEvent(
       PointerMovementEvent(
         pointer,
-        cursor.x - buttonFocusedWindow.drawingX,
-        cursor.y - buttonFocusedWindow.drawingY,
+        cursor.x - window.drawingX,
+        cursor.y - window.drawingY,
         elapsedTimeMilliseconds,
       ),
     );
@@ -415,7 +420,7 @@ void handleNewPointer(PointerDevice pointer) {
     cursor.x = (cursor.x + event.deltaX * speed).clamp(0, monitor.mode.width);
     cursor.y = (cursor.y + event.deltaY * speed).clamp(0, monitor.mode.height);
 
-    if (isMovingWindow) {
+    if (isMovingFocusedWindow) {
       handleWindowGrab();
     } else {
       handlePointerMovement(pointer, event.elapsedTimeMilliseconds);
@@ -428,7 +433,7 @@ void handleNewPointer(PointerDevice pointer) {
     cursor.x = event.x.clamp(0, monitor.mode.width);
     cursor.y = event.y.clamp(0, monitor.mode.height);
 
-    if (isMovingWindow) {
+    if (isMovingFocusedWindow) {
       handleWindowGrab();
     } else {
       handlePointerMovement(pointer, event.elapsedTimeMilliseconds);
@@ -440,10 +445,9 @@ void handleNewPointer(PointerDevice pointer) {
     if (currentlyHoveredWindow == null) {
       if (event.isPressed) {
         unfocusWindow();
-        shouldSubmitPointerMoveEvents = false;
         print("Removed 🪟 window focus.");
       } else {
-        var window = pointerButtonFocusedWindow;
+        var window = focusedWindow;
         if (window != null) {
           window.submitPointerButtonEvent(event);
         }
@@ -461,8 +465,7 @@ void handleNewPointer(PointerDevice pointer) {
         }
 
         currentlyHoveredWindow.submitPointerButtonEvent(event);
-
-        pointerButtonFocusedWindow = currentlyHoveredWindow;
+        isFocusedWindowFocusedFromPointer = true;
       } else {
         var window = focusedWindow;
         if (window != null) {
@@ -472,9 +475,8 @@ void handleNewPointer(PointerDevice pointer) {
     }
 
     if (!event.isPressed) {
-      isMovingWindow = false;
-      shouldSubmitPointerMoveEvents = true;
-      pointerButtonFocusedWindow = null;
+      isMovingFocusedWindow = false;
+      isFocusedWindowFocusedFromPointer = false;
     }
   });
   pointer.setEventHandler("axis", (PointerAxisEvent event) {
