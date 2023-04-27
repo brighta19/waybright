@@ -158,6 +158,7 @@ int waybright_init(struct waybright*);
 /// @param socket_name can be NULL to auto-select a name
 int waybright_open_socket(struct waybright* wb, const char* socket_name);
 void waybright_run_event_loop(struct waybright* wb);
+void waybright_close_socket(struct waybright* wb);
 
 int waybright_renderer_get_fill_style(struct waybright_renderer* wb_renderer);
 void waybright_renderer_set_fill_style(struct waybright_renderer* wb_renderer, int color);

@@ -471,6 +471,10 @@ void waybright_run_event_loop(struct waybright* wb) {
     wl_display_run(wb->wl_display);
 }
 
+void waybright_close_socket(struct waybright* wb) {
+    wl_display_terminate(wb->wl_display);
+}
+
 int waybright_renderer_get_fill_style(struct waybright_renderer* wb_renderer) {
     return get_color_from_array(wb_renderer->color_fill);
 }

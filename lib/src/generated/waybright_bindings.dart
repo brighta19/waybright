@@ -19127,6 +19127,20 @@ class WaybrightLibrary {
   late final _waybright_run_event_loop = _waybright_run_event_loopPtr
       .asFunction<void Function(ffi.Pointer<struct_waybright>)>();
 
+  void waybright_close_socket(
+    ffi.Pointer<struct_waybright> wb,
+  ) {
+    return _waybright_close_socket(
+      wb,
+    );
+  }
+
+  late final _waybright_close_socketPtr = _lookup<
+          ffi.NativeFunction<ffi.Void Function(ffi.Pointer<struct_waybright>)>>(
+      'waybright_close_socket');
+  late final _waybright_close_socket = _waybright_close_socketPtr
+      .asFunction<void Function(ffi.Pointer<struct_waybright>)>();
+
   int waybright_renderer_get_fill_style(
     ffi.Pointer<struct_waybright_renderer> wb_renderer,
   ) {

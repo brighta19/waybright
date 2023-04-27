@@ -1,5 +1,8 @@
 import 'package:waybright/waybright.dart';
 
+// Switch windows with Alt+Tab
+// Close socket by holding Alt while clicking Escape twice
+
 class Vector {
   num x;
   num y;
@@ -36,6 +39,8 @@ var windowSwitchIndex = 0;
 var isSwitchingWindows = false;
 var hasSwitchedWindows = false;
 var tempWindowList = <Window>[];
+
+var readyToQuit = false;
 
 void forEachKeyboard(Function(KeyboardDevice keyboard) callback) {
   for (var inputDevice in inputDevices) {
@@ -492,9 +497,16 @@ void handleNewKeyboard(KeyboardDevice keyboard) {
       isLeftAltKeyPressed = event.isPressed;
       if (!isLeftAltKeyPressed) {
         isSwitchingWindows = false;
+        readyToQuit = false;
       }
     } else if (event.key == InputDeviceButton.shiftLeft) {
       isLeftShiftKeyPressed = event.isPressed;
+    } else if (event.key == InputDeviceButton.escape) {
+      if (event.isPressed && readyToQuit) {
+        socket?.close();
+      } else if (event.isPressed && isLeftAltKeyPressed) {
+        readyToQuit = true;
+      }
     } else if (event.key == InputDeviceButton.tab) {
       if (event.isPressed) {
         if (isLeftAltKeyPressed) {
@@ -559,6 +571,7 @@ void handleNewInput(InputNewEvent event) {
   }
 }
 
+Socket? socket;
 void main(List<String> arguments) async {
   var waybright = Waybright();
 
@@ -566,7 +579,8 @@ void main(List<String> arguments) async {
   waybright.setEventHandler("window-new", handleNewWindow);
   waybright.setEventHandler("input-new", handleNewInput);
 
-  var socket = await waybright.openSocket();
-  print("~~~ Socket opened on '${socket.name}' ~~~");
-  socket.runEventLoop();
+  socket = await waybright.openSocket();
+  print("~~~ Socket opened on '${socket!.name}' ~~~");
+  socket!.runEventLoop();
+  print("~~~ Socket closed ~~~");
 }

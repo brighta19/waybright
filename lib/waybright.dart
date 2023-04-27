@@ -152,6 +152,6 @@ class Waybright {
     }
 
     var name = _toString(_wbPtr.ref.socket_name);
-    return Socket(_wbPtr, name);
+    return Socket(name).._wbPtr = _wbPtr;
   }
 }
