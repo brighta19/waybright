@@ -118,27 +118,51 @@ class Window {
   bool get isFocused =>
       _windowPtr?.ref.wlr_xdg_toplevel.ref.current.activated ?? false;
 
-  /// Tells this window to maximize. It will *not* consider itself maximized
-  /// iuntil the compositor has confirmed the focus change. Track the
-  /// [isMaximized] property to know when it is maximized.
-  void maximize() => _setMaximizeAttribute(true);
+  /// Tells this window to maximize.
+  ///
+  /// It will *not* consider itself maximized until the compositor has confirmed
+  /// the focus change. Track the [isMaximized] property to know when it is
+  /// maximized.
+  ///
+  /// If [width] or [height] are provided, the window will submit the new size.
+  void maximize({int? width, int? height}) {
+    _setMaximizeAttribute(true);
+    if (width != null || height != null) {
+      submitNewSize(width: width, height: height);
+    }
+  }
 
-  /// Tells this window to unmaximize. It will *not* consider itself maximized
-  /// until the compositor has confirmed the focus change. Track the
-  /// [isMaximized] property to know when it is unmaximized.
-  void unmaximize() => _setMaximizeAttribute(false);
+  /// Tells this window to unmaximize.
+  ///
+  /// It will *not* consider itself unmaximized until the compositor has
+  /// confirmed the focus change. Track the [isMaximized] property to know when
+  /// 8it is unmaximized.
+  ///
+  /// If [width] or [height] are provided, the window will submit the new size.
+  void unmaximize({int? width, int? height}) {
+    _setMaximizeAttribute(false);
+    if (width != null || height != null) {
+      submitNewSize(width: width, height: height);
+    }
+  }
 
-  /// Tells this window to focus. It will *not* consider itself focused until
+  /// Tells this window to focus.
+  ///
+  /// It will *not* consider itself focused until
   /// the compositor has confirmed the focus change. Track the [isFocused]
   /// property to know when it is focused.
   void focus() => _setFocusedAttribute(true);
 
-  /// Tells this window to unfocus. It will *not* consider itself unfocused
+  /// Tells this window to unfocus.
+  ///
+  /// It will *not* consider itself unfocused
   /// until the compositor has confirmed the focus change. Track the
   /// [isFocused] property to know when it is unfocused.
   void unfocus() => _setFocusedAttribute(false);
 
-  /// Submits a new size for this window. The window itself may choose to either
+  /// Submits a new size for this window.
+  ///
+  /// The window itself may choose to either
   /// accept this size or choose a different size, so track the [contentWidth]
   /// and [contentHeight] properties to know the actual size.
   void submitNewSize({int? width, int? height}) {

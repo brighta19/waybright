@@ -14,6 +14,8 @@ const backgroundColors = [
   0xffaaaaff,
 ];
 
+Socket? socket;
+
 var monitors = <Monitor>[];
 var windows = WindowList();
 var inputDevices = <InputDevice>[];
@@ -41,9 +43,7 @@ var tempWindowList = <Window>[];
 
 var readyToQuit = false;
 
-get shouldSubmitPointerMoveEvents {
-  return !isSwitchingWindows;
-}
+get shouldSubmitPointerMoveEvents => !isSwitchingWindows;
 
 void forEachKeyboard(Function(KeyboardDevice keyboard) callback) {
   for (var inputDevice in inputDevices) {
@@ -78,6 +78,24 @@ void unfocusWindow() {
     if (keyboard.focusedWindow == focusedWindow) keyboard.clearFocus();
   });
   focusedWindow = null;
+}
+
+void startMaximizingWindow(Window window) {
+  var monitor = currentMonitor;
+  if (monitor == null) return;
+
+  isMaximizingFocusedWindow = true;
+  window.maximize(width: monitor.mode.width, height: monitor.mode.height);
+}
+
+void startUnmaximizingWindow(Window window) {
+  var monitor = currentMonitor;
+  if (monitor == null) return;
+
+  isUnmaximizingFocusedWindow = true;
+  var width = (monitor.mode.width * 0.5).toInt();
+  var height = (monitor.mode.height * 0.5).toInt();
+  window.unmaximize(width: width, height: height);
 }
 
 Window? getWindowAtPoint(num x, num y) {
@@ -120,39 +138,62 @@ void drawBorder(Renderer renderer, num x, num y, int width, int height,
     int color, int borderWidth) {
   renderer.fillStyle = color;
 
-  var x0 = x - borderWidth;
-  var y0 = y - borderWidth;
+  var x0 = (x - borderWidth).toInt();
+  var y0 = (y - borderWidth).toInt();
   var width0 = width + borderWidth * 2;
   var height0 = height + borderWidth * 2;
 
-  renderer.fillRect(x0, y0, width0, borderWidth);
-  renderer.fillRect(x0, y0 + height0 - borderWidth, width0, borderWidth);
-  renderer.fillRect(x0, y0, borderWidth, height0);
-  renderer.fillRect(x0 + width0 - borderWidth, y0, borderWidth, height0);
+  renderer.fillRect(x0, y0, width0 - borderWidth, borderWidth);
+  renderer.fillRect(
+      x0 + width0 - borderWidth, y0, borderWidth, height0 - borderWidth);
+  renderer.fillRect(x0 + borderWidth, y0 + height0 - borderWidth,
+      width0 - borderWidth, borderWidth);
+  renderer.fillRect(x0, y0 + borderWidth, borderWidth, height0 - borderWidth);
 }
 
 void drawWindows(Renderer renderer) {
-  var numberOfWindows = windows.length;
-  var addend = 0xff ~/ (numberOfWindows - 1).clamp(1, 0xff);
-
-  var red = 0x00;
-  var blue = 0xff;
   var borderWidth = 2;
+  var numberOfWindows = windows.length;
 
-  var list = windows.backToFrontIterable;
-  for (var window in list) {
+  if (numberOfWindows == 0) return;
+
+  if (numberOfWindows == 1) {
+    var window = windows.first;
+
     if (window.isVisible) {
       if (!window.isMaximized) {
-        var borderColor = numberOfWindows == 1
-            ? 0xff0000ff
-            : (red << 24) | (blue << 8) | 0x77;
         drawBorder(
           renderer,
           window.contentX,
           window.contentY,
           window.contentWidth,
           window.contentHeight,
-          borderColor,
+          0xff0000ff,
+          borderWidth,
+        );
+      }
+      renderer.drawWindow(window, window.drawingX, window.drawingY);
+    }
+
+    return;
+  }
+
+  var addend = 0xff ~/ (numberOfWindows - 1);
+
+  var red = 0x00;
+  var blue = 0xff;
+
+  var list = windows.backToFrontIterable;
+  for (var window in list) {
+    if (window.isVisible) {
+      if (!window.isMaximized) {
+        drawBorder(
+          renderer,
+          window.contentX,
+          window.contentY,
+          window.contentWidth,
+          window.contentHeight,
+          (red << 24) | (blue << 8) | 0x77,
           borderWidth,
         );
       }
@@ -230,11 +271,7 @@ void initializeMonitor(Monitor monitor) {
     print("- Name: '${monitor.name}'");
 
     if (monitor == currentMonitor) {
-      if (monitors.isEmpty) {
-        currentMonitor = null;
-      } else {
-        currentMonitor = monitors.first;
-      }
+      currentMonitor = monitors.isEmpty ? null : monitors.first;
     }
   });
 
@@ -283,9 +320,7 @@ void initializeWindow(Window window) {
       unfocusWindow();
 
       var nextWindow = windows.getNextWindow(window);
-      if (nextWindow != null) {
-        focusWindow(nextWindow);
-      }
+      if (nextWindow != null) focusWindow(nextWindow);
     }
   });
   // The window wants to be moved, which has to be handled manually.
@@ -310,22 +345,10 @@ void initializeWindow(Window window) {
         " wants ${title.isEmpty ? "its 🪟 window" : "the 🪟 window '$title'"}"
         " ${window.isMaximized ? "un" : ""}maximized!");
 
-    var monitor = currentMonitor;
-    if (monitor == null) return;
-
-    var monitorWidth = monitor.mode.width;
-    var monitorHeight = monitor.mode.height;
-
     if (window.isMaximized) {
-      isUnmaximizingFocusedWindow = true;
-      window.unmaximize();
-      var width = monitorWidth * 0.5;
-      var height = monitorHeight * 0.5;
-      window.submitNewSize(width: width.toInt(), height: height.toInt());
+      startUnmaximizingWindow(window);
     } else {
-      isMaximizingFocusedWindow = true;
-      window.maximize();
-      window.submitNewSize(width: monitorWidth, height: monitorHeight);
+      startMaximizingWindow(window);
     }
   });
   window.setEventHandler("remove", () {
@@ -334,9 +357,7 @@ void initializeWindow(Window window) {
     print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
         "'s 🪟${window.isPopup ? " popup" : ""} window has been removed!");
 
-    if (window == focusedWindow) {
-      unfocusWindow();
-    }
+    if (window == focusedWindow) unfocusWindow();
   });
 }
 
@@ -349,9 +370,7 @@ void handleNewWindow(Window window) {
   print("${appId.isEmpty ? "An application" : "Application '$appId'"}"
       "'s 🪟${window.isPopup ? " popup" : ""} window has been added!");
 
-  if (title.isNotEmpty) {
-    print("- Title: '$title'");
-  }
+  if (title.isNotEmpty) print("- Title: '$title'");
 
   initializeWindow(window);
 }
@@ -392,9 +411,7 @@ void handlePointerMovement(PointerDevice pointer, int elapsedTimeMilliseconds) {
       ),
     );
   } else {
-    if (pointer.focusedWindow != null) {
-      pointer.clearFocus();
-    }
+    if (pointer.focusedWindow != null) pointer.clearFocus();
 
     hoveredWindow = null;
   }
@@ -448,9 +465,7 @@ void handleNewPointer(PointerDevice pointer) {
         print("Removed 🪟 window focus.");
       } else {
         var window = focusedWindow;
-        if (window != null) {
-          window.submitPointerButtonEvent(event);
-        }
+        if (window != null) window.submitPointerButtonEvent(event);
       }
     } else {
       if (event.isPressed) {
@@ -469,6 +484,10 @@ void handleNewPointer(PointerDevice pointer) {
       } else {
         var window = focusedWindow;
         if (window != null) {
+          if (isMovingFocusedWindow && window.contentY < 0) {
+            startMaximizingWindow(window);
+          }
+
           window.submitPointerButtonEvent(event);
         }
       }
@@ -573,7 +592,6 @@ void handleNewInput(InputNewEvent event) {
   }
 }
 
-Socket? socket;
 void main(List<String> arguments) async {
   var waybright = Waybright();
 
