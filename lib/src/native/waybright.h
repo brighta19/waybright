@@ -24,6 +24,7 @@ enum event_type {
     event_type_window_hide,
     event_type_window_move,
     event_type_window_maximize,
+    event_type_window_fullscreen,
 
     event_type_input_new,
 
@@ -94,6 +95,7 @@ struct waybright_window {
         struct wl_listener hide;
         struct wl_listener move;
         struct wl_listener maximize;
+        struct wl_listener fullscreen;
     } listeners;
 
     void(*handle_event)(int type, void* data);

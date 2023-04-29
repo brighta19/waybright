@@ -12,6 +12,7 @@ class Window {
     'hide': enum_event_type.event_type_window_hide,
     'move': enum_event_type.event_type_window_move,
     'maximize': enum_event_type.event_type_window_maximize,
+    'fullscreen': enum_event_type.event_type_window_fullscreen,
   };
 
   static void _executeEventHandler(int type, Pointer<Void> data) {
@@ -77,6 +78,14 @@ class Window {
     }
   }
 
+  void _setFullscreenAttribute(bool value) {
+    var windowPtr = _windowPtr;
+    if (windowPtr != null) {
+      _wblib.wlr_xdg_toplevel_set_fullscreen(
+          windowPtr.ref.wlr_xdg_surface, value);
+    }
+  }
+
   void _setFocusedAttribute(bool value) {
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
@@ -128,6 +137,10 @@ class Window {
   bool get isMaximized =>
       _windowPtr?.ref.wlr_xdg_toplevel.ref.current.maximized ?? false;
 
+  /// Whether this window is considered fullscreen.
+  bool get isFullscreen =>
+      _windowPtr?.ref.wlr_xdg_toplevel.ref.current.fullscreen ?? false;
+
   /// Whether this window is focused.
   bool get isFocused =>
       _windowPtr?.ref.wlr_xdg_toplevel.ref.current.activated ?? false;
@@ -135,7 +148,7 @@ class Window {
   /// Tells this window to maximize.
   ///
   /// It will *not* consider itself maximized until the compositor has confirmed
-  /// the focus change. Track the [isMaximized] property to know when it is
+  /// the maximize change. Track the [isMaximized] property to know when it is
   /// maximized.
   ///
   /// If [width] or [height] are provided, the window will submit the new size.
@@ -149,8 +162,8 @@ class Window {
   /// Tells this window to unmaximize.
   ///
   /// It will *not* consider itself unmaximized until the compositor has
-  /// confirmed the focus change. Track the [isMaximized] property to know when
-  /// 8it is unmaximized.
+  /// confirmed the maximize change. Track the [isMaximized] property to know when
+  /// it is unmaximized.
   ///
   /// If [width] or [height] are provided, the window will submit the new size.
   void unmaximize({int? width, int? height}) {
@@ -160,11 +173,39 @@ class Window {
     }
   }
 
+  /// Tells this window to fullscreen.
+  ///
+  /// It will *not* consider itself fullscreen until the compositor has
+  /// confirmed the fullscreen change. Track the [isFullscreen] property to know
+  /// when it is fullscreened.
+  ///
+  /// If [width] or [height] are provided, the window will submit the new size.
+  void fullscreen({int? width, int? height}) {
+    _setFullscreenAttribute(true);
+    if (width != null || height != null) {
+      submitNewSize(width: width, height: height);
+    }
+  }
+
+  /// Tells this window to unfullscreen.
+  ///
+  /// It will *not* consider itself unfullscreen until the compositor has
+  /// confirmed the focus change. Track the [isFullscreen] property to know when
+  /// it is unfullscreened.
+  ///
+  /// If [width] or [height] are provided, the window will submit the new size.
+  void unfullscreen({int? width, int? height}) {
+    _setFullscreenAttribute(false);
+    if (width != null || height != null) {
+      submitNewSize(width: width, height: height);
+    }
+  }
+
   /// Tells this window to focus.
   ///
-  /// It will *not* consider itself focused until
-  /// the compositor has confirmed the focus change. Track the [isFocused]
-  /// property to know when it is focused.
+  /// It will *not* consider itself focused until the compositor has confirmed
+  /// the focus change. Track the [isFocused] property to know when it is
+  /// focused.
   void focus() => _setFocusedAttribute(true);
 
   /// Tells this window to unfocus.

@@ -24089,15 +24089,16 @@ abstract class enum_event_type {
   static const int event_type_window_hide = 6;
   static const int event_type_window_move = 7;
   static const int event_type_window_maximize = 8;
-  static const int event_type_input_new = 9;
-  static const int event_type_pointer_remove = 10;
-  static const int event_type_pointer_move = 11;
-  static const int event_type_pointer_teleport = 12;
-  static const int event_type_pointer_button = 13;
-  static const int event_type_pointer_axis = 14;
-  static const int event_type_keyboard_remove = 15;
-  static const int event_type_keyboard_key = 16;
-  static const int event_type_keyboard_modifiers = 17;
+  static const int event_type_window_fullscreen = 9;
+  static const int event_type_input_new = 10;
+  static const int event_type_pointer_remove = 11;
+  static const int event_type_pointer_move = 12;
+  static const int event_type_pointer_teleport = 13;
+  static const int event_type_pointer_button = 14;
+  static const int event_type_pointer_axis = 15;
+  static const int event_type_keyboard_remove = 16;
+  static const int event_type_keyboard_key = 17;
+  static const int event_type_keyboard_modifiers = 18;
 }
 
 class struct_waybright extends ffi.Struct {
@@ -24194,6 +24195,8 @@ class UnnamedStruct33 extends ffi.Struct {
   external struct_wl_listener move;
 
   external struct_wl_listener maximize;
+
+  external struct_wl_listener fullscreen;
 }
 
 class struct_waybright_input extends ffi.Struct {

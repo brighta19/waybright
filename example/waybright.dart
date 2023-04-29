@@ -29,6 +29,8 @@ var isFocusedWindowFocusedFromPointer = false;
 var isMovingFocusedWindow = false;
 var isMaximizingFocusedWindow = false;
 var isUnmaximizingFocusedWindow = false;
+var isFullscreeningFocusedWindow = false;
+var isUnfullscreeningFocusedWindow = false;
 
 var cursor = Vector(0.0, 0.0);
 var windowDrawingPositionAtGrab = Vector(0.0, 0.0);
@@ -71,6 +73,10 @@ void startMaximizingWindow(Window window) {
   if (monitor == null) return;
 
   isMaximizingFocusedWindow = true;
+  if (window.isFullscreen) {
+    window.unfullscreen();
+    print("Unfullscreening 🪟 window before maximizing...");
+  }
   window.maximize(width: monitor.mode.width, height: monitor.mode.height);
 }
 
@@ -82,6 +88,28 @@ void startUnmaximizingWindow(Window window) {
   var width = (monitor.mode.width * 0.5).toInt();
   var height = (monitor.mode.height * 0.5).toInt();
   window.unmaximize(width: width, height: height);
+}
+
+void startFullscreeningWindow(Window window) {
+  var monitor = currentMonitor;
+  if (monitor == null) return;
+
+  isFullscreeningFocusedWindow = true;
+  if (window.isMaximized) {
+    window.unmaximize();
+    print("Unmaximizing 🪟 window before fullscreening...");
+  }
+  window.fullscreen(width: monitor.mode.width, height: monitor.mode.height);
+}
+
+void startUnfullscreeningWindow(Window window) {
+  var monitor = currentMonitor;
+  if (monitor == null) return;
+
+  isUnfullscreeningFocusedWindow = true;
+  var width = (monitor.mode.width * 0.5).toInt();
+  var height = (monitor.mode.height * 0.5).toInt();
+  window.unfullscreen(width: width, height: height);
 }
 
 Window? getWindowAtPoint(num x, num y) {
@@ -192,32 +220,51 @@ void drawWindows(Renderer renderer) {
   }
 }
 
-/// Hacky way to (un)maximize a window.
-void handleUpdates() {
+void updateWindowPosition(Window window) {
   var monitor = currentMonitor;
   if (monitor == null) return;
 
-  var monitorWidth = monitor.mode.width;
-  var monitorHeight = monitor.mode.height;
+  var x = 0;
+  var y = 0;
 
+  if (!window.isMaximized && !window.isFullscreen) {
+    x = (monitor.mode.width - window.contentWidth) ~/ 2;
+    y = (monitor.mode.height - window.contentHeight) ~/ 3;
+  }
+
+  window.drawingX = x;
+  window.drawingY = y;
+}
+
+/// Hacky way to (un)maximize a window.
+void handleUpdates() {
   if (isMaximizingFocusedWindow) {
     var window = focusedWindow;
     if (window != null && window.isMaximized) {
       isMaximizingFocusedWindow = false;
-      window.drawingX = 0;
-      window.drawingY = 0;
+      updateWindowPosition(window);
       print("Maximized 🪟 window!");
     }
   } else if (isUnmaximizingFocusedWindow) {
     var window = focusedWindow;
     if (window != null && !window.isMaximized) {
       isUnmaximizingFocusedWindow = false;
-      var width = monitorWidth * 0.5;
-      var height = monitorHeight * 0.5;
-
-      window.drawingX = (monitorWidth - width) / 2;
-      window.drawingY = (monitorHeight - height) / 3;
+      updateWindowPosition(window);
       print("Unmaximized 🪟 window!");
+    }
+  } else if (isFullscreeningFocusedWindow) {
+    var window = focusedWindow;
+    if (window != null && window.isFullscreen) {
+      isFullscreeningFocusedWindow = false;
+      updateWindowPosition(window);
+      print("Fullscreened 🪟 window!");
+    }
+  } else if (isUnfullscreeningFocusedWindow) {
+    var window = focusedWindow;
+    if (window != null && !window.isFullscreen) {
+      isUnfullscreeningFocusedWindow = false;
+      updateWindowPosition(window);
+      print("Unfullscreened 🪟 window!");
     }
   }
 }
@@ -337,6 +384,18 @@ void initializeWindow(Window window) {
       startUnmaximizingWindow(window);
     } else {
       startMaximizingWindow(window);
+    }
+  });
+  // The window wants to be fullscreened, which has to be handled manually.
+  window.setEventHandler("fullscreen", () {
+    print("${appId.isEmpty ? "An application" : "Application '$appId'"}"
+        " wants ${title.isEmpty ? "its 🪟 window" : "the 🪟 window '$title'"}"
+        " ${window.isFullscreen ? "un" : ""}fullscreened!");
+
+    if (window.isFullscreen) {
+      startUnfullscreeningWindow(window);
+    } else {
+      startFullscreeningWindow(window);
     }
   });
   window.setEventHandler("remove", () {

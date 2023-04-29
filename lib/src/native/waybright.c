@@ -187,6 +187,13 @@ void handle_window_maximize_event(struct wl_listener *listener, void *data) {
         wb_window->handle_event(event_type_window_maximize, wb_window);
 }
 
+void handle_window_fullscreen_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.fullscreen);
+
+    if (wb_window->handle_event)
+        wb_window->handle_event(event_type_window_fullscreen, wb_window);
+}
+
 void handle_window_new_event(struct wl_listener *listener, void *data) {
     struct waybright* wb = wl_container_of(listener, wb, listeners.window_new);
     struct wlr_xdg_surface *wlr_xdg_surface = data;
@@ -212,6 +219,8 @@ void handle_window_new_event(struct wl_listener *listener, void *data) {
     wl_signal_add(&wlr_xdg_toplevel->events.request_move, &wb_window->listeners.move);
     wb_window->listeners.maximize.notify = handle_window_maximize_event;
     wl_signal_add(&wlr_xdg_toplevel->events.request_maximize, &wb_window->listeners.maximize);
+    wb_window->listeners.fullscreen.notify = handle_window_fullscreen_event;
+    wl_signal_add(&wlr_xdg_toplevel->events.request_fullscreen, &wb_window->listeners.fullscreen);
 
     // More events coming soon to a town near you!
 
