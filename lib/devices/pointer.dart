@@ -40,7 +40,7 @@ class PointerDevice extends InputDevice {
         var wlrEventPtr =
             eventPtr.ref.event as Pointer<struct_wlr_event_pointer_motion>;
 
-        var event = PointerMoveEvent(
+        var event = PointerRelativeMoveEvent(
           pointer,
           wlrEventPtr.ref.delta_x,
           wlrEventPtr.ref.delta_y,
@@ -77,7 +77,7 @@ class PointerDevice extends InputDevice {
 
         if (activeMonitor == null) return;
 
-        var event = PointerTeleportEvent(
+        var event = PointerAbsoluteMoveEvent(
           pointer,
           activeMonitor,
           x - layoutMonitorX,

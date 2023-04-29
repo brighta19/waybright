@@ -1,10 +1,7 @@
-part of '../waybright.dart';
+part of '../../waybright.dart';
 
 /// A pointer axis event.
-class PointerAxisEvent {
-  /// The pointer.
-  final PointerDevice pointer;
-
+class PointerAxisEvent extends PointerEvent {
   /// The distance the axis had moved.
   final double delta;
 
@@ -17,15 +14,12 @@ class PointerAxisEvent {
   /// The axis orientation.
   final PointerAxisOrientation orientation;
 
-  /// The time elapsed in milliseconds.
-  final int elapsedTimeMilliseconds;
-
   PointerAxisEvent(
-    this.pointer,
+    pointer,
     this.delta,
     this.notches,
     this.source,
     this.orientation,
-    this.elapsedTimeMilliseconds,
-  );
+    elapsedTimeMilliseconds,
+  ) : super(pointer, elapsedTimeMilliseconds);
 }

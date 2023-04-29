@@ -1,10 +1,7 @@
-part of '../waybright.dart';
+part of '../../waybright.dart';
 
 /// A keyboard key event.
-class KeyboardKeyEvent {
-  /// The keyboard.
-  final KeyboardDevice keyboard;
-
+class KeyboardKeyEvent extends KeyboardEvent {
   /// The key.
   final InputDeviceButton key;
 
@@ -18,9 +15,10 @@ class KeyboardKeyEvent {
   final int elapsedTimeMilliseconds;
 
   KeyboardKeyEvent(
-    this.keyboard,
+    keyboard,
     this.code,
     this.isPressed,
     this.elapsedTimeMilliseconds,
-  ) : key = InputDeviceButton.values[code];
+  )   : key = InputDeviceButton.values[code],
+        super(keyboard);
 }

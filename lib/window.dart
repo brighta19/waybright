@@ -55,6 +55,20 @@ class Window {
     }
   }
 
+  void _ensureKeyboardFocus(KeyboardDevice keyboard) {
+    if (keyboard.focusedWindow != this) {
+      keyboard.clearFocus();
+      keyboard.focusOnWindow(this);
+    }
+  }
+
+  void _ensurePointerFocus(PointerDevice pointer, int cursorX, int cursorY) {
+    if (pointer.focusedWindow != this) {
+      pointer.clearFocus();
+      pointer.focusOnWindow(this, cursorX, cursorY);
+    }
+  }
+
   void _setMaximizeAttribute(bool value) {
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
@@ -176,97 +190,110 @@ class Window {
     }
   }
 
-  /// Submits pointer movement events to this window. The coordinates in [event]
-  /// are relative to the window's content area.
-  void submitPointerMovementEvent(PointerMovementEvent event) {
+  /// Submits pointer movement updates to this window. The coordinates in
+  /// [update] are relative to the window's content area.
+  void submitPointerMoveUpdate(PointerUpdate<PointerMoveEvent> update) {
     var windowPtr = _windowPtr;
-    if (windowPtr != null) {
-      _wblib.waybright_window_submit_pointer_move_event(
-        windowPtr,
-        event.elapsedTimeMilliseconds,
-        event.windowCursorX.toInt(),
-        event.windowCursorY.toInt(),
-      );
-    }
+    if (windowPtr == null) return;
+
+    var cursorX = update.windowCursorX.toInt();
+    var cursorY = update.windowCursorY.toInt();
+
+    _ensurePointerFocus(update.pointer, cursorX, cursorY);
+
+    _wblib.waybright_window_submit_pointer_move_event(
+      windowPtr,
+      update.event.elapsedTimeMilliseconds,
+      cursorX,
+      cursorY,
+    );
   }
 
-  /// Submits pointer button events to this window.
-  void submitPointerButtonEvent(PointerButtonEvent event) {
+  /// Submits pointer button updates to this window.
+  void submitPointerButtonUpdate(PointerUpdate<PointerButtonEvent> update) {
     var windowPtr = _windowPtr;
-    if (windowPtr != null) {
-      _wblib.waybright_window_submit_pointer_button_event(
-        windowPtr,
-        event.elapsedTimeMilliseconds,
-        event.code,
-        event.isPressed ? 1 : 0,
-      );
-    }
+    if (windowPtr == null) return;
+
+    _ensurePointerFocus(update.pointer, 0, 0);
+
+    _wblib.waybright_window_submit_pointer_button_event(
+      windowPtr,
+      update.event.elapsedTimeMilliseconds,
+      update.event.code,
+      update.event.isPressed ? 1 : 0,
+    );
   }
 
-  /// Submits pointer axis events to this window.
-  void submitPointerAxisEvent(PointerAxisEvent event) {
+  /// Submits pointer axis updates to this window.
+  void submitPointerAxisUpdate(PointerUpdate<PointerAxisEvent> update) {
     var windowPtr = _windowPtr;
-    if (windowPtr != null) {
-      int source;
-      switch (event.source) {
-        case PointerAxisSource.wheel:
-          source = enum_wlr_axis_source.WLR_AXIS_SOURCE_WHEEL;
-          break;
-        case PointerAxisSource.finger:
-          source = enum_wlr_axis_source.WLR_AXIS_SOURCE_FINGER;
-          break;
-        case PointerAxisSource.continuous:
-          source = enum_wlr_axis_source.WLR_AXIS_SOURCE_CONTINUOUS;
-          break;
-        case PointerAxisSource.wheelTilt:
-          source = enum_wlr_axis_source.WLR_AXIS_SOURCE_WHEEL_TILT;
-          break;
-      }
+    if (windowPtr == null) return;
 
-      int orientation;
-      switch (event.orientation) {
-        case PointerAxisOrientation.vertical:
-          orientation = enum_wlr_axis_orientation.WLR_AXIS_ORIENTATION_VERTICAL;
-          break;
-        case PointerAxisOrientation.horizontal:
-          orientation =
-              enum_wlr_axis_orientation.WLR_AXIS_ORIENTATION_HORIZONTAL;
-          break;
-      }
+    _ensurePointerFocus(update.pointer, 100, 100);
 
-      _wblib.waybright_window_submit_pointer_axis_event(
-        windowPtr,
-        event.elapsedTimeMilliseconds,
-        orientation,
-        event.delta,
-        event.notches,
-        source,
-      );
+    int source;
+    switch (update.event.source) {
+      case PointerAxisSource.wheel:
+        source = enum_wlr_axis_source.WLR_AXIS_SOURCE_WHEEL;
+        break;
+      case PointerAxisSource.finger:
+        source = enum_wlr_axis_source.WLR_AXIS_SOURCE_FINGER;
+        break;
+      case PointerAxisSource.continuous:
+        source = enum_wlr_axis_source.WLR_AXIS_SOURCE_CONTINUOUS;
+        break;
+      case PointerAxisSource.wheelTilt:
+        source = enum_wlr_axis_source.WLR_AXIS_SOURCE_WHEEL_TILT;
+        break;
     }
+
+    int orientation;
+    switch (update.event.orientation) {
+      case PointerAxisOrientation.vertical:
+        orientation = enum_wlr_axis_orientation.WLR_AXIS_ORIENTATION_VERTICAL;
+        break;
+      case PointerAxisOrientation.horizontal:
+        orientation = enum_wlr_axis_orientation.WLR_AXIS_ORIENTATION_HORIZONTAL;
+        break;
+    }
+
+    _wblib.waybright_window_submit_pointer_axis_event(
+      windowPtr,
+      update.event.elapsedTimeMilliseconds,
+      orientation,
+      update.event.delta,
+      update.event.notches,
+      source,
+    );
   }
 
-  /// Submits keyboard key events to this window.
-  void submitKeyboardKeyEvent(KeyboardKeyEvent event) {
+  /// Submits keyboard key updates to this window.
+  void submitKeyboardKeyUpdate(KeyboardUpdate<KeyboardKeyEvent> update) {
     var windowPtr = _windowPtr;
-    if (windowPtr != null) {
-      _wblib.waybright_window_submit_keyboard_key_event(
-        windowPtr,
-        event.elapsedTimeMilliseconds,
-        event.code,
-        event.isPressed ? 1 : 0,
-      );
-    }
+    if (windowPtr == null) return;
+
+    _ensureKeyboardFocus(update.keyboard);
+
+    _wblib.waybright_window_submit_keyboard_key_event(
+      windowPtr,
+      update.event.elapsedTimeMilliseconds,
+      update.event.code,
+      update.event.isPressed ? 1 : 0,
+    );
   }
 
-  /// Submits keyboard modifiers events to this window.
-  void submitKeyboardModifiersEvent(KeyboardModifiersEvent event) {
+  /// Submits keyboard modifiers updates to this window.
+  void submitKeyboardModifiersUpdate(
+      KeyboardUpdate<KeyboardModifiersEvent> update) {
     var windowPtr = _windowPtr;
-    var keyboardPtr = event.keyboard._keyboardPtr;
-    if (windowPtr != null && keyboardPtr != null) {
-      _wblib.waybright_window_submit_keyboard_modifiers_event(
-        windowPtr,
-        keyboardPtr,
-      );
-    }
+    var keyboardPtr = update.keyboard._keyboardPtr;
+    if (windowPtr == null || keyboardPtr == null) return;
+
+    _ensureKeyboardFocus(update.keyboard);
+
+    _wblib.waybright_window_submit_keyboard_modifiers_event(
+      windowPtr,
+      keyboardPtr,
+    );
   }
 }
