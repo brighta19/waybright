@@ -1,14 +1,15 @@
-EXECUTABLE=waybright
 WAYLAND_PROTOCOLS=$(shell pkg-config --variable=pkgdatadir wayland-protocols)
 WAYLAND_SCANNER=$(shell pkg-config --variable=wayland_scanner wayland-scanner)
 LIBS=$(shell pkg-config --cflags --libs wayland-server) \
 	$(shell pkg-config --cflags --libs wlroots) \
 	$(shell pkg-config --cflags --libs cairo) \
 	$(shell pkg-config --cflags --libs libdrm)
+EXAMPLES=$(shell find example -name '*.dart' -exec basename -s .dart {} \;)
 
-build/$(EXECUTABLE): build/waybright.so lib/src/generated/waybright_bindings.dart bin/waybright.dart lib/* lib/events/* lib/devices/*
-	@mkdir -p build
-	dart compile exe bin/waybright.dart -o build/$(EXECUTABLE)
+build-examples: $(EXAMPLES)
+
+$(EXAMPLES): build/waybright.so lib/src/generated/waybright_bindings.dart
+	dart compile exe example/$@.dart -o build/$@
 
 build-deps: build/waybright.so lib/src/generated/waybright_bindings.dart
 
@@ -29,3 +30,5 @@ lib/src/generated/waybright_bindings.dart: lib/src/native/xdg-shell-protocol.h l
 
 clean:
 	rm -rf lib/src/generated/waybright_bindings.dart lib/src/native/xdg-shell-protocol.h build/
+
+.PHONY: build-examples
