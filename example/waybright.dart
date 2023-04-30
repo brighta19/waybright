@@ -27,6 +27,7 @@ Window? hoveredWindow;
 
 var isFocusedWindowFocusedFromPointer = false;
 var isMovingFocusedWindow = false;
+var isResizingFocusedWindow = false;
 var isMaximizingFocusedWindow = false;
 var isUnmaximizingFocusedWindow = false;
 var isFullscreeningFocusedWindow = false;
@@ -35,6 +36,10 @@ var isUnfullscreeningFocusedWindow = false;
 var cursor = Vector(0.0, 0.0);
 var windowDrawingPositionAtGrab = Vector(0.0, 0.0);
 var cursorPositionAtGrab = Vector(0.0, 0.0);
+
+var windowWidthAtGrab = 0;
+var windowHeightAtGrab = 0;
+var edgeOfWindowResize = WindowEdge.none;
 
 var isLeftAltKeyPressed = false;
 var isLeftShiftKeyPressed = false;
@@ -346,6 +351,7 @@ void initializeWindow(Window window) {
 
     focusWindow(window);
   });
+
   window.setEventHandler("hide", () {
     print("${appId.isEmpty ? "An application" : "Application '$appId'"}"
         " wants ${title.isEmpty ? "its 🪟 window" : "the 🪟 window '$title'"}"
@@ -358,8 +364,9 @@ void initializeWindow(Window window) {
       if (nextWindow != null) focusWindow(nextWindow);
     }
   });
+
   // The window wants to be moved, which has to be handled manually.
-  window.setEventHandler("move", () {
+  window.setEventHandler("move", (WindowMoveEvent event) {
     print("${appId.isEmpty ? "An application" : "Application '$appId'"}"
         " wants ${title.isEmpty ? "its 🪟 window" : "the 🪟 window '$title'"}"
         " moved!");
@@ -374,8 +381,28 @@ void initializeWindow(Window window) {
 
     focusWindow(window);
   });
+
+  // The window wants to be resized, which has to be handled manually.
+  window.setEventHandler("resize", (WindowResizeEvent event) {
+    print("${appId.isEmpty ? "An application" : "Application '$appId'"}"
+        " wants ${title.isEmpty ? "its 🪟 window" : "the 🪟 window '$title'"}"
+        " resized!");
+    print("- Edge: ${event.edge}");
+
+    if (!window.isMaximized) {
+      isResizingFocusedWindow = true;
+      cursorPositionAtGrab.x = cursor.x;
+      cursorPositionAtGrab.y = cursor.y;
+      windowDrawingPositionAtGrab.x = window.drawingX;
+      windowDrawingPositionAtGrab.y = window.drawingY;
+      windowWidthAtGrab = window.contentWidth;
+      windowHeightAtGrab = window.contentHeight;
+      edgeOfWindowResize = event.edge;
+    }
+  });
+
   // The window wants to be maximize, which has to be handled manually.
-  window.setEventHandler("maximize", () {
+  window.setEventHandler("maximize", (WindowMaximizeEvent event) {
     print("${appId.isEmpty ? "An application" : "Application '$appId'"}"
         " wants ${title.isEmpty ? "its 🪟 window" : "the 🪟 window '$title'"}"
         " ${window.isMaximized ? "un" : ""}maximized!");
@@ -386,8 +413,9 @@ void initializeWindow(Window window) {
       startMaximizingWindow(window);
     }
   });
+
   // The window wants to be fullscreened, which has to be handled manually.
-  window.setEventHandler("fullscreen", () {
+  window.setEventHandler("fullscreen", (WindowFullscreenEvent event) {
     print("${appId.isEmpty ? "An application" : "Application '$appId'"}"
         " wants ${title.isEmpty ? "its 🪟 window" : "the 🪟 window '$title'"}"
         " ${window.isFullscreen ? "un" : ""}fullscreened!");
@@ -398,13 +426,12 @@ void initializeWindow(Window window) {
       startFullscreeningWindow(window);
     }
   });
+
   window.setEventHandler("remove", () {
     windows.remove(window);
 
     print("${appId.isEmpty ? "An application" : "Application `$appId`"}"
         "'s 🪟${window.isPopup ? " popup" : ""} window has been removed!");
-
-    if (window == focusedWindow) unfocusWindow();
   });
 }
 
@@ -454,7 +481,7 @@ void handlePointerMovement(PointerMoveEvent event) {
   }
 }
 
-void handleWindowGrab() {
+void handleWindowMove() {
   var window = focusedWindow;
   if (window == null) return;
 
@@ -464,18 +491,68 @@ void handleWindowGrab() {
       windowDrawingPositionAtGrab.y + cursor.y - cursorPositionAtGrab.y;
 }
 
+void handleWindowResize() {
+  var window = focusedWindow;
+  if (window == null) return;
+
+  var deltaX = cursor.x - cursorPositionAtGrab.x;
+  var deltaY = cursor.y - cursorPositionAtGrab.y;
+
+  num x = windowDrawingPositionAtGrab.x;
+  num y = windowDrawingPositionAtGrab.y;
+  num width = windowWidthAtGrab;
+  num height = windowHeightAtGrab;
+
+  switch (edgeOfWindowResize) {
+    case WindowEdge.top:
+    case WindowEdge.topLeft:
+    case WindowEdge.topRight:
+      y += deltaY;
+      height -= deltaY;
+      break;
+    case WindowEdge.bottom:
+    case WindowEdge.bottomLeft:
+    case WindowEdge.bottomRight:
+      height += deltaY;
+      break;
+    default:
+      break;
+  }
+
+  switch (edgeOfWindowResize) {
+    case WindowEdge.left:
+    case WindowEdge.topLeft:
+    case WindowEdge.bottomLeft:
+      x += deltaX;
+      width -= deltaX;
+      break;
+    case WindowEdge.right:
+    case WindowEdge.topRight:
+    case WindowEdge.bottomRight:
+      width += deltaX;
+      break;
+    default:
+      break;
+  }
+
+  window.drawingX = x;
+  window.drawingY = y;
+  window.submitNewSize(width: width.toInt(), height: height.toInt());
+}
+
 void handleNewPointer(PointerDevice pointer) {
   pointer.setEventHandler("move", (PointerRelativeMoveEvent event) {
     var monitor = currentMonitor;
     if (monitor == null) return;
 
     var speed = 0.5; // my preference
-
     cursor.x = (cursor.x + event.deltaX * speed).clamp(0, monitor.mode.width);
     cursor.y = (cursor.y + event.deltaY * speed).clamp(0, monitor.mode.height);
 
     if (isMovingFocusedWindow) {
-      handleWindowGrab();
+      handleWindowMove();
+    } else if (isResizingFocusedWindow) {
+      handleWindowResize();
     } else {
       handlePointerMovement(event);
     }
@@ -488,7 +565,9 @@ void handleNewPointer(PointerDevice pointer) {
     cursor.y = event.y.clamp(0, monitor.mode.height);
 
     if (isMovingFocusedWindow) {
-      handleWindowGrab();
+      handleWindowMove();
+    } else if (isResizingFocusedWindow) {
+      handleWindowResize();
     } else {
       handlePointerMovement(event);
     }
@@ -501,14 +580,16 @@ void handleNewPointer(PointerDevice pointer) {
         unfocusWindow();
         print("Removed 🪟 window focus.");
       } else {
-        var window = focusedWindow;
-        if (window != null) {
-          window.submitPointerButtonUpdate(PointerUpdate(
-            pointer,
-            event,
-            (cursor.x - window.drawingX).toDouble(),
-            (cursor.y - window.drawingY).toDouble(),
-          ));
+        if (isFocusedWindowFocusedFromPointer) {
+          var window = focusedWindow;
+          if (window != null) {
+            window.submitPointerButtonUpdate(PointerUpdate(
+              pointer,
+              event,
+              (cursor.x - window.drawingX).toDouble(),
+              (cursor.y - window.drawingY).toDouble(),
+            ));
+          }
         }
       }
     } else {
@@ -543,6 +624,7 @@ void handleNewPointer(PointerDevice pointer) {
 
     if (!event.isPressed) {
       isMovingFocusedWindow = false;
+      isResizingFocusedWindow = false;
       isFocusedWindowFocusedFromPointer = false;
     }
   });
@@ -581,31 +663,28 @@ void handleNewKeyboard(KeyboardDevice keyboard) {
       } else if (event.isPressed && isLeftAltKeyPressed) {
         readyToQuit = true;
       }
-    } else if (event.key == InputDeviceButton.tab) {
-      if (event.isPressed) {
-        if (isLeftAltKeyPressed) {
-          if (!isSwitchingWindows) {
-            isSwitchingWindows = true;
-            windowSwitchIndex = 0;
-            tempWindowList = windows.frontToBackIterable.toList();
-          }
+    } else if (event.key == InputDeviceButton.tab && event.isPressed) {
+      if (isLeftAltKeyPressed) {
+        if (!isSwitchingWindows) {
+          isSwitchingWindows = true;
+          windowSwitchIndex = 0;
+          tempWindowList = windows.frontToBackIterable.toList();
+        }
 
-          if (focusedWindow != null) {
-            var direction = isLeftShiftKeyPressed ? -1 : 1;
-            windowSwitchIndex =
-                (windowSwitchIndex + direction) % windows.length;
-          }
+        if (focusedWindow != null) {
+          var direction = isLeftShiftKeyPressed ? -1 : 1;
+          windowSwitchIndex = (windowSwitchIndex + direction) % windows.length;
+        }
 
-          if (windows.isNotEmpty) {
-            var index = 0;
-            for (var window in tempWindowList) {
-              if (index == windowSwitchIndex) {
-                focusWindow(window);
-                break;
-              }
-
-              index++;
+        if (windows.isNotEmpty) {
+          var index = 0;
+          for (var window in tempWindowList) {
+            if (index == windowSwitchIndex) {
+              focusWindow(window);
+              break;
             }
+
+            index++;
           }
         }
       }

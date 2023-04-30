@@ -10,6 +10,7 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_pointer.h>
+#include <wlr/util/edges.h>
 #include <xkbcommon/xkbcommon.h>
 #include <malloc.h>
 
@@ -25,6 +26,7 @@ enum event_type {
     event_type_window_move,
     event_type_window_maximize,
     event_type_window_fullscreen,
+    event_type_window_resize,
 
     event_type_input_new,
 
@@ -82,6 +84,11 @@ struct waybright_monitor {
     void(*handle_event)(int type, void* data);
 };
 
+struct waybright_window_event {
+    struct waybright_window* wb_window;
+    void* event;
+};
+
 struct waybright_window {
     struct waybright* wb;
     struct wlr_xdg_surface* wlr_xdg_surface;
@@ -96,6 +103,7 @@ struct waybright_window {
         struct wl_listener move;
         struct wl_listener maximize;
         struct wl_listener fullscreen;
+        struct wl_listener resize;
     } listeners;
 
     void(*handle_event)(int type, void* data);

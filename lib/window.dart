@@ -1,5 +1,17 @@
 part of "./waybright.dart";
 
+enum WindowEdge {
+  none,
+  top,
+  topRight,
+  right,
+  bottomRight,
+  bottom,
+  bottomLeft,
+  left,
+  topLeft,
+}
+
 /// An application window.
 ///
 /// In wayland, this contains an xdg-surface from the xdg-shell protocol.
@@ -11,6 +23,7 @@ class Window {
     'show': enum_event_type.event_type_window_show,
     'hide': enum_event_type.event_type_window_hide,
     'move': enum_event_type.event_type_window_move,
+    'resize': enum_event_type.event_type_window_resize,
     'maximize': enum_event_type.event_type_window_maximize,
     'fullscreen': enum_event_type.event_type_window_fullscreen,
   };
@@ -18,15 +31,68 @@ class Window {
   static void _executeEventHandler(int type, Pointer<Void> data) {
     var windows = _windowInstances.toList();
     for (var window in windows) {
-      var windowPtr = data as Pointer<struct_waybright_window>;
-      if (window._windowPtr != windowPtr) continue;
+      var eventPtr = data as Pointer<struct_waybright_window_event>;
+      if (window._windowPtr != eventPtr.ref.wb_window) continue;
 
       var handleEvent = window._eventHandlers[type];
       if (handleEvent == null) continue;
 
-      handleEvent();
+      if (type == enum_event_type.event_type_window_show ||
+          type == enum_event_type.event_type_window_hide) {
+        handleEvent();
+      } else if (type == enum_event_type.event_type_window_move) {
+        // var wlrEventPtr =
+        //     eventPtr.ref.event as Pointer<struct_wlr_xdg_toplevel_move_event>;
 
-      if (type == enum_event_type.event_type_window_remove) {
+        var event = WindowMoveEvent(window);
+
+        handleEvent(event);
+      } else if (type == enum_event_type.event_type_window_resize) {
+        var wlrEventPtr =
+            eventPtr.ref.event as Pointer<struct_wlr_xdg_toplevel_resize_event>;
+
+        WindowEdge edge;
+        switch (wlrEventPtr.ref.edges) {
+          case enum_wlr_edges.WLR_EDGE_TOP:
+            edge = WindowEdge.top;
+            break;
+          case enum_wlr_edges.WLR_EDGE_TOP | enum_wlr_edges.WLR_EDGE_RIGHT:
+            edge = WindowEdge.topRight;
+            break;
+          case enum_wlr_edges.WLR_EDGE_RIGHT:
+            edge = WindowEdge.right;
+            break;
+          case enum_wlr_edges.WLR_EDGE_BOTTOM | enum_wlr_edges.WLR_EDGE_RIGHT:
+            edge = WindowEdge.bottomRight;
+            break;
+          case enum_wlr_edges.WLR_EDGE_BOTTOM:
+            edge = WindowEdge.bottom;
+            break;
+          case enum_wlr_edges.WLR_EDGE_BOTTOM | enum_wlr_edges.WLR_EDGE_LEFT:
+            edge = WindowEdge.bottomLeft;
+            break;
+          case enum_wlr_edges.WLR_EDGE_LEFT:
+            edge = WindowEdge.left;
+            break;
+          case enum_wlr_edges.WLR_EDGE_TOP | enum_wlr_edges.WLR_EDGE_LEFT:
+            edge = WindowEdge.topLeft;
+            break;
+          default:
+            edge = WindowEdge.none;
+        }
+
+        var event = WindowResizeEvent(
+          window,
+          edge,
+        );
+
+        handleEvent(event);
+      } else if (type == enum_event_type.event_type_window_maximize) {
+        handleEvent(WindowMaximizeEvent(window));
+      } else if (type == enum_event_type.event_type_window_fullscreen) {
+        handleEvent(WindowFullscreenEvent(window));
+      } else if (type == enum_event_type.event_type_window_remove) {
+        handleEvent();
         _windowInstances.remove(window);
       }
     }
@@ -63,7 +129,7 @@ class Window {
     }
   }
 
-  void _ensurePointerFocus(PointerDevice pointer, int cursorX, int cursorY) {
+  void _ensurePointerFocus(PointerDevice pointer, num cursorX, num cursorY) {
     if (pointer.focusedWindow != this) {
       pointer.clearFocus();
       pointer.focusOnWindow(this, cursorX, cursorY);
@@ -255,7 +321,8 @@ class Window {
     var windowPtr = _windowPtr;
     if (windowPtr == null) return;
 
-    _ensurePointerFocus(update.pointer, 0, 0);
+    _ensurePointerFocus(
+        update.pointer, update.windowCursorX, update.windowCursorY);
 
     _wblib.waybright_window_submit_pointer_button_event(
       windowPtr,
@@ -270,7 +337,8 @@ class Window {
     var windowPtr = _windowPtr;
     if (windowPtr == null) return;
 
-    _ensurePointerFocus(update.pointer, 100, 100);
+    _ensurePointerFocus(
+        update.pointer, update.windowCursorX, update.windowCursorY);
 
     int source;
     switch (update.event.source) {

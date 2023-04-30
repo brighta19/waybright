@@ -149,22 +149,28 @@ void handle_monitor_new_event(struct wl_listener *listener, void *data) {
 void handle_window_show_event(struct wl_listener *listener, void *data) {
     struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.show);
 
+    struct waybright_window_event wb_window_event = { wb_window, NULL };
+
     if (wb_window->handle_event)
-        wb_window->handle_event(event_type_window_show, wb_window);
+        wb_window->handle_event(event_type_window_show, &wb_window_event);
 }
 
 void handle_window_hide_event(struct wl_listener *listener, void *data) {
     struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.hide);
 
+    struct waybright_window_event wb_window_event = { wb_window, NULL };
+
     if (wb_window->handle_event)
-        wb_window->handle_event(event_type_window_hide, wb_window);
+        wb_window->handle_event(event_type_window_hide, &wb_window_event);
 }
 
 void handle_window_remove_event(struct wl_listener *listener, void *data) {
     struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.remove);
 
+    struct waybright_window_event wb_window_event = { wb_window, NULL };
+
     if (wb_window->handle_event)
-        wb_window->handle_event(event_type_window_remove, wb_window);
+        wb_window->handle_event(event_type_window_remove, &wb_window_event);
 
     waybright_window_destroy(wb_window);
 }
@@ -176,22 +182,41 @@ void handle_window_move_event(struct wl_listener *listener, void *data) {
     // Accept move requests only if it is a response to pointer button events
     if (event->serial != wb_window->wb->last_pointer_button_serial) return;
 
+    struct waybright_window_event wb_window_event = { wb_window, event };
+
     if (wb_window->handle_event)
-        wb_window->handle_event(event_type_window_move, wb_window);
+        wb_window->handle_event(event_type_window_move, &wb_window_event);
+}
+
+void handle_window_resize_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.resize);
+	struct wlr_xdg_toplevel_resize_event *event = data;
+
+    // Accept move requests only if it is a response to pointer button events
+    if (event->serial != wb_window->wb->last_pointer_button_serial) return;
+
+    struct waybright_window_event wb_window_event = { wb_window, event };
+
+    if (wb_window->handle_event)
+        wb_window->handle_event(event_type_window_resize, &wb_window_event);
 }
 
 void handle_window_maximize_event(struct wl_listener *listener, void *data) {
     struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.maximize);
 
+    struct waybright_window_event wb_window_event = { wb_window, NULL };
+
     if (wb_window->handle_event)
-        wb_window->handle_event(event_type_window_maximize, wb_window);
+        wb_window->handle_event(event_type_window_maximize, &wb_window_event);
 }
 
 void handle_window_fullscreen_event(struct wl_listener *listener, void *data) {
     struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.fullscreen);
 
+    struct waybright_window_event wb_window_event = { wb_window, NULL };
+
     if (wb_window->handle_event)
-        wb_window->handle_event(event_type_window_fullscreen, wb_window);
+        wb_window->handle_event(event_type_window_fullscreen, &wb_window_event);
 }
 
 void handle_window_new_event(struct wl_listener *listener, void *data) {
@@ -221,6 +246,8 @@ void handle_window_new_event(struct wl_listener *listener, void *data) {
     wl_signal_add(&wlr_xdg_toplevel->events.request_maximize, &wb_window->listeners.maximize);
     wb_window->listeners.fullscreen.notify = handle_window_fullscreen_event;
     wl_signal_add(&wlr_xdg_toplevel->events.request_fullscreen, &wb_window->listeners.fullscreen);
+    wb_window->listeners.resize.notify = handle_window_resize_event;
+    wl_signal_add(&wlr_xdg_toplevel->events.request_resize, &wb_window->listeners.resize);
 
     // More events coming soon to a town near you!
 
