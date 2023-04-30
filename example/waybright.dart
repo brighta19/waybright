@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:waybright/waybright.dart';
 
 // Switch windows with Alt+Tab
@@ -26,6 +27,8 @@ Window? focusedWindow;
 Window? hoveredWindow;
 
 var isFocusedWindowFocusedFromPointer = false;
+var isBackgroundFocusedFromPointer = false;
+var isGrabbingFocusedWindow = false;
 var isMovingFocusedWindow = false;
 var isResizingFocusedWindow = false;
 var isMaximizingFocusedWindow = false;
@@ -50,7 +53,14 @@ var tempWindowList = <Window>[];
 
 var readyToQuit = false;
 
-get shouldSubmitPointerMoveEvents => !isSwitchingWindows;
+get shouldSubmitPointerMoveEvents =>
+    !isSwitchingWindows && !isBackgroundFocusedFromPointer;
+
+double getDistanceBetweenPoints(Vector point1, Vector point2) {
+  var x = point1.x - point2.x;
+  var y = point1.y - point2.y;
+  return sqrt(x * x + y * y);
+}
 
 void focusWindow(Window window) {
   if (focusedWindow == window) return;
@@ -237,6 +247,18 @@ void updateWindowPosition(Window window) {
     y = (monitor.mode.height - window.contentHeight) ~/ 3;
   }
 
+  if (isGrabbingFocusedWindow) {
+    windowDrawingPositionAtGrab.x =
+        (cursorPositionAtGrab.x - window.contentWidth / 2)
+                .clamp(0, monitor.mode.width - window.contentWidth) -
+            window.offsetX;
+
+    windowDrawingPositionAtGrab.y = -window.offsetY;
+
+    x = windowDrawingPositionAtGrab.x.toInt();
+    y = windowDrawingPositionAtGrab.y.toInt();
+  }
+
   window.drawingX = x;
   window.drawingY = y;
 }
@@ -371,13 +393,11 @@ void initializeWindow(Window window) {
         " wants ${title.isEmpty ? "its 🪟 window" : "the 🪟 window '$title'"}"
         " moved!");
 
-    if (!window.isMaximized) {
-      isMovingFocusedWindow = true;
-      cursorPositionAtGrab.x = cursor.x;
-      cursorPositionAtGrab.y = cursor.y;
-      windowDrawingPositionAtGrab.x = window.drawingX;
-      windowDrawingPositionAtGrab.y = window.drawingY;
-    }
+    isGrabbingFocusedWindow = true;
+    cursorPositionAtGrab.x = cursor.x;
+    cursorPositionAtGrab.y = cursor.y;
+    windowDrawingPositionAtGrab.x = window.drawingX;
+    windowDrawingPositionAtGrab.y = window.drawingY;
 
     focusWindow(window);
   });
@@ -449,7 +469,7 @@ void handleNewWindow(Window window) {
   initializeWindow(window);
 }
 
-void handlePointerMovement(PointerMoveEvent event) {
+void handleWindowHover(PointerMoveEvent event) {
   if (!shouldSubmitPointerMoveEvents) return;
   var pointer = event.pointer;
 
@@ -540,6 +560,35 @@ void handleWindowResize() {
   window.submitNewSize(width: width.toInt(), height: height.toInt());
 }
 
+void handlePointerMovement(PointerMoveEvent event) {
+  var window = focusedWindow;
+  if (window == null) return;
+
+  if (isGrabbingFocusedWindow) {
+    var distance = getDistanceBetweenPoints(cursorPositionAtGrab, cursor);
+    if (distance >= 15) {
+      if (window.isMaximized) {
+        startUnmaximizingWindow(window);
+      }
+      isMovingFocusedWindow = true;
+      window.submitPointerMoveUpdate(PointerUpdate(
+        event.pointer,
+        event,
+        (cursor.x - window.drawingX).toDouble(),
+        (cursor.y - window.drawingY).toDouble(),
+      ));
+    }
+  }
+
+  if (isMovingFocusedWindow) {
+    handleWindowMove();
+  } else if (isResizingFocusedWindow) {
+    handleWindowResize();
+  } else {
+    handleWindowHover(event);
+  }
+}
+
 void handleNewPointer(PointerDevice pointer) {
   pointer.setEventHandler("move", (PointerRelativeMoveEvent event) {
     var monitor = currentMonitor;
@@ -549,13 +598,7 @@ void handleNewPointer(PointerDevice pointer) {
     cursor.x = (cursor.x + event.deltaX * speed).clamp(0, monitor.mode.width);
     cursor.y = (cursor.y + event.deltaY * speed).clamp(0, monitor.mode.height);
 
-    if (isMovingFocusedWindow) {
-      handleWindowMove();
-    } else if (isResizingFocusedWindow) {
-      handleWindowResize();
-    } else {
-      handlePointerMovement(event);
-    }
+    handlePointerMovement(event);
   });
   pointer.setEventHandler("teleport", (PointerAbsoluteMoveEvent event) {
     var monitor = currentMonitor;
@@ -564,21 +607,17 @@ void handleNewPointer(PointerDevice pointer) {
     cursor.x = event.x.clamp(0, monitor.mode.width);
     cursor.y = event.y.clamp(0, monitor.mode.height);
 
-    if (isMovingFocusedWindow) {
-      handleWindowMove();
-    } else if (isResizingFocusedWindow) {
-      handleWindowResize();
-    } else {
-      handlePointerMovement(event);
-    }
+    handlePointerMovement(event);
   });
   pointer.setEventHandler("button", (PointerButtonEvent event) {
     Window? currentlyHoveredWindow = getWindowAtPoint(cursor.x, cursor.y);
+    hoveredWindow = currentlyHoveredWindow;
 
     if (currentlyHoveredWindow == null) {
       if (event.isPressed) {
         unfocusWindow();
         print("Removed 🪟 window focus.");
+        isBackgroundFocusedFromPointer = true;
       } else {
         if (isFocusedWindowFocusedFromPointer) {
           var window = focusedWindow;
@@ -623,6 +662,7 @@ void handleNewPointer(PointerDevice pointer) {
     }
 
     if (!event.isPressed) {
+      isGrabbingFocusedWindow = false;
       isMovingFocusedWindow = false;
       isResizingFocusedWindow = false;
       isFocusedWindowFocusedFromPointer = false;
@@ -647,6 +687,31 @@ void handleNewPointer(PointerDevice pointer) {
   });
 }
 
+void handleWindowSwitching(KeyboardDevice keyboard) {
+  if (!isSwitchingWindows) {
+    isSwitchingWindows = true;
+    windowSwitchIndex = 0;
+    tempWindowList = windows.frontToBackIterable.toList();
+  }
+
+  if (focusedWindow != null) {
+    var direction = isLeftShiftKeyPressed ? -1 : 1;
+    windowSwitchIndex = (windowSwitchIndex + direction) % windows.length;
+  }
+
+  if (windows.isNotEmpty) {
+    var index = 0;
+    for (var window in tempWindowList) {
+      if (index == windowSwitchIndex) {
+        focusWindow(window);
+        break;
+      }
+
+      index++;
+    }
+  }
+}
+
 void handleNewKeyboard(KeyboardDevice keyboard) {
   keyboard.setEventHandler("key", (KeyboardKeyEvent event) {
     if (event.key == InputDeviceButton.altLeft) {
@@ -665,35 +730,22 @@ void handleNewKeyboard(KeyboardDevice keyboard) {
       }
     } else if (event.key == InputDeviceButton.tab && event.isPressed) {
       if (isLeftAltKeyPressed) {
-        if (!isSwitchingWindows) {
-          isSwitchingWindows = true;
-          windowSwitchIndex = 0;
-          tempWindowList = windows.frontToBackIterable.toList();
-        }
-
-        if (focusedWindow != null) {
-          var direction = isLeftShiftKeyPressed ? -1 : 1;
-          windowSwitchIndex = (windowSwitchIndex + direction) % windows.length;
-        }
-
-        if (windows.isNotEmpty) {
-          var index = 0;
-          for (var window in tempWindowList) {
-            if (index == windowSwitchIndex) {
-              focusWindow(window);
-              break;
-            }
-
-            index++;
-          }
-        }
+        handleWindowSwitching(keyboard);
       }
     }
 
-    focusedWindow?.submitKeyboardKeyUpdate(KeyboardUpdate(
-      keyboard,
-      event,
-    ));
+    // print("${keyboard.isAltPressed}");
+    if (!isLeftAltKeyPressed) {
+      isSwitchingWindows = false;
+      readyToQuit = false;
+    }
+
+    if (!isSwitchingWindows) {
+      focusedWindow?.submitKeyboardKeyUpdate(KeyboardUpdate(
+        keyboard,
+        event,
+      ));
+    }
   });
   keyboard.setEventHandler("modifiers", (KeyboardModifiersEvent event) {
     var window = focusedWindow;
