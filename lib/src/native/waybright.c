@@ -389,7 +389,7 @@ void handle_keyboard_new_event(struct waybright* wb, struct waybright_keyboard* 
     wb_keyboard->listeners.modifiers.notify = handle_keyboard_modifiers_event;
     wl_signal_add(&wlr_keyboard->events.modifiers, &wb_keyboard->listeners.modifiers);
 
-	wlr_seat_set_keyboard(wb->wlr_seat, wlr_input_device);
+	wlr_seat_set_keyboard(wb->wlr_seat, wlr_keyboard);
 }
 
 void handle_input_new_event(struct wl_listener *listener, void *data) {
@@ -404,7 +404,7 @@ void handle_input_new_event(struct wl_listener *listener, void *data) {
         case WLR_INPUT_DEVICE_POINTER:
             struct waybright_pointer* wb_pointer = calloc(sizeof(struct waybright_pointer), 1);
             wb_pointer->wb = wb;
-            wb_pointer->wlr_pointer = wlr_input_device->pointer;
+            wb_pointer->wlr_pointer = wlr_pointer_from_input_device(wlr_input_device);
             wb_pointer->wb_input = wb_input;
             wb_input->pointer = wb_pointer;
 
@@ -414,7 +414,7 @@ void handle_input_new_event(struct wl_listener *listener, void *data) {
         case WLR_INPUT_DEVICE_KEYBOARD:
             struct waybright_keyboard* wb_keyboard = calloc(sizeof(struct waybright_keyboard), 1);
             wb_keyboard->wb = wb;
-            wb_keyboard->wlr_keyboard = wlr_input_device->keyboard;
+            wb_keyboard->wlr_keyboard = wlr_keyboard_from_input_device(wlr_input_device);
             wb_keyboard->wb_input = wb_input;
             wb_input->keyboard = wb_keyboard;
 
@@ -458,7 +458,7 @@ int waybright_init(struct waybright* wb) {
     if (!wb->wlr_compositor)
         return 1;
 
-    wb->wlr_xdg_shell = wlr_xdg_shell_create(wb->wl_display);
+    wb->wlr_xdg_shell = wlr_xdg_shell_create(wb->wl_display, 3);
     if (!wb->wlr_xdg_shell)
         return 1;
 
