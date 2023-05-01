@@ -509,6 +509,7 @@ void waybright_run_event_loop(struct waybright* wb) {
 }
 
 void waybright_close_socket(struct waybright* wb) {
+    wl_display_destroy_clients(wb->wl_display);
     wl_display_terminate(wb->wl_display);
 }
 

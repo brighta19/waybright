@@ -1,8 +1,11 @@
+import 'dart:io';
+import 'dart:isolate';
 import 'dart:math';
 import 'package:waybright/waybright.dart';
 
 // Close socket by holding Alt while clicking Escape twice
 // Switch windows with Alt+Tab
+// Launch Weston Terminal with Alt+T
 
 class Vector {
   num x;
@@ -44,14 +47,19 @@ var windowWidthAtGrab = 0;
 var windowHeightAtGrab = 0;
 var edgeOfWindowResize = WindowEdge.none;
 
-var isLeftAltKeyPressed = false;
-var isLeftShiftKeyPressed = false;
 var windowSwitchIndex = 0;
 var isSwitchingWindows = false;
 var hasSwitchedWindows = false;
 var tempWindowList = <Window>[];
 
 var readyToQuit = false;
+
+var isLeftAltKeyPressed = false;
+var isRightAltKeyPressed = false;
+get isAltKeyPressed => isLeftAltKeyPressed || isRightAltKeyPressed;
+var isLeftShiftKeyPressed = false;
+var isRightShiftKeyPressed = false;
+get isShiftKeyPressed => isLeftShiftKeyPressed || isRightShiftKeyPressed;
 
 get shouldSubmitPointerMoveEvents =>
     !isSwitchingWindows && !isBackgroundFocusedFromPointer;
@@ -243,8 +251,10 @@ void updateWindowPosition(Window window) {
   var y = 0;
 
   if (!window.isMaximized && !window.isFullscreen) {
-    x = (monitor.mode.width - window.contentWidth) ~/ 2;
-    y = (monitor.mode.height - window.contentHeight) ~/ 3;
+    x = ((monitor.mode.width - window.contentWidth) / 2 - window.offsetX)
+        .toInt();
+    y = ((monitor.mode.height - window.contentHeight) / 3 - window.offsetY)
+        .toInt();
   }
 
   if (isGrabbingFocusedWindow) {
@@ -696,7 +706,7 @@ void handleWindowSwitching(KeyboardDevice keyboard) {
   }
 
   if (focusedWindow != null) {
-    var direction = isLeftShiftKeyPressed ? -1 : 1;
+    var direction = isShiftKeyPressed ? -1 : 1;
     windowSwitchIndex = (windowSwitchIndex + direction) % windows.length;
   }
 
@@ -713,30 +723,56 @@ void handleWindowSwitching(KeyboardDevice keyboard) {
   }
 }
 
+void launchWestonTerminal() {
+  Isolate.run(() {
+    print("Launching 🖥️ Weston Terminal...");
+    try {
+      Process.runSync("weston-terminal", []);
+    } catch (e) {
+      print("Failed to launch 🖥️ Weston Terminal: $e");
+    }
+  });
+}
+
+void updateKeys(KeyboardKeyEvent event) {
+  switch (event.key) {
+    case InputDeviceButton.altLeft:
+      isLeftAltKeyPressed = event.isPressed;
+      break;
+    case InputDeviceButton.altRight:
+      isRightAltKeyPressed = event.isPressed;
+      break;
+    case InputDeviceButton.shiftLeft:
+      isLeftShiftKeyPressed = event.isPressed;
+      break;
+    case InputDeviceButton.shiftRight:
+      isRightShiftKeyPressed = event.isPressed;
+      break;
+    default:
+  }
+}
+
 void handleNewKeyboard(KeyboardDevice keyboard) {
   keyboard.setEventHandler("key", (KeyboardKeyEvent event) {
-    if (event.key == InputDeviceButton.altLeft) {
-      isLeftAltKeyPressed = event.isPressed;
-      if (!isLeftAltKeyPressed) {
-        isSwitchingWindows = false;
-        readyToQuit = false;
-      }
-    } else if (event.key == InputDeviceButton.shiftLeft) {
-      isLeftShiftKeyPressed = event.isPressed;
-    } else if (event.key == InputDeviceButton.escape) {
-      if (event.isPressed && readyToQuit) {
+    updateKeys(event);
+
+    if (event.key == InputDeviceButton.escape && event.isPressed) {
+      if (readyToQuit) {
         socket?.close();
-      } else if (event.isPressed && isLeftAltKeyPressed) {
+      } else if (isAltKeyPressed) {
         readyToQuit = true;
       }
     } else if (event.key == InputDeviceButton.tab && event.isPressed) {
-      if (isLeftAltKeyPressed) {
+      if (isAltKeyPressed) {
         handleWindowSwitching(keyboard);
+      }
+    } else if (event.key == InputDeviceButton.keyT && event.isPressed) {
+      if (isAltKeyPressed) {
+        launchWestonTerminal();
       }
     }
 
-    // print("${keyboard.isAltPressed}");
-    if (!isLeftAltKeyPressed) {
+    if (!isAltKeyPressed) {
       isSwitchingWindows = false;
       readyToQuit = false;
     }
