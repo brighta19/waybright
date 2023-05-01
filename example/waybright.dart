@@ -1,8 +1,8 @@
 import 'dart:math';
 import 'package:waybright/waybright.dart';
 
-// Switch windows with Alt+Tab
 // Close socket by holding Alt while clicking Escape twice
+// Switch windows with Alt+Tab
 
 class Vector {
   num x;
@@ -562,9 +562,7 @@ void handleWindowResize() {
 
 void handlePointerMovement(PointerMoveEvent event) {
   var window = focusedWindow;
-  if (window == null) return;
-
-  if (isGrabbingFocusedWindow) {
+  if (window != null && isGrabbingFocusedWindow) {
     var distance = getDistanceBetweenPoints(cursorPositionAtGrab, cursor);
     if (distance >= 15) {
       if (window.isMaximized) {
@@ -615,8 +613,10 @@ void handleNewPointer(PointerDevice pointer) {
 
     if (currentlyHoveredWindow == null) {
       if (event.isPressed) {
-        unfocusWindow();
-        print("Removed 🪟 window focus.");
+        if (focusedWindow != null) {
+          unfocusWindow();
+          print("Removed 🪟 window focus.");
+        }
         isBackgroundFocusedFromPointer = true;
       } else {
         if (isFocusedWindowFocusedFromPointer) {
@@ -666,6 +666,7 @@ void handleNewPointer(PointerDevice pointer) {
       isMovingFocusedWindow = false;
       isResizingFocusedWindow = false;
       isFocusedWindowFocusedFromPointer = false;
+      isBackgroundFocusedFromPointer = false;
     }
   });
   pointer.setEventHandler("axis", (PointerAxisEvent event) {
