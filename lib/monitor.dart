@@ -134,20 +134,4 @@ class Monitor {
     }
     _isEnabled = false;
   }
-
-  /// The background color of this monitor.
-  int get backgroundColor {
-    var monitorPtr = _monitorPtr;
-    if (monitorPtr != null) {
-      return _wblib.waybright_monitor_get_background_color(monitorPtr);
-    }
-    return 0;
-  }
-
-  set backgroundColor(int color) {
-    var monitorPtr = _monitorPtr;
-    if (monitorPtr != null) {
-      _wblib.waybright_monitor_set_background_color(monitorPtr, color);
-    }
-  }
 }

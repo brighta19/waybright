@@ -334,8 +334,6 @@ void initializeMonitor(Monitor monitor) {
 
   if (preferredMode != null) monitor.mode = preferredMode;
   monitor.enable();
-  monitor.backgroundColor =
-      backgroundColors[(monitors.length - 1) % backgroundColors.length];
 
   monitor.setEventHandler("remove", () {
     monitors.remove(monitor);
@@ -346,6 +344,9 @@ void initializeMonitor(Monitor monitor) {
       currentMonitor = monitors.isEmpty ? null : monitors.first;
     }
   });
+
+  monitor.renderer.backgroundColor =
+      backgroundColors[(monitors.length - 1) % backgroundColors.length];
 
   if (monitors.length == 1) {
     currentMonitor = monitor;

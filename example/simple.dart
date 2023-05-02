@@ -35,9 +35,10 @@ void main(List<String> args) {
 
     monitor.mode = preferredMode;
     monitor.enable();
-    monitor.backgroundColor = backgroundColor;
 
     var renderer = monitor.renderer;
+    renderer.backgroundColor = backgroundColor;
+
     monitor.setEventHandler("frame", () {
       var list = windows.backToFrontIterable;
       for (var window in list) {

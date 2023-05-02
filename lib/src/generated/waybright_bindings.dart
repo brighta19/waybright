@@ -4579,6 +4579,40 @@ class WaybrightLibrary {
   late final _waybright_close_socket = _waybright_close_socketPtr
       .asFunction<void Function(ffi.Pointer<struct_waybright>)>();
 
+  void waybright_renderer_set_background_color(
+    ffi.Pointer<struct_waybright_renderer> wb_renderer,
+    int color,
+  ) {
+    return _waybright_renderer_set_background_color(
+      wb_renderer,
+      color,
+    );
+  }
+
+  late final _waybright_renderer_set_background_colorPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_waybright_renderer>,
+              ffi.Int)>>('waybright_renderer_set_background_color');
+  late final _waybright_renderer_set_background_color =
+      _waybright_renderer_set_background_colorPtr.asFunction<
+          void Function(ffi.Pointer<struct_waybright_renderer>, int)>();
+
+  int waybright_renderer_get_background_color(
+    ffi.Pointer<struct_waybright_renderer> wb_renderer,
+  ) {
+    return _waybright_renderer_get_background_color(
+      wb_renderer,
+    );
+  }
+
+  late final _waybright_renderer_get_background_colorPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Int Function(ffi.Pointer<struct_waybright_renderer>)>>(
+      'waybright_renderer_get_background_color');
+  late final _waybright_renderer_get_background_color =
+      _waybright_renderer_get_background_colorPtr
+          .asFunction<int Function(ffi.Pointer<struct_waybright_renderer>)>();
+
   int waybright_renderer_get_fill_style(
     ffi.Pointer<struct_waybright_renderer> wb_renderer,
   ) {
@@ -7599,6 +7633,9 @@ class struct_waybright_renderer extends ffi.Struct {
 
   @ffi.Array.multi([4])
   external ffi.Array<ffi.Float> color_fill;
+
+  @ffi.Array.multi([4])
+  external ffi.Array<ffi.Float> color_background;
 }
 
 class struct_waybright_monitor extends ffi.Struct {
@@ -7607,9 +7644,6 @@ class struct_waybright_monitor extends ffi.Struct {
   external ffi.Pointer<struct_waybright_renderer> wb_renderer;
 
   external ffi.Pointer<struct_wlr_output> wlr_output;
-
-  @ffi.Array.multi([4])
-  external ffi.Array<ffi.Float> background_color;
 
   external UnnamedStruct31 listeners;
 

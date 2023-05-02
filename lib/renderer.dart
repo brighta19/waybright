@@ -4,6 +4,22 @@ part of "./waybright.dart";
 class Renderer {
   Pointer<struct_waybright_renderer>? _rendererPtr;
 
+  /// The background color of this monitor.
+  int get backgroundColor {
+    var rendererPtr = _rendererPtr;
+    if (rendererPtr != null) {
+      return _wblib.waybright_renderer_get_background_color(rendererPtr);
+    }
+    return 0;
+  }
+
+  set backgroundColor(int color) {
+    var rendererPtr = _rendererPtr;
+    if (rendererPtr != null) {
+      _wblib.waybright_renderer_set_background_color(rendererPtr, color);
+    }
+  }
+
   /// The color used to fill in shapes.
   int get fillStyle {
     var rendererPtr = _rendererPtr;

@@ -109,7 +109,7 @@ void handle_monitor_frame_event(struct wl_listener *listener, void *data) {
     wlr_renderer_begin(wlr_renderer, width, height);
 
     // Fills the entire buffer with a single color.
-    wlr_renderer_clear(wlr_renderer, wb_monitor->background_color);
+    wlr_renderer_clear(wlr_renderer, wb_monitor->wb_renderer->color_background);
 
 
     if (wb_monitor->handle_event)
@@ -515,6 +515,14 @@ void waybright_close_socket(struct waybright* wb) {
     wl_display_terminate(wb->wl_display);
 }
 
+void waybright_renderer_set_background_color(struct waybright_renderer* wb_renderer, int color) {
+    set_color_to_array(color, wb_renderer->color_background);
+}
+
+int waybright_renderer_get_background_color(struct waybright_renderer* wb_renderer) {
+    return get_color_from_array(wb_renderer->color_background);
+}
+
 int waybright_renderer_get_fill_style(struct waybright_renderer* wb_renderer) {
     return get_color_from_array(wb_renderer->color_fill);
 }
@@ -562,14 +570,6 @@ void waybright_monitor_enable(struct waybright_monitor* wb_monitor) {
 
 void waybright_monitor_disable(struct waybright_monitor* wb_monitor) {
     wlr_output_enable(wb_monitor->wlr_output, false);
-}
-
-void waybright_monitor_set_background_color(struct waybright_monitor* wb_monitor, int color) {
-    set_color_to_array(color, wb_monitor->background_color);
-}
-
-int waybright_monitor_get_background_color(struct waybright_monitor* wb_monitor) {
-    return get_color_from_array(wb_monitor->background_color);
 }
 
 void waybright_window_submit_pointer_move_event(struct waybright_window* wb_window, int time, int sx, int sy) {

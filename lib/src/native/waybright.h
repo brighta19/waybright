@@ -67,14 +67,13 @@ struct waybright_renderer {
     struct wlr_renderer* wlr_renderer;
 
     float color_fill[4];
+    float color_background[4];
 };
 
 struct waybright_monitor {
     struct waybright* wb;
     struct waybright_renderer* wb_renderer;
     struct wlr_output* wlr_output;
-
-    float background_color[4];
 
     struct {
         struct wl_listener remove;
@@ -170,6 +169,8 @@ int waybright_open_socket(struct waybright* wb, const char* socket_name);
 void waybright_run_event_loop(struct waybright* wb);
 void waybright_close_socket(struct waybright* wb);
 
+void waybright_renderer_set_background_color(struct waybright_renderer* wb_renderer, int color);
+int waybright_renderer_get_background_color(struct waybright_renderer* wb_renderer);
 int waybright_renderer_get_fill_style(struct waybright_renderer* wb_renderer);
 void waybright_renderer_set_fill_style(struct waybright_renderer* wb_renderer, int color);
 void waybright_renderer_clear_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height);
@@ -178,8 +179,6 @@ void waybright_renderer_draw_window(struct waybright_renderer* wb_renderer, stru
 
 void waybright_monitor_enable(struct waybright_monitor* wb_monitor);
 void waybright_monitor_disable(struct waybright_monitor* wb_monitor);
-void waybright_monitor_set_background_color(struct waybright_monitor* wb_monitor, int color);
-int waybright_monitor_get_background_color(struct waybright_monitor* wb_monitor);
 
 void waybright_window_submit_pointer_move_event(struct waybright_window* wb_window, int time, int sx, int sy);
 void waybright_window_submit_pointer_button_event(struct waybright_window* wb_window, int time, int button, int pressed);
