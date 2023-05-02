@@ -5,8 +5,8 @@ class Monitor {
   static final _monitorInstances = <Monitor>[];
 
   static final _eventTypeFromString = {
-    'remove': enum_event_type.event_type_monitor_remove,
-    'frame': enum_event_type.event_type_monitor_frame,
+    'remove': enum_wb_event_type.event_type_monitor_remove,
+    'frame': enum_wb_event_type.event_type_monitor_frame,
   };
 
   static void _executeEventHandler(int type, Pointer<Void> data) {
@@ -20,7 +20,7 @@ class Monitor {
 
       handleEvent();
 
-      if (type == enum_event_type.event_type_monitor_remove) {
+      if (type == enum_wb_event_type.event_type_monitor_remove) {
         _monitorInstances.remove(monitor);
       }
     }
@@ -65,7 +65,7 @@ class Monitor {
       var link = head;
       Pointer<struct_wlr_output_mode> item;
       while (link.ref.next != head) {
-        item = _wblib.get_wlr_output_mode_from_wl_list(link);
+        item = _wblib.waybright_get_wlr_output_mode_from_wl_list(link);
         var mode = Mode(
           item.ref.width,
           item.ref.height,

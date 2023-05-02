@@ -19,13 +19,13 @@ class Window {
   static final _windowInstances = <Window>[];
 
   static final _eventTypeFromString = {
-    'remove': enum_event_type.event_type_window_remove,
-    'show': enum_event_type.event_type_window_show,
-    'hide': enum_event_type.event_type_window_hide,
-    'move': enum_event_type.event_type_window_move,
-    'resize': enum_event_type.event_type_window_resize,
-    'maximize': enum_event_type.event_type_window_maximize,
-    'fullscreen': enum_event_type.event_type_window_fullscreen,
+    'remove': enum_wb_event_type.event_type_window_remove,
+    'show': enum_wb_event_type.event_type_window_show,
+    'hide': enum_wb_event_type.event_type_window_hide,
+    'move': enum_wb_event_type.event_type_window_move,
+    'resize': enum_wb_event_type.event_type_window_resize,
+    'maximize': enum_wb_event_type.event_type_window_maximize,
+    'fullscreen': enum_wb_event_type.event_type_window_fullscreen,
   };
 
   static void _executeEventHandler(int type, Pointer<Void> data) {
@@ -37,17 +37,17 @@ class Window {
       var handleEvent = window._eventHandlers[type];
       if (handleEvent == null) continue;
 
-      if (type == enum_event_type.event_type_window_show ||
-          type == enum_event_type.event_type_window_hide) {
+      if (type == enum_wb_event_type.event_type_window_show ||
+          type == enum_wb_event_type.event_type_window_hide) {
         handleEvent();
-      } else if (type == enum_event_type.event_type_window_move) {
+      } else if (type == enum_wb_event_type.event_type_window_move) {
         // var wlrEventPtr =
         //     eventPtr.ref.event as Pointer<struct_wlr_xdg_toplevel_move_event>;
 
         var event = WindowMoveEvent(window);
 
         handleEvent(event);
-      } else if (type == enum_event_type.event_type_window_resize) {
+      } else if (type == enum_wb_event_type.event_type_window_resize) {
         var wlrEventPtr =
             eventPtr.ref.event as Pointer<struct_wlr_xdg_toplevel_resize_event>;
 
@@ -87,11 +87,11 @@ class Window {
         );
 
         handleEvent(event);
-      } else if (type == enum_event_type.event_type_window_maximize) {
+      } else if (type == enum_wb_event_type.event_type_window_maximize) {
         handleEvent(WindowMaximizeEvent(window));
-      } else if (type == enum_event_type.event_type_window_fullscreen) {
+      } else if (type == enum_wb_event_type.event_type_window_fullscreen) {
         handleEvent(WindowFullscreenEvent(window));
-      } else if (type == enum_event_type.event_type_window_remove) {
+      } else if (type == enum_wb_event_type.event_type_window_remove) {
         handleEvent();
         _windowInstances.remove(window);
       }

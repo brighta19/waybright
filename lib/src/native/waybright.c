@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 200809L
+
 #include <stdlib.h>
 #include <time.h>
 #include <wlr/render/wlr_texture.h>
@@ -55,7 +57,7 @@ void waybright_keyboard_destroy(struct waybright_keyboard* wb_keyboard) {
     free(wb_keyboard);
 }
 
-struct wlr_output_mode* get_wlr_output_mode_from_wl_list(struct wl_list *ptr) {
+struct wlr_output_mode* waybright_get_wlr_output_mode_from_wl_list(struct wl_list *ptr) {
     return wl_container_of(ptr, (struct wlr_output_mode*)NULL, link);
 }
 

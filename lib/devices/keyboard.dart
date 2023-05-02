@@ -5,9 +5,9 @@ class KeyboardDevice extends InputDevice {
   static final _keyboardInstances = <KeyboardDevice>[];
 
   static final _eventTypeFromString = {
-    'remove': enum_event_type.event_type_keyboard_remove,
-    'key': enum_event_type.event_type_keyboard_key,
-    'modifiers': enum_event_type.event_type_keyboard_modifiers,
+    'remove': enum_wb_event_type.event_type_keyboard_remove,
+    'key': enum_wb_event_type.event_type_keyboard_key,
+    'modifiers': enum_wb_event_type.event_type_keyboard_modifiers,
   };
 
   static void _executeEventHandler(int type, Pointer<Void> data) {
@@ -19,10 +19,10 @@ class KeyboardDevice extends InputDevice {
       var handleEvent = keyboard._eventHandlers[type];
       if (handleEvent == null) continue;
 
-      if (type == enum_event_type.event_type_keyboard_remove) {
+      if (type == enum_wb_event_type.event_type_keyboard_remove) {
         handleEvent();
         _keyboardInstances.remove(keyboard);
-      } else if (type == enum_event_type.event_type_keyboard_key) {
+      } else if (type == enum_wb_event_type.event_type_keyboard_key) {
         var wlrEventPtr =
             eventPtr.ref.event as Pointer<struct_wlr_event_keyboard_key>;
 
@@ -35,7 +35,7 @@ class KeyboardDevice extends InputDevice {
         );
 
         handleEvent(event);
-      } else if (type == enum_event_type.event_type_keyboard_modifiers) {
+      } else if (type == enum_wb_event_type.event_type_keyboard_modifiers) {
         // var wlrEventPtr =
         //     eventPtr.ref.event as Pointer<struct_wlr_keyboard_modifiers>;
 

@@ -14,7 +14,7 @@
 #include <xkbcommon/xkbcommon.h>
 #include <malloc.h>
 
-enum event_type {
+enum wb_event_type {
     event_type_monitor_new,
     event_type_monitor_remove,
     event_type_monitor_frame,
@@ -160,7 +160,7 @@ struct waybright_keyboard {
     void(*handle_event)(int type, void* data);
 };
 
-struct wlr_output_mode* get_wlr_output_mode_from_wl_list(struct wl_list *ptr);
+struct wlr_output_mode* waybright_get_wlr_output_mode_from_wl_list(struct wl_list *ptr);
 struct waybright* waybright_create();
 void waybright_destroy(struct waybright* wb);
 int waybright_init(struct waybright*);

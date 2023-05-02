@@ -27,9 +27,35 @@ ffigen:
   headers:
     entry-points:
       - 'lib/src/native/waybright.h'
+  functions:
+    include:
+      - '^waybright_.*'
+      - '^wlr_.*'
   structs:
+    include:
+      - '^waybright_.*'
+      - '^wlr_.*'
     rename:
       '(.*)': 'struct_$1'
+  unions:
+    exclude:
+      - '.*'
   enums:
+    include:
+      - '^wb_.*'
+      - '^wl_.*'
+      - '^wlr_.*'
     rename:
       '(.*)': 'enum_$1'
+  unnamed-enums:
+    exclude:
+      - '.*'
+  globals:
+    exclude:
+      - '.*'
+  typedefs:
+    exclude:
+      - '.*'
+  macros:
+    exclude:
+      - '.*'

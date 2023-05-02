@@ -46,9 +46,9 @@ class Waybright {
   static final _waybrightInstances = <Waybright>[];
 
   static final _eventTypeFromString = {
-    'monitor-new': enum_event_type.event_type_monitor_new,
-    'window-new': enum_event_type.event_type_window_new,
-    'input-new': enum_event_type.event_type_input_new,
+    'monitor-new': enum_wb_event_type.event_type_monitor_new,
+    'window-new': enum_wb_event_type.event_type_window_new,
+    'input-new': enum_wb_event_type.event_type_input_new,
   };
 
   static void _executeEventHandler(int type, Pointer<Void> data) {
@@ -56,7 +56,7 @@ class Waybright {
       var handleEvent = waybright._eventHandlers[type];
       if (handleEvent == null) continue;
 
-      if (type == enum_event_type.event_type_monitor_new) {
+      if (type == enum_wb_event_type.event_type_monitor_new) {
         var monitorPtr = data as Pointer<struct_waybright_monitor>;
 
         var renderer = Renderer().._rendererPtr = monitorPtr.ref.wb_renderer;
@@ -67,7 +67,7 @@ class Waybright {
               Pointer.fromFunction(Monitor._executeEventHandler);
 
         handleEvent(monitor);
-      } else if (type == enum_event_type.event_type_window_new) {
+      } else if (type == enum_wb_event_type.event_type_window_new) {
         var windowPtr = data as Pointer<struct_waybright_window>;
         var wlrXdgToplevel = windowPtr.ref.wlr_xdg_toplevel.ref;
 
@@ -79,7 +79,7 @@ class Waybright {
               Pointer.fromFunction(Window._executeEventHandler);
 
         handleEvent(window);
-      } else if (type == enum_event_type.event_type_input_new) {
+      } else if (type == enum_wb_event_type.event_type_input_new) {
         var inputPtr = data as Pointer<struct_waybright_input>;
         var wlrInputDevice = inputPtr.ref.wlr_input_device.ref;
 
