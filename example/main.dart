@@ -14,7 +14,9 @@ var cursorY = 10.0;
 
 var cursorXAtGrab = 0.0;
 var cursorYAtGrab = 0.0;
-var isGrabbingWindow = false;
+var isMovingWindow = false;
+var isResizingWindow = false;
+bool get isGrabbingWindow => isMovingWindow || isResizingWindow;
 
 var isLeftAltPressed = false;
 var isRightAltPressed = false;
@@ -79,10 +81,16 @@ void main(List<String> args) {
       window.unfocus();
     });
 
-    window.setEventHandler("move", () {
+    window.setEventHandler("move", (event) {
       cursorXAtGrab = cursorX;
       cursorYAtGrab = cursorY;
-      isGrabbingWindow = true;
+      isMovingWindow = true;
+    });
+
+    window.setEventHandler("resize", (event) {
+      cursorXAtGrab = cursorX;
+      cursorYAtGrab = cursorY;
+      isResizingWindow = true;
     });
   });
 
@@ -141,10 +149,15 @@ void main(List<String> args) {
       });
 
       pointer.setEventHandler("button", (PointerButtonEvent event) {
-        if (!event.isPressed && isGrabbingWindow) {
-          focusedWindow!.drawingX += cursorX - cursorXAtGrab;
-          focusedWindow!.drawingY += cursorY - cursorYAtGrab;
-          isGrabbingWindow = false;
+        if (!event.isPressed) {
+          if (isMovingWindow) {
+            focusedWindow!.drawingX += cursorX - cursorXAtGrab;
+            focusedWindow!.drawingY += cursorY - cursorYAtGrab;
+          } else if (isResizingWindow) {
+            // resize
+          }
+          isMovingWindow = false;
+          isResizingWindow = false;
         }
 
         var hoveredWindow = getHoveredWindow();

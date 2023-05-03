@@ -35,7 +35,7 @@ part 'window.dart';
 part 'windowlist.dart';
 
 final WaybrightLibrary _wblib =
-    WaybrightLibrary(DynamicLibrary.open("build/waybright.so"));
+    WaybrightLibrary(DynamicLibrary.open("./waybright.so"));
 
 String _toString(Pointer<Char> stringPtr) {
   if (stringPtr == nullptr) return "";
