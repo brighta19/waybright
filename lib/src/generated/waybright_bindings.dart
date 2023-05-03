@@ -393,61 +393,31 @@ class WaybrightLibrary {
       ffi.Pointer<struct_wlr_texture> Function(ffi.Pointer<struct_wlr_renderer>,
           ffi.Pointer<struct_wlr_dmabuf_attributes>)>();
 
-  bool wlr_texture_is_opaque(
+  bool wlr_texture_update_from_buffer(
     ffi.Pointer<struct_wlr_texture> texture,
+    ffi.Pointer<struct_wlr_buffer> buffer,
+    ffi.Pointer<struct_pixman_region32> damage,
   ) {
-    return _wlr_texture_is_opaque(
+    return _wlr_texture_update_from_buffer(
       texture,
+      buffer,
+      damage,
     );
   }
 
-  late final _wlr_texture_is_opaquePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Bool Function(
-              ffi.Pointer<struct_wlr_texture>)>>('wlr_texture_is_opaque');
-  late final _wlr_texture_is_opaque = _wlr_texture_is_opaquePtr
-      .asFunction<bool Function(ffi.Pointer<struct_wlr_texture>)>();
-
-  bool wlr_texture_write_pixels(
-    ffi.Pointer<struct_wlr_texture> texture,
-    int stride,
-    int width,
-    int height,
-    int src_x,
-    int src_y,
-    int dst_x,
-    int dst_y,
-    ffi.Pointer<ffi.Void> data,
-  ) {
-    return _wlr_texture_write_pixels(
-      texture,
-      stride,
-      width,
-      height,
-      src_x,
-      src_y,
-      dst_x,
-      dst_y,
-      data,
-    );
-  }
-
-  late final _wlr_texture_write_pixelsPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Bool Function(
+  late final _wlr_texture_update_from_bufferPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Bool Function(
+                  ffi.Pointer<struct_wlr_texture>,
+                  ffi.Pointer<struct_wlr_buffer>,
+                  ffi.Pointer<struct_pixman_region32>)>>(
+      'wlr_texture_update_from_buffer');
+  late final _wlr_texture_update_from_buffer =
+      _wlr_texture_update_from_bufferPtr.asFunction<
+          bool Function(
               ffi.Pointer<struct_wlr_texture>,
-              ffi.Uint32,
-              ffi.Uint32,
-              ffi.Uint32,
-              ffi.Uint32,
-              ffi.Uint32,
-              ffi.Uint32,
-              ffi.Uint32,
-              ffi.Pointer<ffi.Void>)>>('wlr_texture_write_pixels');
-  late final _wlr_texture_write_pixels =
-      _wlr_texture_write_pixelsPtr.asFunction<
-          bool Function(ffi.Pointer<struct_wlr_texture>, int, int, int, int,
-              int, int, int, ffi.Pointer<ffi.Void>)>();
+              ffi.Pointer<struct_wlr_buffer>,
+              ffi.Pointer<struct_pixman_region32>)>();
 
   void wlr_texture_destroy(
     ffi.Pointer<struct_wlr_texture> texture,
@@ -779,7 +749,6 @@ class WaybrightLibrary {
   bool wlr_renderer_read_pixels(
     ffi.Pointer<struct_wlr_renderer> r,
     int fmt,
-    ffi.Pointer<ffi.Uint32> flags,
     int stride,
     int width,
     int height,
@@ -792,7 +761,6 @@ class WaybrightLibrary {
     return _wlr_renderer_read_pixels(
       r,
       fmt,
-      flags,
       stride,
       width,
       height,
@@ -809,7 +777,6 @@ class WaybrightLibrary {
           ffi.Bool Function(
               ffi.Pointer<struct_wlr_renderer>,
               ffi.Uint32,
-              ffi.Pointer<ffi.Uint32>,
               ffi.Uint32,
               ffi.Uint32,
               ffi.Uint32,
@@ -820,18 +787,8 @@ class WaybrightLibrary {
               ffi.Pointer<ffi.Void>)>>('wlr_renderer_read_pixels');
   late final _wlr_renderer_read_pixels =
       _wlr_renderer_read_pixelsPtr.asFunction<
-          bool Function(
-              ffi.Pointer<struct_wlr_renderer>,
-              int,
-              ffi.Pointer<ffi.Uint32>,
-              int,
-              int,
-              int,
-              int,
-              int,
-              int,
-              int,
-              ffi.Pointer<ffi.Void>)>();
+          bool Function(ffi.Pointer<struct_wlr_renderer>, int, int, int, int,
+              int, int, int, int, ffi.Pointer<ffi.Void>)>();
 
   bool wlr_renderer_init_wl_display(
     ffi.Pointer<struct_wlr_renderer> r,
@@ -900,146 +857,6 @@ class WaybrightLibrary {
               ffi.Pointer<struct_wlr_renderer>)>>('wlr_renderer_destroy');
   late final _wlr_renderer_destroy = _wlr_renderer_destroyPtr
       .asFunction<void Function(ffi.Pointer<struct_wlr_renderer>)>();
-
-  ffi.Pointer<struct_wlr_compositor> wlr_compositor_create(
-    ffi.Pointer<struct_wl_display> display,
-    ffi.Pointer<struct_wlr_renderer> renderer,
-  ) {
-    return _wlr_compositor_create(
-      display,
-      renderer,
-    );
-  }
-
-  late final _wlr_compositor_createPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Pointer<struct_wlr_compositor> Function(
-              ffi.Pointer<struct_wl_display>,
-              ffi.Pointer<struct_wlr_renderer>)>>('wlr_compositor_create');
-  late final _wlr_compositor_create = _wlr_compositor_createPtr.asFunction<
-      ffi.Pointer<struct_wlr_compositor> Function(
-          ffi.Pointer<struct_wl_display>, ffi.Pointer<struct_wlr_renderer>)>();
-
-  bool wlr_surface_is_subsurface(
-    ffi.Pointer<struct_wlr_surface> surface,
-  ) {
-    return _wlr_surface_is_subsurface(
-      surface,
-    );
-  }
-
-  late final _wlr_surface_is_subsurfacePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Bool Function(
-              ffi.Pointer<struct_wlr_surface>)>>('wlr_surface_is_subsurface');
-  late final _wlr_surface_is_subsurface = _wlr_surface_is_subsurfacePtr
-      .asFunction<bool Function(ffi.Pointer<struct_wlr_surface>)>();
-
-  ffi.Pointer<struct_wlr_subsurface> wlr_subsurface_from_wlr_surface(
-    ffi.Pointer<struct_wlr_surface> surface,
-  ) {
-    return _wlr_subsurface_from_wlr_surface(
-      surface,
-    );
-  }
-
-  late final _wlr_subsurface_from_wlr_surfacePtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Pointer<struct_wlr_subsurface> Function(
-                  ffi.Pointer<struct_wlr_surface>)>>(
-      'wlr_subsurface_from_wlr_surface');
-  late final _wlr_subsurface_from_wlr_surface =
-      _wlr_subsurface_from_wlr_surfacePtr.asFunction<
-          ffi.Pointer<struct_wlr_subsurface> Function(
-              ffi.Pointer<struct_wlr_surface>)>();
-
-  bool wlr_keyboard_set_keymap(
-    ffi.Pointer<struct_wlr_keyboard> kb,
-    ffi.Pointer<struct_xkb_keymap> keymap,
-  ) {
-    return _wlr_keyboard_set_keymap(
-      kb,
-      keymap,
-    );
-  }
-
-  late final _wlr_keyboard_set_keymapPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Bool Function(ffi.Pointer<struct_wlr_keyboard>,
-              ffi.Pointer<struct_xkb_keymap>)>>('wlr_keyboard_set_keymap');
-  late final _wlr_keyboard_set_keymap = _wlr_keyboard_set_keymapPtr.asFunction<
-      bool Function(
-          ffi.Pointer<struct_wlr_keyboard>, ffi.Pointer<struct_xkb_keymap>)>();
-
-  bool wlr_keyboard_keymaps_match(
-    ffi.Pointer<struct_xkb_keymap> km1,
-    ffi.Pointer<struct_xkb_keymap> km2,
-  ) {
-    return _wlr_keyboard_keymaps_match(
-      km1,
-      km2,
-    );
-  }
-
-  late final _wlr_keyboard_keymaps_matchPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Bool Function(ffi.Pointer<struct_xkb_keymap>,
-              ffi.Pointer<struct_xkb_keymap>)>>('wlr_keyboard_keymaps_match');
-  late final _wlr_keyboard_keymaps_match =
-      _wlr_keyboard_keymaps_matchPtr.asFunction<
-          bool Function(ffi.Pointer<struct_xkb_keymap>,
-              ffi.Pointer<struct_xkb_keymap>)>();
-
-  void wlr_keyboard_set_repeat_info(
-    ffi.Pointer<struct_wlr_keyboard> kb,
-    int rate,
-    int delay,
-  ) {
-    return _wlr_keyboard_set_repeat_info(
-      kb,
-      rate,
-      delay,
-    );
-  }
-
-  late final _wlr_keyboard_set_repeat_infoPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_keyboard>, ffi.Int32,
-              ffi.Int32)>>('wlr_keyboard_set_repeat_info');
-  late final _wlr_keyboard_set_repeat_info = _wlr_keyboard_set_repeat_infoPtr
-      .asFunction<void Function(ffi.Pointer<struct_wlr_keyboard>, int, int)>();
-
-  void wlr_keyboard_led_update(
-    ffi.Pointer<struct_wlr_keyboard> keyboard,
-    int leds,
-  ) {
-    return _wlr_keyboard_led_update(
-      keyboard,
-      leds,
-    );
-  }
-
-  late final _wlr_keyboard_led_updatePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_keyboard>,
-              ffi.Uint32)>>('wlr_keyboard_led_update');
-  late final _wlr_keyboard_led_update = _wlr_keyboard_led_updatePtr
-      .asFunction<void Function(ffi.Pointer<struct_wlr_keyboard>, int)>();
-
-  int wlr_keyboard_get_modifiers(
-    ffi.Pointer<struct_wlr_keyboard> keyboard,
-  ) {
-    return _wlr_keyboard_get_modifiers(
-      keyboard,
-    );
-  }
-
-  late final _wlr_keyboard_get_modifiersPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Uint32 Function(
-              ffi.Pointer<struct_wlr_keyboard>)>>('wlr_keyboard_get_modifiers');
-  late final _wlr_keyboard_get_modifiers = _wlr_keyboard_get_modifiersPtr
-      .asFunction<int Function(ffi.Pointer<struct_wlr_keyboard>)>();
 
   void wlr_addon_set_init(
     ffi.Pointer<struct_wlr_addon_set> set1,
@@ -1135,31 +952,6 @@ class WaybrightLibrary {
       ffi.Pointer<struct_wlr_addon> Function(ffi.Pointer<struct_wlr_addon_set>,
           ffi.Pointer<ffi.Void>, ffi.Pointer<struct_wlr_addon_interface>)>();
 
-  void wlr_buffer_init(
-    ffi.Pointer<struct_wlr_buffer> buffer,
-    ffi.Pointer<struct_wlr_buffer_impl> impl,
-    int width,
-    int height,
-  ) {
-    return _wlr_buffer_init(
-      buffer,
-      impl,
-      width,
-      height,
-    );
-  }
-
-  late final _wlr_buffer_initPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Pointer<struct_wlr_buffer>,
-              ffi.Pointer<struct_wlr_buffer_impl>,
-              ffi.Int,
-              ffi.Int)>>('wlr_buffer_init');
-  late final _wlr_buffer_init = _wlr_buffer_initPtr.asFunction<
-      void Function(ffi.Pointer<struct_wlr_buffer>,
-          ffi.Pointer<struct_wlr_buffer_impl>, int, int)>();
-
   void wlr_buffer_drop(
     ffi.Pointer<struct_wlr_buffer> buffer,
   ) {
@@ -1242,23 +1034,6 @@ class WaybrightLibrary {
   late final _wlr_buffer_get_shm = _wlr_buffer_get_shmPtr.asFunction<
       bool Function(ffi.Pointer<struct_wlr_buffer>,
           ffi.Pointer<struct_wlr_shm_attributes>)>();
-
-  void wlr_buffer_register_resource_interface(
-    ffi.Pointer<struct_wlr_buffer_resource_interface> iface,
-  ) {
-    return _wlr_buffer_register_resource_interface(
-      iface,
-    );
-  }
-
-  late final _wlr_buffer_register_resource_interfacePtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(
-                  ffi.Pointer<struct_wlr_buffer_resource_interface>)>>(
-      'wlr_buffer_register_resource_interface');
-  late final _wlr_buffer_register_resource_interface =
-      _wlr_buffer_register_resource_interfacePtr.asFunction<
-          void Function(ffi.Pointer<struct_wlr_buffer_resource_interface>)>();
 
   ffi.Pointer<struct_wlr_buffer> wlr_buffer_from_resource(
     ffi.Pointer<struct_wl_resource> resource,
@@ -1847,6 +1622,43 @@ class WaybrightLibrary {
   late final _wlr_output_rollback = _wlr_output_rollbackPtr
       .asFunction<void Function(ffi.Pointer<struct_wlr_output>)>();
 
+  bool wlr_output_test_state(
+    ffi.Pointer<struct_wlr_output> output,
+    ffi.Pointer<struct_wlr_output_state> state,
+  ) {
+    return _wlr_output_test_state(
+      output,
+      state,
+    );
+  }
+
+  late final _wlr_output_test_statePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Bool Function(ffi.Pointer<struct_wlr_output>,
+              ffi.Pointer<struct_wlr_output_state>)>>('wlr_output_test_state');
+  late final _wlr_output_test_state = _wlr_output_test_statePtr.asFunction<
+      bool Function(ffi.Pointer<struct_wlr_output>,
+          ffi.Pointer<struct_wlr_output_state>)>();
+
+  bool wlr_output_commit_state(
+    ffi.Pointer<struct_wlr_output> output,
+    ffi.Pointer<struct_wlr_output_state> state,
+  ) {
+    return _wlr_output_commit_state(
+      output,
+      state,
+    );
+  }
+
+  late final _wlr_output_commit_statePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Bool Function(ffi.Pointer<struct_wlr_output>,
+                  ffi.Pointer<struct_wlr_output_state>)>>(
+      'wlr_output_commit_state');
+  late final _wlr_output_commit_state = _wlr_output_commit_statePtr.asFunction<
+      bool Function(ffi.Pointer<struct_wlr_output>,
+          ffi.Pointer<struct_wlr_output_state>)>();
+
   void wlr_output_schedule_frame(
     ffi.Pointer<struct_wlr_output> output,
   ) {
@@ -2079,6 +1891,32 @@ class WaybrightLibrary {
           void Function(ffi.Pointer<struct_wlr_output_cursor>,
               ffi.Pointer<struct_wlr_surface>, int, int)>();
 
+  bool wlr_output_cursor_set_buffer(
+    ffi.Pointer<struct_wlr_output_cursor> cursor,
+    ffi.Pointer<struct_wlr_buffer> buffer,
+    int hotspot_x,
+    int hotspot_y,
+  ) {
+    return _wlr_output_cursor_set_buffer(
+      cursor,
+      buffer,
+      hotspot_x,
+      hotspot_y,
+    );
+  }
+
+  late final _wlr_output_cursor_set_bufferPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Bool Function(
+              ffi.Pointer<struct_wlr_output_cursor>,
+              ffi.Pointer<struct_wlr_buffer>,
+              ffi.Int32,
+              ffi.Int32)>>('wlr_output_cursor_set_buffer');
+  late final _wlr_output_cursor_set_buffer =
+      _wlr_output_cursor_set_bufferPtr.asFunction<
+          bool Function(ffi.Pointer<struct_wlr_output_cursor>,
+              ffi.Pointer<struct_wlr_buffer>, int, int)>();
+
   bool wlr_output_cursor_move(
     ffi.Pointer<struct_wlr_output_cursor> cursor,
     double x,
@@ -2113,6 +1951,154 @@ class WaybrightLibrary {
   late final _wlr_output_cursor_destroy = _wlr_output_cursor_destroyPtr
       .asFunction<void Function(ffi.Pointer<struct_wlr_output_cursor>)>();
 
+  void wlr_output_state_set_enabled(
+    ffi.Pointer<struct_wlr_output_state> state,
+    bool enabled,
+  ) {
+    return _wlr_output_state_set_enabled(
+      state,
+      enabled,
+    );
+  }
+
+  late final _wlr_output_state_set_enabledPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_output_state>,
+              ffi.Bool)>>('wlr_output_state_set_enabled');
+  late final _wlr_output_state_set_enabled = _wlr_output_state_set_enabledPtr
+      .asFunction<void Function(ffi.Pointer<struct_wlr_output_state>, bool)>();
+
+  void wlr_output_state_set_mode(
+    ffi.Pointer<struct_wlr_output_state> state,
+    ffi.Pointer<struct_wlr_output_mode> mode,
+  ) {
+    return _wlr_output_state_set_mode(
+      state,
+      mode,
+    );
+  }
+
+  late final _wlr_output_state_set_modePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_wlr_output_state>,
+                  ffi.Pointer<struct_wlr_output_mode>)>>(
+      'wlr_output_state_set_mode');
+  late final _wlr_output_state_set_mode =
+      _wlr_output_state_set_modePtr.asFunction<
+          void Function(ffi.Pointer<struct_wlr_output_state>,
+              ffi.Pointer<struct_wlr_output_mode>)>();
+
+  void wlr_output_state_set_custom_mode(
+    ffi.Pointer<struct_wlr_output_state> state,
+    int width,
+    int height,
+    int refresh,
+  ) {
+    return _wlr_output_state_set_custom_mode(
+      state,
+      width,
+      height,
+      refresh,
+    );
+  }
+
+  late final _wlr_output_state_set_custom_modePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_output_state>, ffi.Int32,
+              ffi.Int32, ffi.Int32)>>('wlr_output_state_set_custom_mode');
+  late final _wlr_output_state_set_custom_mode =
+      _wlr_output_state_set_custom_modePtr.asFunction<
+          void Function(ffi.Pointer<struct_wlr_output_state>, int, int, int)>();
+
+  void wlr_output_state_set_scale(
+    ffi.Pointer<struct_wlr_output_state> state,
+    double scale,
+  ) {
+    return _wlr_output_state_set_scale(
+      state,
+      scale,
+    );
+  }
+
+  late final _wlr_output_state_set_scalePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_output_state>,
+              ffi.Float)>>('wlr_output_state_set_scale');
+  late final _wlr_output_state_set_scale =
+      _wlr_output_state_set_scalePtr.asFunction<
+          void Function(ffi.Pointer<struct_wlr_output_state>, double)>();
+
+  void wlr_output_state_set_transform(
+    ffi.Pointer<struct_wlr_output_state> state,
+    int transform,
+  ) {
+    return _wlr_output_state_set_transform(
+      state,
+      transform,
+    );
+  }
+
+  late final _wlr_output_state_set_transformPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_output_state>,
+              ffi.Int32)>>('wlr_output_state_set_transform');
+  late final _wlr_output_state_set_transform =
+      _wlr_output_state_set_transformPtr.asFunction<
+          void Function(ffi.Pointer<struct_wlr_output_state>, int)>();
+
+  void wlr_output_state_set_adaptive_sync_enabled(
+    ffi.Pointer<struct_wlr_output_state> state,
+    bool enabled,
+  ) {
+    return _wlr_output_state_set_adaptive_sync_enabled(
+      state,
+      enabled,
+    );
+  }
+
+  late final _wlr_output_state_set_adaptive_sync_enabledPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_output_state>,
+              ffi.Bool)>>('wlr_output_state_set_adaptive_sync_enabled');
+  late final _wlr_output_state_set_adaptive_sync_enabled =
+      _wlr_output_state_set_adaptive_sync_enabledPtr.asFunction<
+          void Function(ffi.Pointer<struct_wlr_output_state>, bool)>();
+
+  void wlr_output_state_set_render_format(
+    ffi.Pointer<struct_wlr_output_state> state,
+    int format,
+  ) {
+    return _wlr_output_state_set_render_format(
+      state,
+      format,
+    );
+  }
+
+  late final _wlr_output_state_set_render_formatPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_output_state>,
+              ffi.Uint32)>>('wlr_output_state_set_render_format');
+  late final _wlr_output_state_set_render_format =
+      _wlr_output_state_set_render_formatPtr.asFunction<
+          void Function(ffi.Pointer<struct_wlr_output_state>, int)>();
+
+  void wlr_output_state_set_subpixel(
+    ffi.Pointer<struct_wlr_output_state> state,
+    int subpixel,
+  ) {
+    return _wlr_output_state_set_subpixel(
+      state,
+      subpixel,
+    );
+  }
+
+  late final _wlr_output_state_set_subpixelPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_output_state>,
+              ffi.Int32)>>('wlr_output_state_set_subpixel');
+  late final _wlr_output_state_set_subpixel = _wlr_output_state_set_subpixelPtr
+      .asFunction<void Function(ffi.Pointer<struct_wlr_output_state>, int)>();
+
   int wlr_output_transform_invert(
     int tr,
   ) {
@@ -2142,112 +2128,6 @@ class WaybrightLibrary {
           'wlr_output_transform_compose');
   late final _wlr_output_transform_compose =
       _wlr_output_transform_composePtr.asFunction<int Function(int, int)>();
-
-  ffi.Pointer<struct_wlr_output_damage> wlr_output_damage_create(
-    ffi.Pointer<struct_wlr_output> output,
-  ) {
-    return _wlr_output_damage_create(
-      output,
-    );
-  }
-
-  late final _wlr_output_damage_createPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Pointer<struct_wlr_output_damage> Function(
-              ffi.Pointer<struct_wlr_output>)>>('wlr_output_damage_create');
-  late final _wlr_output_damage_create =
-      _wlr_output_damage_createPtr.asFunction<
-          ffi.Pointer<struct_wlr_output_damage> Function(
-              ffi.Pointer<struct_wlr_output>)>();
-
-  void wlr_output_damage_destroy(
-    ffi.Pointer<struct_wlr_output_damage> output_damage,
-  ) {
-    return _wlr_output_damage_destroy(
-      output_damage,
-    );
-  }
-
-  late final _wlr_output_damage_destroyPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<struct_wlr_output_damage>)>>(
-      'wlr_output_damage_destroy');
-  late final _wlr_output_damage_destroy = _wlr_output_damage_destroyPtr
-      .asFunction<void Function(ffi.Pointer<struct_wlr_output_damage>)>();
-
-  bool wlr_output_damage_attach_render(
-    ffi.Pointer<struct_wlr_output_damage> output_damage,
-    ffi.Pointer<ffi.Bool> needs_frame,
-    ffi.Pointer<struct_pixman_region32> buffer_damage,
-  ) {
-    return _wlr_output_damage_attach_render(
-      output_damage,
-      needs_frame,
-      buffer_damage,
-    );
-  }
-
-  late final _wlr_output_damage_attach_renderPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Bool Function(ffi.Pointer<struct_wlr_output_damage>,
-                  ffi.Pointer<ffi.Bool>, ffi.Pointer<struct_pixman_region32>)>>(
-      'wlr_output_damage_attach_render');
-  late final _wlr_output_damage_attach_render =
-      _wlr_output_damage_attach_renderPtr.asFunction<
-          bool Function(ffi.Pointer<struct_wlr_output_damage>,
-              ffi.Pointer<ffi.Bool>, ffi.Pointer<struct_pixman_region32>)>();
-
-  void wlr_output_damage_add(
-    ffi.Pointer<struct_wlr_output_damage> output_damage,
-    ffi.Pointer<struct_pixman_region32> damage,
-  ) {
-    return _wlr_output_damage_add(
-      output_damage,
-      damage,
-    );
-  }
-
-  late final _wlr_output_damage_addPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_output_damage>,
-              ffi.Pointer<struct_pixman_region32>)>>('wlr_output_damage_add');
-  late final _wlr_output_damage_add = _wlr_output_damage_addPtr.asFunction<
-      void Function(ffi.Pointer<struct_wlr_output_damage>,
-          ffi.Pointer<struct_pixman_region32>)>();
-
-  void wlr_output_damage_add_whole(
-    ffi.Pointer<struct_wlr_output_damage> output_damage,
-  ) {
-    return _wlr_output_damage_add_whole(
-      output_damage,
-    );
-  }
-
-  late final _wlr_output_damage_add_wholePtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<struct_wlr_output_damage>)>>(
-      'wlr_output_damage_add_whole');
-  late final _wlr_output_damage_add_whole = _wlr_output_damage_add_wholePtr
-      .asFunction<void Function(ffi.Pointer<struct_wlr_output_damage>)>();
-
-  void wlr_output_damage_add_box(
-    ffi.Pointer<struct_wlr_output_damage> output_damage,
-    ffi.Pointer<struct_wlr_box> box,
-  ) {
-    return _wlr_output_damage_add_box(
-      output_damage,
-      box,
-    );
-  }
-
-  late final _wlr_output_damage_add_boxPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_output_damage>,
-              ffi.Pointer<struct_wlr_box>)>>('wlr_output_damage_add_box');
-  late final _wlr_output_damage_add_box =
-      _wlr_output_damage_add_boxPtr.asFunction<
-          void Function(ffi.Pointer<struct_wlr_output_damage>,
-              ffi.Pointer<struct_wlr_box>)>();
 
   void wlr_box_closest_point(
     ffi.Pointer<struct_wlr_box> box,
@@ -2402,6 +2282,42 @@ class WaybrightLibrary {
       void Function(ffi.Pointer<struct_wlr_fbox>, ffi.Pointer<struct_wlr_fbox>,
           int, double, double)>();
 
+  bool wlr_box_equal(
+    ffi.Pointer<struct_wlr_box> a,
+    ffi.Pointer<struct_wlr_box> b,
+  ) {
+    return _wlr_box_equal(
+      a,
+      b,
+    );
+  }
+
+  late final _wlr_box_equalPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Bool Function(ffi.Pointer<struct_wlr_box>,
+              ffi.Pointer<struct_wlr_box>)>>('wlr_box_equal');
+  late final _wlr_box_equal = _wlr_box_equalPtr.asFunction<
+      bool Function(
+          ffi.Pointer<struct_wlr_box>, ffi.Pointer<struct_wlr_box>)>();
+
+  bool wlr_fbox_equal(
+    ffi.Pointer<struct_wlr_fbox> a,
+    ffi.Pointer<struct_wlr_fbox> b,
+  ) {
+    return _wlr_fbox_equal(
+      a,
+      b,
+    );
+  }
+
+  late final _wlr_fbox_equalPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Bool Function(ffi.Pointer<struct_wlr_fbox>,
+              ffi.Pointer<struct_wlr_fbox>)>>('wlr_fbox_equal');
+  late final _wlr_fbox_equal = _wlr_fbox_equalPtr.asFunction<
+      bool Function(
+          ffi.Pointer<struct_wlr_fbox>, ffi.Pointer<struct_wlr_fbox>)>();
+
   bool wlr_surface_set_role(
     ffi.Pointer<struct_wlr_surface> surface,
     ffi.Pointer<struct_wlr_surface_role> role,
@@ -2433,6 +2349,22 @@ class WaybrightLibrary {
           ffi.Pointer<ffi.Void>,
           ffi.Pointer<struct_wl_resource>,
           int)>();
+
+  void wlr_surface_destroy_role_object(
+    ffi.Pointer<struct_wlr_surface> surface,
+  ) {
+    return _wlr_surface_destroy_role_object(
+      surface,
+    );
+  }
+
+  late final _wlr_surface_destroy_role_objectPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_wlr_surface>)>>(
+      'wlr_surface_destroy_role_object');
+  late final _wlr_surface_destroy_role_object =
+      _wlr_surface_destroy_role_objectPtr
+          .asFunction<void Function(ffi.Pointer<struct_wlr_surface>)>();
 
   bool wlr_surface_has_buffer(
     ffi.Pointer<struct_wlr_surface> surface,
@@ -2727,6 +2659,255 @@ class WaybrightLibrary {
               ffi.Uint32)>>('wlr_surface_unlock_cached');
   late final _wlr_surface_unlock_cached = _wlr_surface_unlock_cachedPtr
       .asFunction<void Function(ffi.Pointer<struct_wlr_surface>, int)>();
+
+  ffi.Pointer<struct_wlr_compositor> wlr_compositor_create(
+    ffi.Pointer<struct_wl_display> display,
+    ffi.Pointer<struct_wlr_renderer> renderer,
+  ) {
+    return _wlr_compositor_create(
+      display,
+      renderer,
+    );
+  }
+
+  late final _wlr_compositor_createPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<struct_wlr_compositor> Function(
+              ffi.Pointer<struct_wl_display>,
+              ffi.Pointer<struct_wlr_renderer>)>>('wlr_compositor_create');
+  late final _wlr_compositor_create = _wlr_compositor_createPtr.asFunction<
+      ffi.Pointer<struct_wlr_compositor> Function(
+          ffi.Pointer<struct_wl_display>, ffi.Pointer<struct_wlr_renderer>)>();
+
+  ffi.Pointer<struct_wlr_keyboard> wlr_keyboard_from_input_device(
+    ffi.Pointer<struct_wlr_input_device> input_device,
+  ) {
+    return _wlr_keyboard_from_input_device(
+      input_device,
+    );
+  }
+
+  late final _wlr_keyboard_from_input_devicePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<struct_wlr_keyboard> Function(
+                  ffi.Pointer<struct_wlr_input_device>)>>(
+      'wlr_keyboard_from_input_device');
+  late final _wlr_keyboard_from_input_device =
+      _wlr_keyboard_from_input_devicePtr.asFunction<
+          ffi.Pointer<struct_wlr_keyboard> Function(
+              ffi.Pointer<struct_wlr_input_device>)>();
+
+  bool wlr_keyboard_set_keymap(
+    ffi.Pointer<struct_wlr_keyboard> kb,
+    ffi.Pointer<struct_xkb_keymap> keymap,
+  ) {
+    return _wlr_keyboard_set_keymap(
+      kb,
+      keymap,
+    );
+  }
+
+  late final _wlr_keyboard_set_keymapPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Bool Function(ffi.Pointer<struct_wlr_keyboard>,
+              ffi.Pointer<struct_xkb_keymap>)>>('wlr_keyboard_set_keymap');
+  late final _wlr_keyboard_set_keymap = _wlr_keyboard_set_keymapPtr.asFunction<
+      bool Function(
+          ffi.Pointer<struct_wlr_keyboard>, ffi.Pointer<struct_xkb_keymap>)>();
+
+  bool wlr_keyboard_keymaps_match(
+    ffi.Pointer<struct_xkb_keymap> km1,
+    ffi.Pointer<struct_xkb_keymap> km2,
+  ) {
+    return _wlr_keyboard_keymaps_match(
+      km1,
+      km2,
+    );
+  }
+
+  late final _wlr_keyboard_keymaps_matchPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Bool Function(ffi.Pointer<struct_xkb_keymap>,
+              ffi.Pointer<struct_xkb_keymap>)>>('wlr_keyboard_keymaps_match');
+  late final _wlr_keyboard_keymaps_match =
+      _wlr_keyboard_keymaps_matchPtr.asFunction<
+          bool Function(ffi.Pointer<struct_xkb_keymap>,
+              ffi.Pointer<struct_xkb_keymap>)>();
+
+  void wlr_keyboard_set_repeat_info(
+    ffi.Pointer<struct_wlr_keyboard> kb,
+    int rate,
+    int delay,
+  ) {
+    return _wlr_keyboard_set_repeat_info(
+      kb,
+      rate,
+      delay,
+    );
+  }
+
+  late final _wlr_keyboard_set_repeat_infoPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_keyboard>, ffi.Int32,
+              ffi.Int32)>>('wlr_keyboard_set_repeat_info');
+  late final _wlr_keyboard_set_repeat_info = _wlr_keyboard_set_repeat_infoPtr
+      .asFunction<void Function(ffi.Pointer<struct_wlr_keyboard>, int, int)>();
+
+  void wlr_keyboard_led_update(
+    ffi.Pointer<struct_wlr_keyboard> keyboard,
+    int leds,
+  ) {
+    return _wlr_keyboard_led_update(
+      keyboard,
+      leds,
+    );
+  }
+
+  late final _wlr_keyboard_led_updatePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_keyboard>,
+              ffi.Uint32)>>('wlr_keyboard_led_update');
+  late final _wlr_keyboard_led_update = _wlr_keyboard_led_updatePtr
+      .asFunction<void Function(ffi.Pointer<struct_wlr_keyboard>, int)>();
+
+  int wlr_keyboard_get_modifiers(
+    ffi.Pointer<struct_wlr_keyboard> keyboard,
+  ) {
+    return _wlr_keyboard_get_modifiers(
+      keyboard,
+    );
+  }
+
+  late final _wlr_keyboard_get_modifiersPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Uint32 Function(
+              ffi.Pointer<struct_wlr_keyboard>)>>('wlr_keyboard_get_modifiers');
+  late final _wlr_keyboard_get_modifiers = _wlr_keyboard_get_modifiersPtr
+      .asFunction<int Function(ffi.Pointer<struct_wlr_keyboard>)>();
+
+  ffi.Pointer<struct_wlr_output_damage> wlr_output_damage_create(
+    ffi.Pointer<struct_wlr_output> output,
+  ) {
+    return _wlr_output_damage_create(
+      output,
+    );
+  }
+
+  late final _wlr_output_damage_createPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<struct_wlr_output_damage> Function(
+              ffi.Pointer<struct_wlr_output>)>>('wlr_output_damage_create');
+  late final _wlr_output_damage_create =
+      _wlr_output_damage_createPtr.asFunction<
+          ffi.Pointer<struct_wlr_output_damage> Function(
+              ffi.Pointer<struct_wlr_output>)>();
+
+  void wlr_output_damage_destroy(
+    ffi.Pointer<struct_wlr_output_damage> output_damage,
+  ) {
+    return _wlr_output_damage_destroy(
+      output_damage,
+    );
+  }
+
+  late final _wlr_output_damage_destroyPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_wlr_output_damage>)>>(
+      'wlr_output_damage_destroy');
+  late final _wlr_output_damage_destroy = _wlr_output_damage_destroyPtr
+      .asFunction<void Function(ffi.Pointer<struct_wlr_output_damage>)>();
+
+  bool wlr_output_damage_attach_render(
+    ffi.Pointer<struct_wlr_output_damage> output_damage,
+    ffi.Pointer<ffi.Bool> needs_frame,
+    ffi.Pointer<struct_pixman_region32> buffer_damage,
+  ) {
+    return _wlr_output_damage_attach_render(
+      output_damage,
+      needs_frame,
+      buffer_damage,
+    );
+  }
+
+  late final _wlr_output_damage_attach_renderPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Bool Function(ffi.Pointer<struct_wlr_output_damage>,
+                  ffi.Pointer<ffi.Bool>, ffi.Pointer<struct_pixman_region32>)>>(
+      'wlr_output_damage_attach_render');
+  late final _wlr_output_damage_attach_render =
+      _wlr_output_damage_attach_renderPtr.asFunction<
+          bool Function(ffi.Pointer<struct_wlr_output_damage>,
+              ffi.Pointer<ffi.Bool>, ffi.Pointer<struct_pixman_region32>)>();
+
+  void wlr_output_damage_add(
+    ffi.Pointer<struct_wlr_output_damage> output_damage,
+    ffi.Pointer<struct_pixman_region32> damage,
+  ) {
+    return _wlr_output_damage_add(
+      output_damage,
+      damage,
+    );
+  }
+
+  late final _wlr_output_damage_addPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_output_damage>,
+              ffi.Pointer<struct_pixman_region32>)>>('wlr_output_damage_add');
+  late final _wlr_output_damage_add = _wlr_output_damage_addPtr.asFunction<
+      void Function(ffi.Pointer<struct_wlr_output_damage>,
+          ffi.Pointer<struct_pixman_region32>)>();
+
+  void wlr_output_damage_add_whole(
+    ffi.Pointer<struct_wlr_output_damage> output_damage,
+  ) {
+    return _wlr_output_damage_add_whole(
+      output_damage,
+    );
+  }
+
+  late final _wlr_output_damage_add_wholePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_wlr_output_damage>)>>(
+      'wlr_output_damage_add_whole');
+  late final _wlr_output_damage_add_whole = _wlr_output_damage_add_wholePtr
+      .asFunction<void Function(ffi.Pointer<struct_wlr_output_damage>)>();
+
+  void wlr_output_damage_add_box(
+    ffi.Pointer<struct_wlr_output_damage> output_damage,
+    ffi.Pointer<struct_wlr_box> box,
+  ) {
+    return _wlr_output_damage_add_box(
+      output_damage,
+      box,
+    );
+  }
+
+  late final _wlr_output_damage_add_boxPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_output_damage>,
+              ffi.Pointer<struct_wlr_box>)>>('wlr_output_damage_add_box');
+  late final _wlr_output_damage_add_box =
+      _wlr_output_damage_add_boxPtr.asFunction<
+          void Function(ffi.Pointer<struct_wlr_output_damage>,
+              ffi.Pointer<struct_wlr_box>)>();
+
+  ffi.Pointer<struct_wlr_pointer> wlr_pointer_from_input_device(
+    ffi.Pointer<struct_wlr_input_device> input_device,
+  ) {
+    return _wlr_pointer_from_input_device(
+      input_device,
+    );
+  }
+
+  late final _wlr_pointer_from_input_devicePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<struct_wlr_pointer> Function(
+                  ffi.Pointer<struct_wlr_input_device>)>>(
+      'wlr_pointer_from_input_device');
+  late final _wlr_pointer_from_input_device =
+      _wlr_pointer_from_input_devicePtr.asFunction<
+          ffi.Pointer<struct_wlr_pointer> Function(
+              ffi.Pointer<struct_wlr_input_device>)>();
 
   ffi.Pointer<struct_wlr_seat> wlr_seat_create(
     ffi.Pointer<struct_wl_display> display,
@@ -3157,21 +3338,21 @@ class WaybrightLibrary {
 
   void wlr_seat_set_keyboard(
     ffi.Pointer<struct_wlr_seat> seat,
-    ffi.Pointer<struct_wlr_input_device> dev,
+    ffi.Pointer<struct_wlr_keyboard> keyboard,
   ) {
     return _wlr_seat_set_keyboard(
       seat,
-      dev,
+      keyboard,
     );
   }
 
   late final _wlr_seat_set_keyboardPtr = _lookup<
       ffi.NativeFunction<
           ffi.Void Function(ffi.Pointer<struct_wlr_seat>,
-              ffi.Pointer<struct_wlr_input_device>)>>('wlr_seat_set_keyboard');
+              ffi.Pointer<struct_wlr_keyboard>)>>('wlr_seat_set_keyboard');
   late final _wlr_seat_set_keyboard = _wlr_seat_set_keyboardPtr.asFunction<
-      void Function(ffi.Pointer<struct_wlr_seat>,
-          ffi.Pointer<struct_wlr_input_device>)>();
+      void Function(
+          ffi.Pointer<struct_wlr_seat>, ffi.Pointer<struct_wlr_keyboard>)>();
 
   ffi.Pointer<struct_wlr_keyboard> wlr_seat_get_keyboard(
     ffi.Pointer<struct_wlr_seat> seat,
@@ -3563,6 +3744,25 @@ class WaybrightLibrary {
           void Function(
               ffi.Pointer<struct_wlr_seat>, int, int, double, double)>();
 
+  void wlr_seat_touch_send_cancel(
+    ffi.Pointer<struct_wlr_seat> seat,
+    ffi.Pointer<struct_wlr_surface> surface,
+  ) {
+    return _wlr_seat_touch_send_cancel(
+      seat,
+      surface,
+    );
+  }
+
+  late final _wlr_seat_touch_send_cancelPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_seat>,
+              ffi.Pointer<struct_wlr_surface>)>>('wlr_seat_touch_send_cancel');
+  late final _wlr_seat_touch_send_cancel =
+      _wlr_seat_touch_send_cancelPtr.asFunction<
+          void Function(
+              ffi.Pointer<struct_wlr_seat>, ffi.Pointer<struct_wlr_surface>)>();
+
   void wlr_seat_touch_send_frame(
     ffi.Pointer<struct_wlr_seat> seat,
   ) {
@@ -3652,6 +3852,26 @@ class WaybrightLibrary {
       _wlr_seat_touch_notify_motionPtr.asFunction<
           void Function(
               ffi.Pointer<struct_wlr_seat>, int, int, double, double)>();
+
+  void wlr_seat_touch_notify_cancel(
+    ffi.Pointer<struct_wlr_seat> seat,
+    ffi.Pointer<struct_wlr_surface> surface,
+  ) {
+    return _wlr_seat_touch_notify_cancel(
+      seat,
+      surface,
+    );
+  }
+
+  late final _wlr_seat_touch_notify_cancelPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_wlr_seat>,
+                  ffi.Pointer<struct_wlr_surface>)>>(
+      'wlr_seat_touch_notify_cancel');
+  late final _wlr_seat_touch_notify_cancel =
+      _wlr_seat_touch_notify_cancelPtr.asFunction<
+          void Function(
+              ffi.Pointer<struct_wlr_seat>, ffi.Pointer<struct_wlr_surface>)>();
 
   void wlr_seat_touch_notify_frame(
     ffi.Pointer<struct_wlr_seat> seat,
@@ -3889,19 +4109,22 @@ class WaybrightLibrary {
 
   ffi.Pointer<struct_wlr_xdg_shell> wlr_xdg_shell_create(
     ffi.Pointer<struct_wl_display> display,
+    int version,
   ) {
     return _wlr_xdg_shell_create(
       display,
+      version,
     );
   }
 
   late final _wlr_xdg_shell_createPtr = _lookup<
       ffi.NativeFunction<
           ffi.Pointer<struct_wlr_xdg_shell> Function(
-              ffi.Pointer<struct_wl_display>)>>('wlr_xdg_shell_create');
+              ffi.Pointer<struct_wl_display>,
+              ffi.Uint32)>>('wlr_xdg_shell_create');
   late final _wlr_xdg_shell_create = _wlr_xdg_shell_createPtr.asFunction<
       ffi.Pointer<struct_wlr_xdg_shell> Function(
-          ffi.Pointer<struct_wl_display>)>();
+          ffi.Pointer<struct_wl_display>, int)>();
 
   ffi.Pointer<struct_wlr_xdg_surface> wlr_xdg_surface_from_resource(
     ffi.Pointer<struct_wl_resource> resource,
@@ -3921,40 +4144,57 @@ class WaybrightLibrary {
           ffi.Pointer<struct_wlr_xdg_surface> Function(
               ffi.Pointer<struct_wl_resource>)>();
 
-  ffi.Pointer<struct_wlr_xdg_surface> wlr_xdg_surface_from_popup_resource(
+  ffi.Pointer<struct_wlr_xdg_popup> wlr_xdg_popup_from_resource(
     ffi.Pointer<struct_wl_resource> resource,
   ) {
-    return _wlr_xdg_surface_from_popup_resource(
+    return _wlr_xdg_popup_from_resource(
       resource,
     );
   }
 
-  late final _wlr_xdg_surface_from_popup_resourcePtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Pointer<struct_wlr_xdg_surface> Function(
-                  ffi.Pointer<struct_wl_resource>)>>(
-      'wlr_xdg_surface_from_popup_resource');
-  late final _wlr_xdg_surface_from_popup_resource =
-      _wlr_xdg_surface_from_popup_resourcePtr.asFunction<
-          ffi.Pointer<struct_wlr_xdg_surface> Function(
+  late final _wlr_xdg_popup_from_resourcePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<struct_wlr_xdg_popup> Function(
+              ffi.Pointer<struct_wl_resource>)>>('wlr_xdg_popup_from_resource');
+  late final _wlr_xdg_popup_from_resource =
+      _wlr_xdg_popup_from_resourcePtr.asFunction<
+          ffi.Pointer<struct_wlr_xdg_popup> Function(
               ffi.Pointer<struct_wl_resource>)>();
 
-  ffi.Pointer<struct_wlr_xdg_surface> wlr_xdg_surface_from_toplevel_resource(
+  ffi.Pointer<struct_wlr_xdg_toplevel> wlr_xdg_toplevel_from_resource(
     ffi.Pointer<struct_wl_resource> resource,
   ) {
-    return _wlr_xdg_surface_from_toplevel_resource(
+    return _wlr_xdg_toplevel_from_resource(
       resource,
     );
   }
 
-  late final _wlr_xdg_surface_from_toplevel_resourcePtr = _lookup<
+  late final _wlr_xdg_toplevel_from_resourcePtr = _lookup<
           ffi.NativeFunction<
-              ffi.Pointer<struct_wlr_xdg_surface> Function(
+              ffi.Pointer<struct_wlr_xdg_toplevel> Function(
                   ffi.Pointer<struct_wl_resource>)>>(
-      'wlr_xdg_surface_from_toplevel_resource');
-  late final _wlr_xdg_surface_from_toplevel_resource =
-      _wlr_xdg_surface_from_toplevel_resourcePtr.asFunction<
-          ffi.Pointer<struct_wlr_xdg_surface> Function(
+      'wlr_xdg_toplevel_from_resource');
+  late final _wlr_xdg_toplevel_from_resource =
+      _wlr_xdg_toplevel_from_resourcePtr.asFunction<
+          ffi.Pointer<struct_wlr_xdg_toplevel> Function(
+              ffi.Pointer<struct_wl_resource>)>();
+
+  ffi.Pointer<struct_wlr_xdg_positioner> wlr_xdg_positioner_from_resource(
+    ffi.Pointer<struct_wl_resource> resource,
+  ) {
+    return _wlr_xdg_positioner_from_resource(
+      resource,
+    );
+  }
+
+  late final _wlr_xdg_positioner_from_resourcePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<struct_wlr_xdg_positioner> Function(
+                  ffi.Pointer<struct_wl_resource>)>>(
+      'wlr_xdg_positioner_from_resource');
+  late final _wlr_xdg_positioner_from_resource =
+      _wlr_xdg_positioner_from_resourcePtr.asFunction<
+          ffi.Pointer<struct_wlr_xdg_positioner> Function(
               ffi.Pointer<struct_wl_resource>)>();
 
   void wlr_xdg_surface_ping(
@@ -3973,12 +4213,12 @@ class WaybrightLibrary {
       .asFunction<void Function(ffi.Pointer<struct_wlr_xdg_surface>)>();
 
   int wlr_xdg_toplevel_set_size(
-    ffi.Pointer<struct_wlr_xdg_surface> surface,
+    ffi.Pointer<struct_wlr_xdg_toplevel> toplevel,
     int width,
     int height,
   ) {
     return _wlr_xdg_toplevel_set_size(
-      surface,
+      toplevel,
       width,
       height,
     );
@@ -3986,149 +4226,187 @@ class WaybrightLibrary {
 
   late final _wlr_xdg_toplevel_set_sizePtr = _lookup<
       ffi.NativeFunction<
-          ffi.Uint32 Function(ffi.Pointer<struct_wlr_xdg_surface>, ffi.Uint32,
-              ffi.Uint32)>>('wlr_xdg_toplevel_set_size');
+          ffi.Uint32 Function(ffi.Pointer<struct_wlr_xdg_toplevel>, ffi.Int32,
+              ffi.Int32)>>('wlr_xdg_toplevel_set_size');
   late final _wlr_xdg_toplevel_set_size =
       _wlr_xdg_toplevel_set_sizePtr.asFunction<
-          int Function(ffi.Pointer<struct_wlr_xdg_surface>, int, int)>();
+          int Function(ffi.Pointer<struct_wlr_xdg_toplevel>, int, int)>();
 
   int wlr_xdg_toplevel_set_activated(
-    ffi.Pointer<struct_wlr_xdg_surface> surface,
+    ffi.Pointer<struct_wlr_xdg_toplevel> toplevel,
     bool activated,
   ) {
     return _wlr_xdg_toplevel_set_activated(
-      surface,
+      toplevel,
       activated,
     );
   }
 
   late final _wlr_xdg_toplevel_set_activatedPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Uint32 Function(ffi.Pointer<struct_wlr_xdg_surface>,
+          ffi.Uint32 Function(ffi.Pointer<struct_wlr_xdg_toplevel>,
               ffi.Bool)>>('wlr_xdg_toplevel_set_activated');
   late final _wlr_xdg_toplevel_set_activated =
       _wlr_xdg_toplevel_set_activatedPtr.asFunction<
-          int Function(ffi.Pointer<struct_wlr_xdg_surface>, bool)>();
+          int Function(ffi.Pointer<struct_wlr_xdg_toplevel>, bool)>();
 
   int wlr_xdg_toplevel_set_maximized(
-    ffi.Pointer<struct_wlr_xdg_surface> surface,
+    ffi.Pointer<struct_wlr_xdg_toplevel> toplevel,
     bool maximized,
   ) {
     return _wlr_xdg_toplevel_set_maximized(
-      surface,
+      toplevel,
       maximized,
     );
   }
 
   late final _wlr_xdg_toplevel_set_maximizedPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Uint32 Function(ffi.Pointer<struct_wlr_xdg_surface>,
+          ffi.Uint32 Function(ffi.Pointer<struct_wlr_xdg_toplevel>,
               ffi.Bool)>>('wlr_xdg_toplevel_set_maximized');
   late final _wlr_xdg_toplevel_set_maximized =
       _wlr_xdg_toplevel_set_maximizedPtr.asFunction<
-          int Function(ffi.Pointer<struct_wlr_xdg_surface>, bool)>();
+          int Function(ffi.Pointer<struct_wlr_xdg_toplevel>, bool)>();
 
   int wlr_xdg_toplevel_set_fullscreen(
-    ffi.Pointer<struct_wlr_xdg_surface> surface,
+    ffi.Pointer<struct_wlr_xdg_toplevel> toplevel,
     bool fullscreen,
   ) {
     return _wlr_xdg_toplevel_set_fullscreen(
-      surface,
+      toplevel,
       fullscreen,
     );
   }
 
   late final _wlr_xdg_toplevel_set_fullscreenPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Uint32 Function(ffi.Pointer<struct_wlr_xdg_surface>,
+          ffi.Uint32 Function(ffi.Pointer<struct_wlr_xdg_toplevel>,
               ffi.Bool)>>('wlr_xdg_toplevel_set_fullscreen');
   late final _wlr_xdg_toplevel_set_fullscreen =
       _wlr_xdg_toplevel_set_fullscreenPtr.asFunction<
-          int Function(ffi.Pointer<struct_wlr_xdg_surface>, bool)>();
+          int Function(ffi.Pointer<struct_wlr_xdg_toplevel>, bool)>();
 
   int wlr_xdg_toplevel_set_resizing(
-    ffi.Pointer<struct_wlr_xdg_surface> surface,
+    ffi.Pointer<struct_wlr_xdg_toplevel> toplevel,
     bool resizing,
   ) {
     return _wlr_xdg_toplevel_set_resizing(
-      surface,
+      toplevel,
       resizing,
     );
   }
 
   late final _wlr_xdg_toplevel_set_resizingPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Uint32 Function(ffi.Pointer<struct_wlr_xdg_surface>,
+          ffi.Uint32 Function(ffi.Pointer<struct_wlr_xdg_toplevel>,
               ffi.Bool)>>('wlr_xdg_toplevel_set_resizing');
   late final _wlr_xdg_toplevel_set_resizing = _wlr_xdg_toplevel_set_resizingPtr
-      .asFunction<int Function(ffi.Pointer<struct_wlr_xdg_surface>, bool)>();
+      .asFunction<int Function(ffi.Pointer<struct_wlr_xdg_toplevel>, bool)>();
 
   int wlr_xdg_toplevel_set_tiled(
-    ffi.Pointer<struct_wlr_xdg_surface> surface,
+    ffi.Pointer<struct_wlr_xdg_toplevel> toplevel,
     int tiled_edges,
   ) {
     return _wlr_xdg_toplevel_set_tiled(
-      surface,
+      toplevel,
       tiled_edges,
     );
   }
 
   late final _wlr_xdg_toplevel_set_tiledPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Uint32 Function(ffi.Pointer<struct_wlr_xdg_surface>,
+          ffi.Uint32 Function(ffi.Pointer<struct_wlr_xdg_toplevel>,
               ffi.Uint32)>>('wlr_xdg_toplevel_set_tiled');
   late final _wlr_xdg_toplevel_set_tiled = _wlr_xdg_toplevel_set_tiledPtr
-      .asFunction<int Function(ffi.Pointer<struct_wlr_xdg_surface>, int)>();
+      .asFunction<int Function(ffi.Pointer<struct_wlr_xdg_toplevel>, int)>();
+
+  int wlr_xdg_toplevel_set_bounds(
+    ffi.Pointer<struct_wlr_xdg_toplevel> toplevel,
+    int width,
+    int height,
+  ) {
+    return _wlr_xdg_toplevel_set_bounds(
+      toplevel,
+      width,
+      height,
+    );
+  }
+
+  late final _wlr_xdg_toplevel_set_boundsPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Uint32 Function(ffi.Pointer<struct_wlr_xdg_toplevel>, ffi.Int32,
+              ffi.Int32)>>('wlr_xdg_toplevel_set_bounds');
+  late final _wlr_xdg_toplevel_set_bounds =
+      _wlr_xdg_toplevel_set_boundsPtr.asFunction<
+          int Function(ffi.Pointer<struct_wlr_xdg_toplevel>, int, int)>();
+
+  int wlr_xdg_toplevel_set_wm_capabilities(
+    ffi.Pointer<struct_wlr_xdg_toplevel> toplevel,
+    int caps,
+  ) {
+    return _wlr_xdg_toplevel_set_wm_capabilities(
+      toplevel,
+      caps,
+    );
+  }
+
+  late final _wlr_xdg_toplevel_set_wm_capabilitiesPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Uint32 Function(ffi.Pointer<struct_wlr_xdg_toplevel>,
+              ffi.Uint32)>>('wlr_xdg_toplevel_set_wm_capabilities');
+  late final _wlr_xdg_toplevel_set_wm_capabilities =
+      _wlr_xdg_toplevel_set_wm_capabilitiesPtr.asFunction<
+          int Function(ffi.Pointer<struct_wlr_xdg_toplevel>, int)>();
 
   void wlr_xdg_toplevel_send_close(
-    ffi.Pointer<struct_wlr_xdg_surface> surface,
+    ffi.Pointer<struct_wlr_xdg_toplevel> toplevel,
   ) {
     return _wlr_xdg_toplevel_send_close(
-      surface,
+      toplevel,
     );
   }
 
   late final _wlr_xdg_toplevel_send_closePtr = _lookup<
           ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<struct_wlr_xdg_surface>)>>(
+              ffi.Void Function(ffi.Pointer<struct_wlr_xdg_toplevel>)>>(
       'wlr_xdg_toplevel_send_close');
   late final _wlr_xdg_toplevel_send_close = _wlr_xdg_toplevel_send_closePtr
-      .asFunction<void Function(ffi.Pointer<struct_wlr_xdg_surface>)>();
+      .asFunction<void Function(ffi.Pointer<struct_wlr_xdg_toplevel>)>();
 
-  void wlr_xdg_toplevel_set_parent(
-    ffi.Pointer<struct_wlr_xdg_surface> surface,
-    ffi.Pointer<struct_wlr_xdg_surface> parent,
+  bool wlr_xdg_toplevel_set_parent(
+    ffi.Pointer<struct_wlr_xdg_toplevel> toplevel,
+    ffi.Pointer<struct_wlr_xdg_toplevel> parent,
   ) {
     return _wlr_xdg_toplevel_set_parent(
-      surface,
+      toplevel,
       parent,
     );
   }
 
   late final _wlr_xdg_toplevel_set_parentPtr = _lookup<
           ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<struct_wlr_xdg_surface>,
-                  ffi.Pointer<struct_wlr_xdg_surface>)>>(
+              ffi.Bool Function(ffi.Pointer<struct_wlr_xdg_toplevel>,
+                  ffi.Pointer<struct_wlr_xdg_toplevel>)>>(
       'wlr_xdg_toplevel_set_parent');
   late final _wlr_xdg_toplevel_set_parent =
       _wlr_xdg_toplevel_set_parentPtr.asFunction<
-          void Function(ffi.Pointer<struct_wlr_xdg_surface>,
-              ffi.Pointer<struct_wlr_xdg_surface>)>();
+          bool Function(ffi.Pointer<struct_wlr_xdg_toplevel>,
+              ffi.Pointer<struct_wlr_xdg_toplevel>)>();
 
   void wlr_xdg_popup_destroy(
-    ffi.Pointer<struct_wlr_xdg_surface> surface,
+    ffi.Pointer<struct_wlr_xdg_popup> popup,
   ) {
     return _wlr_xdg_popup_destroy(
-      surface,
+      popup,
     );
   }
 
   late final _wlr_xdg_popup_destroyPtr = _lookup<
       ffi.NativeFunction<
           ffi.Void Function(
-              ffi.Pointer<struct_wlr_xdg_surface>)>>('wlr_xdg_popup_destroy');
+              ffi.Pointer<struct_wlr_xdg_popup>)>>('wlr_xdg_popup_destroy');
   late final _wlr_xdg_popup_destroy = _wlr_xdg_popup_destroyPtr
-      .asFunction<void Function(ffi.Pointer<struct_wlr_xdg_surface>)>();
+      .asFunction<void Function(ffi.Pointer<struct_wlr_xdg_popup>)>();
 
   void wlr_xdg_popup_get_position(
     ffi.Pointer<struct_wlr_xdg_popup> popup,
@@ -4153,44 +4431,47 @@ class WaybrightLibrary {
           void Function(ffi.Pointer<struct_wlr_xdg_popup>,
               ffi.Pointer<ffi.Double>, ffi.Pointer<ffi.Double>)>();
 
-  struct_wlr_box wlr_xdg_positioner_get_geometry(
-    ffi.Pointer<struct_wlr_xdg_positioner> positioner,
+  void wlr_xdg_positioner_rules_get_geometry(
+    ffi.Pointer<struct_wlr_xdg_positioner_rules> rules,
+    ffi.Pointer<struct_wlr_box> box,
   ) {
-    return _wlr_xdg_positioner_get_geometry(
-      positioner,
+    return _wlr_xdg_positioner_rules_get_geometry(
+      rules,
+      box,
     );
   }
 
-  late final _wlr_xdg_positioner_get_geometryPtr = _lookup<
+  late final _wlr_xdg_positioner_rules_get_geometryPtr = _lookup<
           ffi.NativeFunction<
-              struct_wlr_box Function(ffi.Pointer<struct_wlr_xdg_positioner>)>>(
-      'wlr_xdg_positioner_get_geometry');
-  late final _wlr_xdg_positioner_get_geometry =
-      _wlr_xdg_positioner_get_geometryPtr.asFunction<
-          struct_wlr_box Function(ffi.Pointer<struct_wlr_xdg_positioner>)>();
+              ffi.Void Function(ffi.Pointer<struct_wlr_xdg_positioner_rules>,
+                  ffi.Pointer<struct_wlr_box>)>>(
+      'wlr_xdg_positioner_rules_get_geometry');
+  late final _wlr_xdg_positioner_rules_get_geometry =
+      _wlr_xdg_positioner_rules_get_geometryPtr.asFunction<
+          void Function(ffi.Pointer<struct_wlr_xdg_positioner_rules>,
+              ffi.Pointer<struct_wlr_box>)>();
 
-  void wlr_xdg_popup_get_anchor_point(
-    ffi.Pointer<struct_wlr_xdg_popup> popup,
-    ffi.Pointer<ffi.Int> toplevel_sx,
-    ffi.Pointer<ffi.Int> toplevel_sy,
+  void wlr_xdg_positioner_rules_unconstrain_box(
+    ffi.Pointer<struct_wlr_xdg_positioner_rules> rules,
+    ffi.Pointer<struct_wlr_box> constraint,
+    ffi.Pointer<struct_wlr_box> box,
   ) {
-    return _wlr_xdg_popup_get_anchor_point(
-      popup,
-      toplevel_sx,
-      toplevel_sy,
+    return _wlr_xdg_positioner_rules_unconstrain_box(
+      rules,
+      constraint,
+      box,
     );
   }
 
-  late final _wlr_xdg_popup_get_anchor_pointPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Pointer<struct_wlr_xdg_popup>,
-              ffi.Pointer<ffi.Int>,
-              ffi.Pointer<ffi.Int>)>>('wlr_xdg_popup_get_anchor_point');
-  late final _wlr_xdg_popup_get_anchor_point =
-      _wlr_xdg_popup_get_anchor_pointPtr.asFunction<
-          void Function(ffi.Pointer<struct_wlr_xdg_popup>, ffi.Pointer<ffi.Int>,
-              ffi.Pointer<ffi.Int>)>();
+  late final _wlr_xdg_positioner_rules_unconstrain_boxPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_wlr_xdg_positioner_rules>,
+                  ffi.Pointer<struct_wlr_box>, ffi.Pointer<struct_wlr_box>)>>(
+      'wlr_xdg_positioner_rules_unconstrain_box');
+  late final _wlr_xdg_positioner_rules_unconstrain_box =
+      _wlr_xdg_positioner_rules_unconstrain_boxPtr.asFunction<
+          void Function(ffi.Pointer<struct_wlr_xdg_positioner_rules>,
+              ffi.Pointer<struct_wlr_box>, ffi.Pointer<struct_wlr_box>)>();
 
   void wlr_xdg_popup_get_toplevel_coords(
     ffi.Pointer<struct_wlr_xdg_popup> popup,
@@ -4223,11 +4504,11 @@ class WaybrightLibrary {
 
   void wlr_xdg_popup_unconstrain_from_box(
     ffi.Pointer<struct_wlr_xdg_popup> popup,
-    ffi.Pointer<struct_wlr_box> toplevel_sx_box,
+    ffi.Pointer<struct_wlr_box> toplevel_space_box,
   ) {
     return _wlr_xdg_popup_unconstrain_from_box(
       popup,
-      toplevel_sx_box,
+      toplevel_space_box,
     );
   }
 
@@ -4240,36 +4521,6 @@ class WaybrightLibrary {
       _wlr_xdg_popup_unconstrain_from_boxPtr.asFunction<
           void Function(ffi.Pointer<struct_wlr_xdg_popup>,
               ffi.Pointer<struct_wlr_box>)>();
-
-  void wlr_positioner_invert_x(
-    ffi.Pointer<struct_wlr_xdg_positioner> positioner,
-  ) {
-    return _wlr_positioner_invert_x(
-      positioner,
-    );
-  }
-
-  late final _wlr_positioner_invert_xPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<struct_wlr_xdg_positioner>)>>(
-      'wlr_positioner_invert_x');
-  late final _wlr_positioner_invert_x = _wlr_positioner_invert_xPtr
-      .asFunction<void Function(ffi.Pointer<struct_wlr_xdg_positioner>)>();
-
-  void wlr_positioner_invert_y(
-    ffi.Pointer<struct_wlr_xdg_positioner> positioner,
-  ) {
-    return _wlr_positioner_invert_y(
-      positioner,
-    );
-  }
-
-  late final _wlr_positioner_invert_yPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<struct_wlr_xdg_positioner>)>>(
-      'wlr_positioner_invert_y');
-  late final _wlr_positioner_invert_y = _wlr_positioner_invert_yPtr
-      .asFunction<void Function(ffi.Pointer<struct_wlr_xdg_positioner>)>();
 
   ffi.Pointer<struct_wlr_surface> wlr_xdg_surface_surface_at(
     ffi.Pointer<struct_wlr_xdg_surface> surface,
@@ -4714,31 +4965,6 @@ class WaybrightLibrary {
               ffi.Int, ffi.Int, ffi.Int)>>('waybright_renderer_fill_rect');
   late final _waybright_renderer_fill_rect =
       _waybright_renderer_fill_rectPtr.asFunction<
-          void Function(
-              ffi.Pointer<struct_waybright_renderer>, int, int, int, int)>();
-
-  void waybright_renderer_stroke_rect(
-    ffi.Pointer<struct_waybright_renderer> wb_renderer,
-    int x,
-    int y,
-    int width,
-    int height,
-  ) {
-    return _waybright_renderer_stroke_rect(
-      wb_renderer,
-      x,
-      y,
-      width,
-      height,
-    );
-  }
-
-  late final _waybright_renderer_stroke_rectPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_waybright_renderer>, ffi.Int,
-              ffi.Int, ffi.Int, ffi.Int)>>('waybright_renderer_stroke_rect');
-  late final _waybright_renderer_stroke_rect =
-      _waybright_renderer_stroke_rectPtr.asFunction<
           void Function(
               ffi.Pointer<struct_waybright_renderer>, int, int, int, int)>();
 
@@ -5222,80 +5448,7 @@ class struct_wlr_buffer extends ffi.Struct {
   external struct_wlr_addon_set addons;
 }
 
-class struct_wlr_buffer_impl extends ffi.Struct {
-  external ffi.Pointer<
-          ffi.NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_buffer>)>>
-      destroy;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Bool Function(ffi.Pointer<struct_wlr_buffer>,
-              ffi.Pointer<struct_wlr_dmabuf_attributes>)>> get_dmabuf;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Bool Function(ffi.Pointer<struct_wlr_buffer>,
-              ffi.Pointer<struct_wlr_shm_attributes>)>> get_shm;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Bool Function(
-              ffi.Pointer<struct_wlr_buffer>,
-              ffi.Uint32,
-              ffi.Pointer<ffi.Pointer<ffi.Void>>,
-              ffi.Pointer<ffi.Uint32>,
-              ffi.Pointer<ffi.Size>)>> begin_data_ptr_access;
-
-  external ffi.Pointer<
-          ffi.NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_buffer>)>>
-      end_data_ptr_access;
-}
-
-class struct_wlr_dmabuf_attributes extends ffi.Struct {
-  @ffi.Int32()
-  external int width;
-
-  @ffi.Int32()
-  external int height;
-
-  @ffi.Uint32()
-  external int format;
-
-  @ffi.Uint64()
-  external int modifier;
-
-  @ffi.Int()
-  external int n_planes;
-
-  @ffi.Array.multi([4])
-  external ffi.Array<ffi.Uint32> offset;
-
-  @ffi.Array.multi([4])
-  external ffi.Array<ffi.Uint32> stride;
-
-  @ffi.Array.multi([4])
-  external ffi.Array<ffi.Int> fd;
-}
-
-class struct_wlr_shm_attributes extends ffi.Struct {
-  @ffi.Int()
-  external int fd;
-
-  @ffi.Uint32()
-  external int format;
-
-  @ffi.Int()
-  external int width;
-
-  @ffi.Int()
-  external int height;
-
-  @ffi.Int()
-  external int stride;
-
-  @ffi.Long()
-  external int offset;
-}
+class struct_wlr_buffer_impl extends ffi.Opaque {}
 
 class UnnamedStruct4 extends ffi.Struct {
   external struct_wl_signal destroy;
@@ -5331,6 +5484,32 @@ class UnnamedStruct6 extends ffi.Struct {
   external struct_wl_signal destroy;
 }
 
+class struct_wlr_dmabuf_attributes extends ffi.Struct {
+  @ffi.Int32()
+  external int width;
+
+  @ffi.Int32()
+  external int height;
+
+  @ffi.Uint32()
+  external int format;
+
+  @ffi.Uint64()
+  external int modifier;
+
+  @ffi.Int()
+  external int n_planes;
+
+  @ffi.Array.multi([4])
+  external ffi.Array<ffi.Uint32> offset;
+
+  @ffi.Array.multi([4])
+  external ffi.Array<ffi.Uint32> stride;
+
+  @ffi.Array.multi([4])
+  external ffi.Array<ffi.Int> fd;
+}
+
 class struct_wlr_texture_impl extends ffi.Opaque {}
 
 class struct_wlr_texture extends ffi.Struct {
@@ -5341,149 +5520,6 @@ class struct_wlr_texture extends ffi.Struct {
 
   @ffi.Uint32()
   external int height;
-}
-
-abstract class enum_wlr_renderer_read_pixels_flags {
-  static const int WLR_RENDERER_READ_PIXELS_Y_INVERT = 1;
-}
-
-class struct_wlr_drm_format_set extends ffi.Opaque {}
-
-class struct_wlr_box extends ffi.Struct {
-  @ffi.Int()
-  external int x;
-
-  @ffi.Int()
-  external int y;
-
-  @ffi.Int()
-  external int width;
-
-  @ffi.Int()
-  external int height;
-}
-
-class struct_wlr_fbox extends ffi.Struct {
-  @ffi.Double()
-  external double x;
-
-  @ffi.Double()
-  external double y;
-
-  @ffi.Double()
-  external double width;
-
-  @ffi.Double()
-  external double height;
-}
-
-class struct_wlr_surface extends ffi.Struct {
-  external ffi.Pointer<struct_wl_resource> resource;
-
-  external ffi.Pointer<struct_wlr_renderer> renderer;
-
-  external ffi.Pointer<struct_wlr_client_buffer> buffer;
-
-  @ffi.Int()
-  external int sx;
-
-  @ffi.Int()
-  external int sy;
-
-  external struct_pixman_region32 buffer_damage;
-
-  external struct_pixman_region32 external_damage;
-
-  external struct_pixman_region32 opaque_region;
-
-  external struct_pixman_region32 input_region;
-
-  external struct_wlr_surface_state current;
-
-  external struct_wlr_surface_state pending;
-
-  external struct_wl_list cached;
-
-  external ffi.Pointer<struct_wlr_surface_role> role;
-
-  external ffi.Pointer<ffi.Void> role_data;
-
-  external UnnamedStruct8 events;
-
-  external struct_wl_list current_outputs;
-
-  external struct_wlr_addon_set addons;
-
-  external ffi.Pointer<ffi.Void> data;
-
-  external struct_wl_listener renderer_destroy;
-
-  external UnnamedStruct9 previous;
-}
-
-class struct_wl_resource extends ffi.Struct {
-  external struct_wl_object object;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wl_resource>)>> destroy;
-
-  external struct_wl_list link;
-
-  external struct_wl_signal destroy_signal;
-
-  external ffi.Pointer<struct_wl_client> client;
-
-  external ffi.Pointer<ffi.Void> data;
-}
-
-class struct_wl_object extends ffi.Struct {
-  external ffi.Pointer<struct_wl_interface> interface1;
-
-  external ffi.Pointer<ffi.Void> implementation;
-
-  @ffi.Uint32()
-  external int id;
-}
-
-class struct_wl_interface extends ffi.Struct {
-  external ffi.Pointer<ffi.Char> name;
-
-  @ffi.Int()
-  external int version;
-
-  @ffi.Int()
-  external int method_count;
-
-  external ffi.Pointer<struct_wl_message> methods;
-
-  @ffi.Int()
-  external int event_count;
-
-  external ffi.Pointer<struct_wl_message> events;
-}
-
-class struct_wl_message extends ffi.Struct {
-  external ffi.Pointer<ffi.Char> name;
-
-  external ffi.Pointer<ffi.Char> signature;
-
-  external ffi.Pointer<ffi.Pointer<struct_wl_interface>> types;
-}
-
-class struct_wl_client extends ffi.Opaque {}
-
-class struct_wlr_client_buffer extends ffi.Struct {
-  external struct_wlr_buffer base;
-
-  external ffi.Pointer<struct_wlr_texture> texture;
-
-  external ffi.Pointer<struct_wlr_buffer> source;
-
-  external struct_wl_listener source_destroy;
-
-  @ffi.Uint32()
-  external int shm_source_format;
 }
 
 class struct_pixman_region32 extends ffi.Struct {
@@ -5514,397 +5550,34 @@ class struct_pixman_region32_data extends ffi.Struct {
   external int numRects;
 }
 
-class struct_wlr_surface_state extends ffi.Struct {
-  @ffi.Uint32()
-  external int committed;
+class struct_wlr_drm_format_set extends ffi.Opaque {}
 
-  @ffi.Uint32()
-  external int seq;
-
-  external ffi.Pointer<struct_wlr_buffer> buffer;
-
-  @ffi.Int32()
-  external int dx;
-
-  @ffi.Int32()
-  external int dy;
-
-  external struct_pixman_region32 surface_damage;
-
-  external struct_pixman_region32 buffer_damage;
-
-  external struct_pixman_region32 opaque;
-
-  external struct_pixman_region32 input;
-
-  @ffi.Int32()
-  external int transform;
-
-  @ffi.Int32()
-  external int scale;
-
-  external struct_wl_list frame_callback_list;
-
+class struct_wlr_box extends ffi.Struct {
   @ffi.Int()
-  external int width;
-
-  @ffi.Int()
-  external int height;
-
-  @ffi.Int()
-  external int buffer_width;
-
-  @ffi.Int()
-  external int buffer_height;
-
-  external struct_wl_list subsurfaces_below;
-
-  external struct_wl_list subsurfaces_above;
-
-  external UnnamedStruct7 viewport;
-
-  @ffi.Size()
-  external int cached_state_locks;
-
-  external struct_wl_list cached_state_link;
-}
-
-abstract class enum_wl_output_transform {
-  static const int WL_OUTPUT_TRANSFORM_NORMAL = 0;
-  static const int WL_OUTPUT_TRANSFORM_90 = 1;
-  static const int WL_OUTPUT_TRANSFORM_180 = 2;
-  static const int WL_OUTPUT_TRANSFORM_270 = 3;
-  static const int WL_OUTPUT_TRANSFORM_FLIPPED = 4;
-  static const int WL_OUTPUT_TRANSFORM_FLIPPED_90 = 5;
-  static const int WL_OUTPUT_TRANSFORM_FLIPPED_180 = 6;
-  static const int WL_OUTPUT_TRANSFORM_FLIPPED_270 = 7;
-}
-
-class UnnamedStruct7 extends ffi.Struct {
-  @ffi.Bool()
-  external bool has_src;
-
-  @ffi.Bool()
-  external bool has_dst;
-
-  external struct_wlr_fbox src;
-
-  @ffi.Int()
-  external int dst_width;
-
-  @ffi.Int()
-  external int dst_height;
-}
-
-class struct_wlr_surface_role extends ffi.Struct {
-  external ffi.Pointer<ffi.Char> name;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_surface>)>> commit;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_surface>)>> precommit;
-}
-
-class UnnamedStruct8 extends ffi.Struct {
-  external struct_wl_signal commit;
-
-  external struct_wl_signal new_subsurface;
-
-  external struct_wl_signal destroy;
-}
-
-class UnnamedStruct9 extends ffi.Struct {
-  @ffi.Int32()
-  external int scale;
-
-  @ffi.Int32()
-  external int transform;
-
-  @ffi.Int()
-  external int width;
-
-  @ffi.Int()
-  external int height;
-
-  @ffi.Int()
-  external int buffer_width;
-
-  @ffi.Int()
-  external int buffer_height;
-}
-
-class struct_wlr_subcompositor extends ffi.Struct {
-  external ffi.Pointer<struct_wl_global> global;
-}
-
-class struct_wl_global extends ffi.Opaque {}
-
-class struct_wlr_compositor extends ffi.Struct {
-  external ffi.Pointer<struct_wl_global> global;
-
-  external ffi.Pointer<struct_wlr_renderer> renderer;
-
-  external struct_wlr_subcompositor subcompositor;
-
-  external struct_wl_listener display_destroy;
-
-  external UnnamedStruct10 events;
-}
-
-class UnnamedStruct10 extends ffi.Struct {
-  external struct_wl_signal new_surface;
-
-  external struct_wl_signal destroy;
-}
-
-class struct_wlr_subsurface extends ffi.Struct {
-  external ffi.Pointer<struct_wl_resource> resource;
-
-  external ffi.Pointer<struct_wlr_surface> surface;
-
-  external ffi.Pointer<struct_wlr_surface> parent;
-
-  external struct_wlr_subsurface_parent_state current;
-
-  external struct_wlr_subsurface_parent_state pending;
-
-  @ffi.Uint32()
-  external int cached_seq;
-
-  @ffi.Bool()
-  external bool has_cache;
-
-  @ffi.Bool()
-  external bool synchronized;
-
-  @ffi.Bool()
-  external bool reordered;
-
-  @ffi.Bool()
-  external bool mapped;
-
-  @ffi.Bool()
-  external bool added;
-
-  external struct_wl_listener surface_destroy;
-
-  external struct_wl_listener parent_destroy;
-
-  external UnnamedStruct11 events;
-
-  external ffi.Pointer<ffi.Void> data;
-}
-
-class struct_wlr_subsurface_parent_state extends ffi.Struct {
-  @ffi.Int32()
   external int x;
 
-  @ffi.Int32()
+  @ffi.Int()
   external int y;
 
-  external struct_wl_list link;
-}
-
-class UnnamedStruct11 extends ffi.Struct {
-  external struct_wl_signal destroy;
-
-  external struct_wl_signal map;
-
-  external struct_wl_signal unmap;
-}
-
-abstract class enum_wlr_button_state {
-  static const int WLR_BUTTON_RELEASED = 0;
-  static const int WLR_BUTTON_PRESSED = 1;
-}
-
-abstract class enum_wlr_input_device_type {
-  static const int WLR_INPUT_DEVICE_KEYBOARD = 0;
-  static const int WLR_INPUT_DEVICE_POINTER = 1;
-  static const int WLR_INPUT_DEVICE_TOUCH = 2;
-  static const int WLR_INPUT_DEVICE_TABLET_TOOL = 3;
-  static const int WLR_INPUT_DEVICE_TABLET_PAD = 4;
-  static const int WLR_INPUT_DEVICE_SWITCH = 5;
-}
-
-class struct_wlr_input_device_impl extends ffi.Opaque {}
-
-class struct_wlr_input_device extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_input_device_impl> impl;
-
-  @ffi.Int32()
-  external int type;
-
-  @ffi.UnsignedInt()
-  external int vendor;
-
-  @ffi.UnsignedInt()
-  external int product;
-
-  external ffi.Pointer<ffi.Char> name;
-
-  @ffi.Double()
-  external double width_mm;
-
-  @ffi.Double()
-  external double height_mm;
-
-  external ffi.Pointer<ffi.Char> output_name;
-
-  external UnnamedUnion2 unnamed;
-
-  external UnnamedStruct15 events;
-
-  external ffi.Pointer<ffi.Void> data;
-}
-
-class UnnamedUnion2 extends ffi.Union {
-  external ffi.Pointer<ffi.Void> _device;
-
-  external ffi.Pointer<struct_wlr_keyboard> keyboard;
-
-  external ffi.Pointer<struct_wlr_pointer> pointer;
-
-  external ffi.Pointer<struct_wlr_switch> switch_device;
-
-  external ffi.Pointer<struct_wlr_touch> touch;
-
-  external ffi.Pointer<struct_wlr_tablet> tablet;
-
-  external ffi.Pointer<struct_wlr_tablet_pad> tablet_pad;
-}
-
-class struct_wlr_keyboard extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_keyboard_impl> impl;
-
-  external ffi.Pointer<struct_wlr_keyboard_group> group;
-
-  external ffi.Pointer<ffi.Char> keymap_string;
-
-  @ffi.Size()
-  external int keymap_size;
+  @ffi.Int()
+  external int width;
 
   @ffi.Int()
-  external int keymap_fd;
-
-  external ffi.Pointer<struct_xkb_keymap> keymap;
-
-  external ffi.Pointer<struct_xkb_state> xkb_state;
-
-  @ffi.Array.multi([3])
-  external ffi.Array<ffi.Uint32> led_indexes;
-
-  @ffi.Array.multi([8])
-  external ffi.Array<ffi.Uint32> mod_indexes;
-
-  @ffi.Array.multi([32])
-  external ffi.Array<ffi.Uint32> keycodes;
-
-  @ffi.Size()
-  external int num_keycodes;
-
-  external struct_wlr_keyboard_modifiers modifiers;
-
-  external UnnamedStruct12 repeat_info;
-
-  external UnnamedStruct13 events;
-
-  external ffi.Pointer<ffi.Void> data;
+  external int height;
 }
 
-class struct_wlr_keyboard_impl extends ffi.Opaque {}
+class struct_wlr_fbox extends ffi.Struct {
+  @ffi.Double()
+  external double x;
 
-class struct_wlr_keyboard_group extends ffi.Opaque {}
+  @ffi.Double()
+  external double y;
 
-class struct_xkb_keymap extends ffi.Opaque {}
+  @ffi.Double()
+  external double width;
 
-class struct_xkb_state extends ffi.Opaque {}
-
-class struct_wlr_keyboard_modifiers extends ffi.Struct {
-  @ffi.Uint32()
-  external int depressed;
-
-  @ffi.Uint32()
-  external int latched;
-
-  @ffi.Uint32()
-  external int locked;
-
-  @ffi.Uint32()
-  external int group;
-}
-
-class UnnamedStruct12 extends ffi.Struct {
-  @ffi.Int32()
-  external int rate;
-
-  @ffi.Int32()
-  external int delay;
-}
-
-class UnnamedStruct13 extends ffi.Struct {
-  external struct_wl_signal key;
-
-  external struct_wl_signal modifiers;
-
-  external struct_wl_signal keymap;
-
-  external struct_wl_signal repeat_info;
-
-  external struct_wl_signal destroy;
-}
-
-class struct_wlr_pointer extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_pointer_impl> impl;
-
-  external UnnamedStruct14 events;
-
-  external ffi.Pointer<ffi.Void> data;
-}
-
-class struct_wlr_pointer_impl extends ffi.Opaque {}
-
-class UnnamedStruct14 extends ffi.Struct {
-  external struct_wl_signal motion;
-
-  external struct_wl_signal motion_absolute;
-
-  external struct_wl_signal button;
-
-  external struct_wl_signal axis;
-
-  external struct_wl_signal frame;
-
-  external struct_wl_signal swipe_begin;
-
-  external struct_wl_signal swipe_update;
-
-  external struct_wl_signal swipe_end;
-
-  external struct_wl_signal pinch_begin;
-
-  external struct_wl_signal pinch_update;
-
-  external struct_wl_signal pinch_end;
-
-  external struct_wl_signal hold_begin;
-
-  external struct_wl_signal hold_end;
-}
-
-class struct_wlr_switch extends ffi.Opaque {}
-
-class struct_wlr_touch extends ffi.Opaque {}
-
-class struct_wlr_tablet extends ffi.Opaque {}
-
-class struct_wlr_tablet_pad extends ffi.Opaque {}
-
-class UnnamedStruct15 extends ffi.Struct {
-  external struct_wl_signal destroy;
+  @ffi.Double()
+  external double height;
 }
 
 abstract class enum_wl_display_error {
@@ -6138,6 +5811,17 @@ abstract class enum_wl_output_subpixel {
   static const int WL_OUTPUT_SUBPIXEL_VERTICAL_BGR = 5;
 }
 
+abstract class enum_wl_output_transform {
+  static const int WL_OUTPUT_TRANSFORM_NORMAL = 0;
+  static const int WL_OUTPUT_TRANSFORM_90 = 1;
+  static const int WL_OUTPUT_TRANSFORM_180 = 2;
+  static const int WL_OUTPUT_TRANSFORM_270 = 3;
+  static const int WL_OUTPUT_TRANSFORM_FLIPPED = 4;
+  static const int WL_OUTPUT_TRANSFORM_FLIPPED_90 = 5;
+  static const int WL_OUTPUT_TRANSFORM_FLIPPED_180 = 6;
+  static const int WL_OUTPUT_TRANSFORM_FLIPPED_270 = 7;
+}
+
 abstract class enum_wl_output_mode {
   static const int WL_OUTPUT_MODE_CURRENT = 1;
   static const int WL_OUTPUT_MODE_PREFERRED = 2;
@@ -6149,37 +5833,6 @@ abstract class enum_wl_subcompositor_error {
 
 abstract class enum_wl_subsurface_error {
   static const int WL_SUBSURFACE_ERROR_BAD_SURFACE = 0;
-}
-
-abstract class enum_wlr_keyboard_led {
-  static const int WLR_LED_NUM_LOCK = 1;
-  static const int WLR_LED_CAPS_LOCK = 2;
-  static const int WLR_LED_SCROLL_LOCK = 4;
-}
-
-abstract class enum_wlr_keyboard_modifier {
-  static const int WLR_MODIFIER_SHIFT = 1;
-  static const int WLR_MODIFIER_CAPS = 2;
-  static const int WLR_MODIFIER_CTRL = 4;
-  static const int WLR_MODIFIER_ALT = 8;
-  static const int WLR_MODIFIER_MOD2 = 16;
-  static const int WLR_MODIFIER_MOD3 = 32;
-  static const int WLR_MODIFIER_LOGO = 64;
-  static const int WLR_MODIFIER_MOD5 = 128;
-}
-
-class struct_wlr_event_keyboard_key extends ffi.Struct {
-  @ffi.Uint32()
-  external int time_msec;
-
-  @ffi.Uint32()
-  external int keycode;
-
-  @ffi.Bool()
-  external bool update_state;
-
-  @ffi.Int32()
-  external int state;
 }
 
 class struct_wlr_addon extends ffi.Struct {
@@ -6198,28 +5851,108 @@ class struct_wlr_addon_interface extends ffi.Struct {
       destroy;
 }
 
+class struct_wlr_shm_attributes extends ffi.Struct {
+  @ffi.Int()
+  external int fd;
+
+  @ffi.Uint32()
+  external int format;
+
+  @ffi.Int()
+  external int width;
+
+  @ffi.Int()
+  external int height;
+
+  @ffi.Int()
+  external int stride;
+
+  @ffi.Long()
+  external int offset;
+}
+
 abstract class enum_wlr_buffer_cap {
   static const int WLR_BUFFER_CAP_DATA_PTR = 1;
   static const int WLR_BUFFER_CAP_DMABUF = 2;
   static const int WLR_BUFFER_CAP_SHM = 4;
 }
 
-class struct_wlr_buffer_resource_interface extends ffi.Struct {
+class struct_wl_resource extends ffi.Struct {
+  external struct_wl_object object;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wl_resource>)>> destroy;
+
+  external struct_wl_list link;
+
+  external struct_wl_signal destroy_signal;
+
+  external ffi.Pointer<struct_wl_client> client;
+
+  external ffi.Pointer<ffi.Void> data;
+}
+
+class struct_wl_object extends ffi.Struct {
+  external ffi.Pointer<struct_wl_interface> interface1;
+
+  external ffi.Pointer<ffi.Void> implementation;
+
+  @ffi.Uint32()
+  external int id;
+}
+
+class struct_wl_interface extends ffi.Struct {
   external ffi.Pointer<ffi.Char> name;
 
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Bool Function(ffi.Pointer<struct_wl_resource>)>> is_instance;
+  @ffi.Int()
+  external int version;
 
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Pointer<struct_wlr_buffer> Function(
-              ffi.Pointer<struct_wl_resource>)>> from_resource;
+  @ffi.Int()
+  external int method_count;
+
+  external ffi.Pointer<struct_wl_message> methods;
+
+  @ffi.Int()
+  external int event_count;
+
+  external ffi.Pointer<struct_wl_message> events;
 }
+
+class struct_wl_message extends ffi.Struct {
+  external ffi.Pointer<ffi.Char> name;
+
+  external ffi.Pointer<ffi.Char> signature;
+
+  external ffi.Pointer<ffi.Pointer<struct_wl_interface>> types;
+}
+
+class struct_wl_client extends ffi.Opaque {}
 
 abstract class enum_wlr_buffer_data_ptr_access_flag {
   static const int WLR_BUFFER_DATA_PTR_ACCESS_READ = 1;
   static const int WLR_BUFFER_DATA_PTR_ACCESS_WRITE = 2;
+}
+
+class struct_wlr_client_buffer extends ffi.Struct {
+  external struct_wlr_buffer base;
+
+  external ffi.Pointer<struct_wlr_texture> texture;
+
+  external ffi.Pointer<struct_wlr_buffer> source;
+
+  external struct_wl_listener source_destroy;
+
+  @ffi.Size()
+  external int n_ignore_locks;
+}
+
+abstract class enum_wlr_output_mode_aspect_ratio {
+  static const int WLR_OUTPUT_MODE_ASPECT_RATIO_NONE = 0;
+  static const int WLR_OUTPUT_MODE_ASPECT_RATIO_4_3 = 1;
+  static const int WLR_OUTPUT_MODE_ASPECT_RATIO_16_9 = 2;
+  static const int WLR_OUTPUT_MODE_ASPECT_RATIO_64_27 = 3;
+  static const int WLR_OUTPUT_MODE_ASPECT_RATIO_256_135 = 4;
 }
 
 class struct_wlr_output_mode extends ffi.Struct {
@@ -6234,6 +5967,9 @@ class struct_wlr_output_mode extends ffi.Struct {
 
   @ffi.Bool()
   external bool preferred;
+
+  @ffi.Int32()
+  external int picture_aspect_ratio;
 
   external struct_wl_list link;
 }
@@ -6274,8 +6010,6 @@ class struct_wlr_output_cursor extends ffi.Struct {
   external struct_wl_listener surface_commit;
 
   external struct_wl_listener surface_destroy;
-
-  external UnnamedStruct18 events;
 }
 
 class struct_wlr_output extends ffi.Struct {
@@ -6293,14 +6027,11 @@ class struct_wlr_output extends ffi.Struct {
 
   external ffi.Pointer<ffi.Char> description;
 
-  @ffi.Array.multi([56])
-  external ffi.Array<ffi.Char> make;
+  external ffi.Pointer<ffi.Char> make;
 
-  @ffi.Array.multi([16])
-  external ffi.Array<ffi.Char> model;
+  external ffi.Pointer<ffi.Char> model;
 
-  @ffi.Array.multi([16])
-  external ffi.Array<ffi.Char> serial;
+  external ffi.Pointer<ffi.Char> serial;
 
   @ffi.Int32()
   external int phys_width;
@@ -6356,7 +6087,7 @@ class struct_wlr_output extends ffi.Struct {
   @ffi.Uint32()
   external int commit_seq;
 
-  external UnnamedStruct17 events;
+  external UnnamedStruct8 events;
 
   external ffi.Pointer<struct_wl_event_source> idle_frame;
 
@@ -6393,15 +6124,19 @@ class struct_wlr_output extends ffi.Struct {
 
 class struct_wlr_output_impl extends ffi.Opaque {}
 
+class struct_wl_global extends ffi.Opaque {}
+
 abstract class enum_wlr_output_adaptive_sync_status {
   static const int WLR_OUTPUT_ADAPTIVE_SYNC_DISABLED = 0;
   static const int WLR_OUTPUT_ADAPTIVE_SYNC_ENABLED = 1;
-  static const int WLR_OUTPUT_ADAPTIVE_SYNC_UNKNOWN = 2;
 }
 
 class struct_wlr_output_state extends ffi.Struct {
   @ffi.Uint32()
   external int committed;
+
+  @ffi.Bool()
+  external bool allow_artifacts;
 
   external struct_pixman_region32 damage;
 
@@ -6420,6 +6155,9 @@ class struct_wlr_output_state extends ffi.Struct {
   @ffi.Uint32()
   external int render_format;
 
+  @ffi.Int32()
+  external int subpixel;
+
   external ffi.Pointer<struct_wlr_buffer> buffer;
 
   @ffi.Int32()
@@ -6427,7 +6165,7 @@ class struct_wlr_output_state extends ffi.Struct {
 
   external ffi.Pointer<struct_wlr_output_mode> mode;
 
-  external UnnamedStruct16 custom_mode;
+  external UnnamedStruct7 custom_mode;
 
   external ffi.Pointer<ffi.Uint16> gamma_lut;
 
@@ -6440,7 +6178,7 @@ abstract class enum_wlr_output_state_mode_type {
   static const int WLR_OUTPUT_STATE_MODE_CUSTOM = 1;
 }
 
-class UnnamedStruct16 extends ffi.Struct {
+class UnnamedStruct7 extends ffi.Struct {
   @ffi.Int32()
   external int width;
 
@@ -6451,7 +6189,7 @@ class UnnamedStruct16 extends ffi.Struct {
   external int refresh;
 }
 
-class UnnamedStruct17 extends ffi.Struct {
+class UnnamedStruct8 extends ffi.Struct {
   external struct_wl_signal frame;
 
   external struct_wl_signal damage;
@@ -6477,8 +6215,169 @@ class UnnamedStruct17 extends ffi.Struct {
 
 class struct_wlr_swapchain extends ffi.Opaque {}
 
-class UnnamedStruct18 extends ffi.Struct {
+class struct_wlr_surface extends ffi.Struct {
+  external ffi.Pointer<struct_wl_resource> resource;
+
+  external ffi.Pointer<struct_wlr_renderer> renderer;
+
+  external ffi.Pointer<struct_wlr_client_buffer> buffer;
+
+  @ffi.Int()
+  external int sx;
+
+  @ffi.Int()
+  external int sy;
+
+  external struct_pixman_region32 buffer_damage;
+
+  external struct_pixman_region32 external_damage;
+
+  external struct_pixman_region32 opaque_region;
+
+  external struct_pixman_region32 input_region;
+
+  external struct_wlr_surface_state current;
+
+  external struct_wlr_surface_state pending;
+
+  external struct_wl_list cached;
+
+  external ffi.Pointer<struct_wlr_surface_role> role;
+
+  external ffi.Pointer<ffi.Void> role_data;
+
+  external UnnamedStruct10 events;
+
+  external struct_wl_list current_outputs;
+
+  external struct_wlr_addon_set addons;
+
+  external ffi.Pointer<ffi.Void> data;
+
+  external struct_wl_listener renderer_destroy;
+
+  external UnnamedStruct11 previous;
+
+  @ffi.Bool()
+  external bool opaque;
+}
+
+class struct_wlr_surface_state extends ffi.Struct {
+  @ffi.Uint32()
+  external int committed;
+
+  @ffi.Uint32()
+  external int seq;
+
+  external ffi.Pointer<struct_wlr_buffer> buffer;
+
+  @ffi.Int32()
+  external int dx;
+
+  @ffi.Int32()
+  external int dy;
+
+  external struct_pixman_region32 surface_damage;
+
+  external struct_pixman_region32 buffer_damage;
+
+  external struct_pixman_region32 opaque;
+
+  external struct_pixman_region32 input;
+
+  @ffi.Int32()
+  external int transform;
+
+  @ffi.Int32()
+  external int scale;
+
+  external struct_wl_list frame_callback_list;
+
+  @ffi.Int()
+  external int width;
+
+  @ffi.Int()
+  external int height;
+
+  @ffi.Int()
+  external int buffer_width;
+
+  @ffi.Int()
+  external int buffer_height;
+
+  external struct_wl_list subsurfaces_below;
+
+  external struct_wl_list subsurfaces_above;
+
+  external UnnamedStruct9 viewport;
+
+  @ffi.Size()
+  external int cached_state_locks;
+
+  external struct_wl_list cached_state_link;
+}
+
+class UnnamedStruct9 extends ffi.Struct {
+  @ffi.Bool()
+  external bool has_src;
+
+  @ffi.Bool()
+  external bool has_dst;
+
+  external struct_wlr_fbox src;
+
+  @ffi.Int()
+  external int dst_width;
+
+  @ffi.Int()
+  external int dst_height;
+}
+
+class struct_wlr_surface_role extends ffi.Struct {
+  external ffi.Pointer<ffi.Char> name;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_surface>)>> commit;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_surface>,
+              ffi.Pointer<struct_wlr_surface_state>)>> precommit;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_surface>)>> destroy;
+}
+
+class UnnamedStruct10 extends ffi.Struct {
+  external struct_wl_signal client_commit;
+
+  external struct_wl_signal commit;
+
+  external struct_wl_signal new_subsurface;
+
   external struct_wl_signal destroy;
+}
+
+class UnnamedStruct11 extends ffi.Struct {
+  @ffi.Int32()
+  external int scale;
+
+  @ffi.Int32()
+  external int transform;
+
+  @ffi.Int()
+  external int width;
+
+  @ffi.Int()
+  external int height;
+
+  @ffi.Int()
+  external int buffer_width;
+
+  @ffi.Int()
+  external int buffer_height;
 }
 
 abstract class enum_wlr_output_state_field {
@@ -6491,6 +6390,7 @@ abstract class enum_wlr_output_state_field {
   static const int WLR_OUTPUT_STATE_ADAPTIVE_SYNC_ENABLED = 64;
   static const int WLR_OUTPUT_STATE_GAMMA_LUT = 128;
   static const int WLR_OUTPUT_STATE_RENDER_FORMAT = 256;
+  static const int WLR_OUTPUT_STATE_SUBPIXEL = 512;
 }
 
 class struct_wlr_output_event_damage extends ffi.Struct {
@@ -6503,6 +6403,8 @@ class struct_wlr_output_event_precommit extends ffi.Struct {
   external ffi.Pointer<struct_wlr_output> output;
 
   external ffi.Pointer<struct_timespec> when;
+
+  external ffi.Pointer<struct_wlr_output_state> state;
 }
 
 class struct_timespec extends ffi.Struct {
@@ -6558,6 +6460,193 @@ class struct_wlr_output_event_bind extends ffi.Struct {
   external ffi.Pointer<struct_wl_resource> resource;
 }
 
+abstract class enum_wlr_surface_state_field {
+  static const int WLR_SURFACE_STATE_BUFFER = 1;
+  static const int WLR_SURFACE_STATE_SURFACE_DAMAGE = 2;
+  static const int WLR_SURFACE_STATE_BUFFER_DAMAGE = 4;
+  static const int WLR_SURFACE_STATE_OPAQUE_REGION = 8;
+  static const int WLR_SURFACE_STATE_INPUT_REGION = 16;
+  static const int WLR_SURFACE_STATE_TRANSFORM = 32;
+  static const int WLR_SURFACE_STATE_SCALE = 64;
+  static const int WLR_SURFACE_STATE_FRAME_CALLBACK_LIST = 128;
+  static const int WLR_SURFACE_STATE_VIEWPORT = 256;
+  static const int WLR_SURFACE_STATE_OFFSET = 512;
+}
+
+class struct_wlr_surface_output extends ffi.Struct {
+  external ffi.Pointer<struct_wlr_surface> surface;
+
+  external ffi.Pointer<struct_wlr_output> output;
+
+  external struct_wl_list link;
+
+  external struct_wl_listener bind;
+
+  external struct_wl_listener destroy;
+}
+
+class struct_wlr_compositor extends ffi.Struct {
+  external ffi.Pointer<struct_wl_global> global;
+
+  external ffi.Pointer<struct_wlr_renderer> renderer;
+
+  external struct_wl_listener display_destroy;
+
+  external UnnamedStruct12 events;
+}
+
+class UnnamedStruct12 extends ffi.Struct {
+  external struct_wl_signal new_surface;
+
+  external struct_wl_signal destroy;
+}
+
+abstract class enum_wlr_button_state {
+  static const int WLR_BUTTON_RELEASED = 0;
+  static const int WLR_BUTTON_PRESSED = 1;
+}
+
+abstract class enum_wlr_input_device_type {
+  static const int WLR_INPUT_DEVICE_KEYBOARD = 0;
+  static const int WLR_INPUT_DEVICE_POINTER = 1;
+  static const int WLR_INPUT_DEVICE_TOUCH = 2;
+  static const int WLR_INPUT_DEVICE_TABLET_TOOL = 3;
+  static const int WLR_INPUT_DEVICE_TABLET_PAD = 4;
+  static const int WLR_INPUT_DEVICE_SWITCH = 5;
+}
+
+class struct_wlr_input_device extends ffi.Struct {
+  @ffi.Int32()
+  external int type;
+
+  @ffi.UnsignedInt()
+  external int vendor;
+
+  @ffi.UnsignedInt()
+  external int product;
+
+  external ffi.Pointer<ffi.Char> name;
+
+  external UnnamedStruct13 events;
+
+  external ffi.Pointer<ffi.Void> data;
+}
+
+class UnnamedStruct13 extends ffi.Struct {
+  external struct_wl_signal destroy;
+}
+
+abstract class enum_wlr_keyboard_led {
+  static const int WLR_LED_NUM_LOCK = 1;
+  static const int WLR_LED_CAPS_LOCK = 2;
+  static const int WLR_LED_SCROLL_LOCK = 4;
+}
+
+abstract class enum_wlr_keyboard_modifier {
+  static const int WLR_MODIFIER_SHIFT = 1;
+  static const int WLR_MODIFIER_CAPS = 2;
+  static const int WLR_MODIFIER_CTRL = 4;
+  static const int WLR_MODIFIER_ALT = 8;
+  static const int WLR_MODIFIER_MOD2 = 16;
+  static const int WLR_MODIFIER_MOD3 = 32;
+  static const int WLR_MODIFIER_LOGO = 64;
+  static const int WLR_MODIFIER_MOD5 = 128;
+}
+
+class struct_wlr_keyboard_impl extends ffi.Opaque {}
+
+class struct_wlr_keyboard_modifiers extends ffi.Struct {
+  @ffi.Uint32()
+  external int depressed;
+
+  @ffi.Uint32()
+  external int latched;
+
+  @ffi.Uint32()
+  external int locked;
+
+  @ffi.Uint32()
+  external int group;
+}
+
+class struct_wlr_keyboard extends ffi.Struct {
+  external struct_wlr_input_device base;
+
+  external ffi.Pointer<struct_wlr_keyboard_impl> impl;
+
+  external ffi.Pointer<struct_wlr_keyboard_group> group;
+
+  external ffi.Pointer<ffi.Char> keymap_string;
+
+  @ffi.Size()
+  external int keymap_size;
+
+  @ffi.Int()
+  external int keymap_fd;
+
+  external ffi.Pointer<struct_xkb_keymap> keymap;
+
+  external ffi.Pointer<struct_xkb_state> xkb_state;
+
+  @ffi.Array.multi([3])
+  external ffi.Array<ffi.Uint32> led_indexes;
+
+  @ffi.Array.multi([8])
+  external ffi.Array<ffi.Uint32> mod_indexes;
+
+  @ffi.Array.multi([32])
+  external ffi.Array<ffi.Uint32> keycodes;
+
+  @ffi.Size()
+  external int num_keycodes;
+
+  external struct_wlr_keyboard_modifiers modifiers;
+
+  external UnnamedStruct14 repeat_info;
+
+  external UnnamedStruct15 events;
+
+  external ffi.Pointer<ffi.Void> data;
+}
+
+class struct_wlr_keyboard_group extends ffi.Opaque {}
+
+class struct_xkb_keymap extends ffi.Opaque {}
+
+class struct_xkb_state extends ffi.Opaque {}
+
+class UnnamedStruct14 extends ffi.Struct {
+  @ffi.Int32()
+  external int rate;
+
+  @ffi.Int32()
+  external int delay;
+}
+
+class UnnamedStruct15 extends ffi.Struct {
+  external struct_wl_signal key;
+
+  external struct_wl_signal modifiers;
+
+  external struct_wl_signal keymap;
+
+  external struct_wl_signal repeat_info;
+}
+
+class struct_wlr_keyboard_key_event extends ffi.Struct {
+  @ffi.Uint32()
+  external int time_msec;
+
+  @ffi.Uint32()
+  external int keycode;
+
+  @ffi.Bool()
+  external bool update_state;
+
+  @ffi.Int32()
+  external int state;
+}
+
 class struct_wlr_output_damage extends ffi.Struct {
   external ffi.Pointer<struct_wlr_output> output;
 
@@ -6572,10 +6661,7 @@ class struct_wlr_output_damage extends ffi.Struct {
   @ffi.Size()
   external int previous_idx;
 
-  @ffi.Bool()
-  external bool pending_attach_render;
-
-  external UnnamedStruct19 events;
+  external UnnamedStruct16 events;
 
   external struct_wl_listener output_destroy;
 
@@ -6587,19 +6673,59 @@ class struct_wlr_output_damage extends ffi.Struct {
 
   external struct_wl_listener output_frame;
 
-  external struct_wl_listener output_precommit;
-
   external struct_wl_listener output_commit;
 }
 
-class UnnamedStruct19 extends ffi.Struct {
+class UnnamedStruct16 extends ffi.Struct {
   external struct_wl_signal frame;
 
   external struct_wl_signal destroy;
 }
 
-class struct_wlr_event_pointer_motion extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_input_device> device;
+class struct_wlr_pointer_impl extends ffi.Opaque {}
+
+class struct_wlr_pointer extends ffi.Struct {
+  external struct_wlr_input_device base;
+
+  external ffi.Pointer<struct_wlr_pointer_impl> impl;
+
+  external ffi.Pointer<ffi.Char> output_name;
+
+  external UnnamedStruct17 events;
+
+  external ffi.Pointer<ffi.Void> data;
+}
+
+class UnnamedStruct17 extends ffi.Struct {
+  external struct_wl_signal motion;
+
+  external struct_wl_signal motion_absolute;
+
+  external struct_wl_signal button;
+
+  external struct_wl_signal axis;
+
+  external struct_wl_signal frame;
+
+  external struct_wl_signal swipe_begin;
+
+  external struct_wl_signal swipe_update;
+
+  external struct_wl_signal swipe_end;
+
+  external struct_wl_signal pinch_begin;
+
+  external struct_wl_signal pinch_update;
+
+  external struct_wl_signal pinch_end;
+
+  external struct_wl_signal hold_begin;
+
+  external struct_wl_signal hold_end;
+}
+
+class struct_wlr_pointer_motion_event extends ffi.Struct {
+  external ffi.Pointer<struct_wlr_pointer> pointer;
 
   @ffi.Uint32()
   external int time_msec;
@@ -6617,8 +6743,8 @@ class struct_wlr_event_pointer_motion extends ffi.Struct {
   external double unaccel_dy;
 }
 
-class struct_wlr_event_pointer_motion_absolute extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_input_device> device;
+class struct_wlr_pointer_motion_absolute_event extends ffi.Struct {
+  external ffi.Pointer<struct_wlr_pointer> pointer;
 
   @ffi.Uint32()
   external int time_msec;
@@ -6630,8 +6756,8 @@ class struct_wlr_event_pointer_motion_absolute extends ffi.Struct {
   external double y;
 }
 
-class struct_wlr_event_pointer_button extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_input_device> device;
+class struct_wlr_pointer_button_event extends ffi.Struct {
+  external ffi.Pointer<struct_wlr_pointer> pointer;
 
   @ffi.Uint32()
   external int time_msec;
@@ -6655,8 +6781,8 @@ abstract class enum_wlr_axis_orientation {
   static const int WLR_AXIS_ORIENTATION_HORIZONTAL = 1;
 }
 
-class struct_wlr_event_pointer_axis extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_input_device> device;
+class struct_wlr_pointer_axis_event extends ffi.Struct {
+  external ffi.Pointer<struct_wlr_pointer> pointer;
 
   @ffi.Uint32()
   external int time_msec;
@@ -6674,8 +6800,8 @@ class struct_wlr_event_pointer_axis extends ffi.Struct {
   external int delta_discrete;
 }
 
-class struct_wlr_event_pointer_swipe_begin extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_input_device> device;
+class struct_wlr_pointer_swipe_begin_event extends ffi.Struct {
+  external ffi.Pointer<struct_wlr_pointer> pointer;
 
   @ffi.Uint32()
   external int time_msec;
@@ -6684,8 +6810,8 @@ class struct_wlr_event_pointer_swipe_begin extends ffi.Struct {
   external int fingers;
 }
 
-class struct_wlr_event_pointer_swipe_update extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_input_device> device;
+class struct_wlr_pointer_swipe_update_event extends ffi.Struct {
+  external ffi.Pointer<struct_wlr_pointer> pointer;
 
   @ffi.Uint32()
   external int time_msec;
@@ -6700,8 +6826,8 @@ class struct_wlr_event_pointer_swipe_update extends ffi.Struct {
   external double dy;
 }
 
-class struct_wlr_event_pointer_swipe_end extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_input_device> device;
+class struct_wlr_pointer_swipe_end_event extends ffi.Struct {
+  external ffi.Pointer<struct_wlr_pointer> pointer;
 
   @ffi.Uint32()
   external int time_msec;
@@ -6710,8 +6836,8 @@ class struct_wlr_event_pointer_swipe_end extends ffi.Struct {
   external bool cancelled;
 }
 
-class struct_wlr_event_pointer_pinch_begin extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_input_device> device;
+class struct_wlr_pointer_pinch_begin_event extends ffi.Struct {
+  external ffi.Pointer<struct_wlr_pointer> pointer;
 
   @ffi.Uint32()
   external int time_msec;
@@ -6720,8 +6846,8 @@ class struct_wlr_event_pointer_pinch_begin extends ffi.Struct {
   external int fingers;
 }
 
-class struct_wlr_event_pointer_pinch_update extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_input_device> device;
+class struct_wlr_pointer_pinch_update_event extends ffi.Struct {
+  external ffi.Pointer<struct_wlr_pointer> pointer;
 
   @ffi.Uint32()
   external int time_msec;
@@ -6742,8 +6868,8 @@ class struct_wlr_event_pointer_pinch_update extends ffi.Struct {
   external double rotation;
 }
 
-class struct_wlr_event_pointer_pinch_end extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_input_device> device;
+class struct_wlr_pointer_pinch_end_event extends ffi.Struct {
+  external ffi.Pointer<struct_wlr_pointer> pointer;
 
   @ffi.Uint32()
   external int time_msec;
@@ -6752,8 +6878,8 @@ class struct_wlr_event_pointer_pinch_end extends ffi.Struct {
   external bool cancelled;
 }
 
-class struct_wlr_event_pointer_hold_begin extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_input_device> device;
+class struct_wlr_pointer_hold_begin_event extends ffi.Struct {
+  external ffi.Pointer<struct_wlr_pointer> pointer;
 
   @ffi.Uint32()
   external int time_msec;
@@ -6762,38 +6888,14 @@ class struct_wlr_event_pointer_hold_begin extends ffi.Struct {
   external int fingers;
 }
 
-class struct_wlr_event_pointer_hold_end extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_input_device> device;
+class struct_wlr_pointer_hold_end_event extends ffi.Struct {
+  external ffi.Pointer<struct_wlr_pointer> pointer;
 
   @ffi.Uint32()
   external int time_msec;
 
   @ffi.Bool()
   external bool cancelled;
-}
-
-abstract class enum_wlr_surface_state_field {
-  static const int WLR_SURFACE_STATE_BUFFER = 1;
-  static const int WLR_SURFACE_STATE_SURFACE_DAMAGE = 2;
-  static const int WLR_SURFACE_STATE_BUFFER_DAMAGE = 4;
-  static const int WLR_SURFACE_STATE_OPAQUE_REGION = 8;
-  static const int WLR_SURFACE_STATE_INPUT_REGION = 16;
-  static const int WLR_SURFACE_STATE_TRANSFORM = 32;
-  static const int WLR_SURFACE_STATE_SCALE = 64;
-  static const int WLR_SURFACE_STATE_FRAME_CALLBACK_LIST = 128;
-  static const int WLR_SURFACE_STATE_VIEWPORT = 256;
-}
-
-class struct_wlr_surface_output extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_surface> surface;
-
-  external ffi.Pointer<struct_wlr_output> output;
-
-  external struct_wl_list link;
-
-  external struct_wl_listener bind;
-
-  external struct_wl_listener destroy;
 }
 
 class struct_wlr_serial_range extends ffi.Struct {
@@ -6832,12 +6934,14 @@ class struct_wlr_seat_client extends ffi.Struct {
 
   external struct_wl_list data_devices;
 
-  external UnnamedStruct24 events;
+  external UnnamedStruct22 events;
 
   external struct_wlr_serial_ringset serials;
 
   @ffi.Bool()
   external bool needs_touch_frame;
+
+  external UnnamedStruct23 value120;
 }
 
 class struct_wlr_seat extends ffi.Struct {
@@ -6893,7 +6997,7 @@ class struct_wlr_seat extends ffi.Struct {
 
   external struct_wl_listener drag_source_destroy;
 
-  external UnnamedStruct23 events;
+  external UnnamedStruct21 events;
 
   external ffi.Pointer<ffi.Void> data;
 }
@@ -6944,7 +7048,7 @@ class struct_wlr_seat_pointer_state extends ffi.Struct {
 
   external struct_wl_listener surface_destroy;
 
-  external UnnamedStruct20 events;
+  external UnnamedStruct18 events;
 }
 
 class struct_wlr_seat_pointer_grab extends ffi.Struct {
@@ -6990,7 +7094,7 @@ class struct_wlr_pointer_grab_interface extends ffi.Struct {
           ffi.Void Function(ffi.Pointer<struct_wlr_seat_pointer_grab>)>> cancel;
 }
 
-class UnnamedStruct20 extends ffi.Struct {
+class UnnamedStruct18 extends ffi.Struct {
   external struct_wl_signal focus_change;
 }
 
@@ -7015,7 +7119,7 @@ class struct_wlr_seat_keyboard_state extends ffi.Struct {
 
   external ffi.Pointer<struct_wlr_seat_keyboard_grab> default_grab;
 
-  external UnnamedStruct21 events;
+  external UnnamedStruct19 events;
 }
 
 class struct_wlr_seat_keyboard_grab extends ffi.Struct {
@@ -7057,7 +7161,7 @@ class struct_wlr_keyboard_grab_interface extends ffi.Struct {
       cancel;
 }
 
-class UnnamedStruct21 extends ffi.Struct {
+class UnnamedStruct19 extends ffi.Struct {
   external struct_wl_signal focus_change;
 }
 
@@ -7113,6 +7217,11 @@ class struct_wlr_touch_grab_interface extends ffi.Struct {
   external ffi.Pointer<
       ffi.NativeFunction<
           ffi.Void Function(ffi.Pointer<struct_wlr_seat_touch_grab>)>> cancel;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_seat_touch_grab>,
+              ffi.Pointer<struct_wlr_surface>)>> wl_cancel;
 }
 
 class struct_wlr_touch_point extends ffi.Struct {
@@ -7139,16 +7248,16 @@ class struct_wlr_touch_point extends ffi.Struct {
 
   external struct_wl_listener client_destroy;
 
-  external UnnamedStruct22 events;
+  external UnnamedStruct20 events;
 
   external struct_wl_list link;
 }
 
-class UnnamedStruct22 extends ffi.Struct {
+class UnnamedStruct20 extends ffi.Struct {
   external struct_wl_signal destroy;
 }
 
-class UnnamedStruct23 extends ffi.Struct {
+class UnnamedStruct21 extends ffi.Struct {
   external struct_wl_signal pointer_grab_begin;
 
   external struct_wl_signal pointer_grab_end;
@@ -7178,8 +7287,19 @@ class UnnamedStruct23 extends ffi.Struct {
   external struct_wl_signal destroy;
 }
 
-class UnnamedStruct24 extends ffi.Struct {
+class UnnamedStruct22 extends ffi.Struct {
   external struct_wl_signal destroy;
+}
+
+class UnnamedStruct23 extends ffi.Struct {
+  @ffi.Array.multi([2])
+  external ffi.Array<ffi.Int32> acc_discrete;
+
+  @ffi.Array.multi([2])
+  external ffi.Array<ffi.Int32> last_discrete;
+
+  @ffi.Array.multi([2])
+  external ffi.Array<ffi.Double> acc_axis;
 }
 
 class struct_wlr_seat_pointer_request_set_cursor_event extends ffi.Struct {
@@ -7245,6 +7365,9 @@ class struct_wlr_seat_keyboard_focus_change_event extends ffi.Struct {
 class struct_wlr_xdg_shell extends ffi.Struct {
   external ffi.Pointer<struct_wl_global> global;
 
+  @ffi.Uint32()
+  external int version;
+
   external struct_wl_list clients;
 
   external struct_wl_list popup_grabs;
@@ -7254,12 +7377,12 @@ class struct_wlr_xdg_shell extends ffi.Struct {
 
   external struct_wl_listener display_destroy;
 
-  external UnnamedStruct25 events;
+  external UnnamedStruct24 events;
 
   external ffi.Pointer<ffi.Void> data;
 }
 
-class UnnamedStruct25 extends ffi.Struct {
+class UnnamedStruct24 extends ffi.Struct {
   external struct_wl_signal new_surface;
 
   external struct_wl_signal destroy;
@@ -7282,7 +7405,7 @@ class struct_wlr_xdg_client extends ffi.Struct {
   external ffi.Pointer<struct_wl_event_source> ping_timer;
 }
 
-class struct_wlr_xdg_positioner extends ffi.Struct {
+class struct_wlr_xdg_positioner_rules extends ffi.Struct {
   external struct_wlr_box anchor_rect;
 
   @ffi.Int32()
@@ -7294,9 +7417,20 @@ class struct_wlr_xdg_positioner extends ffi.Struct {
   @ffi.Int32()
   external int constraint_adjustment;
 
-  external UnnamedStruct26 size;
+  @ffi.Bool()
+  external bool reactive;
 
-  external UnnamedStruct27 offset;
+  @ffi.Bool()
+  external bool has_parent_configure_serial;
+
+  @ffi.Uint32()
+  external int parent_configure_serial;
+
+  external UnnamedStruct25 size;
+
+  external UnnamedStruct25 parent_size;
+
+  external UnnamedStruct26 offset;
 }
 
 abstract class enum_xdg_positioner_anchor {
@@ -7333,7 +7467,7 @@ abstract class enum_xdg_positioner_constraint_adjustment {
   static const int XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_RESIZE_Y = 32;
 }
 
-class UnnamedStruct26 extends ffi.Struct {
+class UnnamedStruct25 extends ffi.Struct {
   @ffi.Int32()
   external int width;
 
@@ -7341,12 +7475,41 @@ class UnnamedStruct26 extends ffi.Struct {
   external int height;
 }
 
-class UnnamedStruct27 extends ffi.Struct {
+class UnnamedStruct26 extends ffi.Struct {
   @ffi.Int32()
   external int x;
 
   @ffi.Int32()
   external int y;
+}
+
+class struct_wlr_xdg_positioner extends ffi.Struct {
+  external ffi.Pointer<struct_wl_resource> resource;
+
+  external struct_wlr_xdg_positioner_rules rules;
+}
+
+class struct_wlr_xdg_popup_state extends ffi.Struct {
+  external struct_wlr_box geometry;
+
+  @ffi.Bool()
+  external bool reactive;
+}
+
+abstract class enum_wlr_xdg_popup_configure_field {
+  static const int WLR_XDG_POPUP_CONFIGURE_REPOSITION_TOKEN = 1;
+}
+
+class struct_wlr_xdg_popup_configure extends ffi.Struct {
+  @ffi.Uint32()
+  external int fields;
+
+  external struct_wlr_box geometry;
+
+  external struct_wlr_xdg_positioner_rules rules;
+
+  @ffi.Uint32()
+  external int reposition_token;
 }
 
 class struct_wlr_xdg_popup extends ffi.Struct {
@@ -7363,9 +7526,13 @@ class struct_wlr_xdg_popup extends ffi.Struct {
 
   external ffi.Pointer<struct_wlr_seat> seat;
 
-  external struct_wlr_box geometry;
+  external struct_wlr_xdg_popup_configure scheduled;
 
-  external struct_wlr_xdg_positioner positioner;
+  external struct_wlr_xdg_popup_state current;
+
+  external struct_wlr_xdg_popup_state pending;
+
+  external UnnamedStruct30 events;
 
   external struct_wl_list grab_link;
 }
@@ -7382,7 +7549,7 @@ class struct_wlr_xdg_surface extends ffi.Struct {
   @ffi.Int32()
   external int role;
 
-  external UnnamedUnion3 unnamed;
+  external UnnamedUnion2 unnamed;
 
   external struct_wl_list popups;
 
@@ -7406,8 +7573,6 @@ class struct_wlr_xdg_surface extends ffi.Struct {
 
   external struct_wlr_xdg_surface_state pending;
 
-  external struct_wl_listener surface_destroy;
-
   external struct_wl_listener surface_commit;
 
   external UnnamedStruct29 events;
@@ -7421,7 +7586,7 @@ abstract class enum_wlr_xdg_surface_role {
   static const int WLR_XDG_SURFACE_ROLE_POPUP = 2;
 }
 
-class UnnamedUnion3 extends ffi.Union {
+class UnnamedUnion2 extends ffi.Union {
   external ffi.Pointer<struct_wlr_xdg_toplevel> toplevel;
 
   external ffi.Pointer<struct_wlr_xdg_popup> popup;
@@ -7435,7 +7600,7 @@ class struct_wlr_xdg_toplevel extends ffi.Struct {
   @ffi.Bool()
   external bool added;
 
-  external ffi.Pointer<struct_wlr_xdg_surface> parent;
+  external ffi.Pointer<struct_wlr_xdg_toplevel> parent;
 
   external struct_wl_listener parent_unmap;
 
@@ -7470,26 +7635,29 @@ class struct_wlr_xdg_toplevel_state extends ffi.Struct {
   @ffi.Uint32()
   external int tiled;
 
-  @ffi.Uint32()
+  @ffi.Int32()
   external int width;
 
-  @ffi.Uint32()
+  @ffi.Int32()
   external int height;
 
-  @ffi.Uint32()
+  @ffi.Int32()
   external int max_width;
 
-  @ffi.Uint32()
+  @ffi.Int32()
   external int max_height;
 
-  @ffi.Uint32()
+  @ffi.Int32()
   external int min_width;
 
-  @ffi.Uint32()
+  @ffi.Int32()
   external int min_height;
 }
 
 class struct_wlr_xdg_toplevel_configure extends ffi.Struct {
+  @ffi.Uint32()
+  external int fields;
+
   @ffi.Bool()
   external bool maximized;
 
@@ -7505,10 +7673,23 @@ class struct_wlr_xdg_toplevel_configure extends ffi.Struct {
   @ffi.Uint32()
   external int tiled;
 
-  @ffi.Uint32()
+  @ffi.Int32()
   external int width;
 
+  @ffi.Int32()
+  external int height;
+
+  external UnnamedStruct27 bounds;
+
   @ffi.Uint32()
+  external int wm_capabilities;
+}
+
+class UnnamedStruct27 extends ffi.Struct {
+  @ffi.Int32()
+  external int width;
+
+  @ffi.Int32()
   external int height;
 }
 
@@ -7570,6 +7751,10 @@ class UnnamedStruct29 extends ffi.Struct {
   external struct_wl_signal ack_configure;
 }
 
+class UnnamedStruct30 extends ffi.Struct {
+  external struct_wl_signal reposition;
+}
+
 class struct_wlr_xdg_popup_grab extends ffi.Struct {
   external ffi.Pointer<struct_wl_client> client;
 
@@ -7588,6 +7773,18 @@ class struct_wlr_xdg_popup_grab extends ffi.Struct {
   external struct_wl_listener seat_destroy;
 }
 
+abstract class enum_wlr_xdg_toplevel_wm_capabilities {
+  static const int WLR_XDG_TOPLEVEL_WM_CAPABILITIES_WINDOW_MENU = 1;
+  static const int WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE = 2;
+  static const int WLR_XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN = 4;
+  static const int WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MINIMIZE = 8;
+}
+
+abstract class enum_wlr_xdg_toplevel_configure_field {
+  static const int WLR_XDG_TOPLEVEL_CONFIGURE_BOUNDS = 1;
+  static const int WLR_XDG_TOPLEVEL_CONFIGURE_WM_CAPABILITIES = 2;
+}
+
 class struct_wlr_xdg_surface_configure extends ffi.Struct {
   external ffi.Pointer<struct_wlr_xdg_surface> surface;
 
@@ -7596,11 +7793,17 @@ class struct_wlr_xdg_surface_configure extends ffi.Struct {
   @ffi.Uint32()
   external int serial;
 
+  external UnnamedUnion3 unnamed;
+}
+
+class UnnamedUnion3 extends ffi.Union {
   external ffi.Pointer<struct_wlr_xdg_toplevel_configure> toplevel_configure;
+
+  external ffi.Pointer<struct_wlr_xdg_popup_configure> popup_configure;
 }
 
 class struct_wlr_xdg_toplevel_move_event extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_xdg_surface> surface;
+  external ffi.Pointer<struct_wlr_xdg_toplevel> toplevel;
 
   external ffi.Pointer<struct_wlr_seat_client> seat;
 
@@ -7609,7 +7812,7 @@ class struct_wlr_xdg_toplevel_move_event extends ffi.Struct {
 }
 
 class struct_wlr_xdg_toplevel_resize_event extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_xdg_surface> surface;
+  external ffi.Pointer<struct_wlr_xdg_toplevel> toplevel;
 
   external ffi.Pointer<struct_wlr_seat_client> seat;
 
@@ -7620,27 +7823,18 @@ class struct_wlr_xdg_toplevel_resize_event extends ffi.Struct {
   external int edges;
 }
 
-class struct_wlr_xdg_toplevel_set_fullscreen_event extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_xdg_surface> surface;
-
-  @ffi.Bool()
-  external bool fullscreen;
-
-  external ffi.Pointer<struct_wlr_output> output;
-}
-
 class struct_wlr_xdg_toplevel_show_window_menu_event extends ffi.Struct {
-  external ffi.Pointer<struct_wlr_xdg_surface> surface;
+  external ffi.Pointer<struct_wlr_xdg_toplevel> toplevel;
 
   external ffi.Pointer<struct_wlr_seat_client> seat;
 
   @ffi.Uint32()
   external int serial;
 
-  @ffi.Uint32()
+  @ffi.Int32()
   external int x;
 
-  @ffi.Uint32()
+  @ffi.Int32()
   external int y;
 }
 
@@ -7706,7 +7900,7 @@ class struct_waybright_monitor extends ffi.Struct {
 
   external ffi.Pointer<struct_wlr_output> wlr_output;
 
-  external UnnamedStruct31 listeners;
+  external UnnamedStruct32 listeners;
 
   external ffi.Pointer<
           ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
@@ -7733,14 +7927,14 @@ class struct_waybright extends ffi.Struct {
 
   external ffi.Pointer<ffi.Char> socket_name;
 
-  external UnnamedStruct30 listeners;
+  external UnnamedStruct31 listeners;
 
   external ffi.Pointer<
           ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
       handle_event;
 }
 
-class UnnamedStruct30 extends ffi.Struct {
+class UnnamedStruct31 extends ffi.Struct {
   external struct_wl_listener monitor_new;
 
   external struct_wl_listener window_new;
@@ -7748,7 +7942,7 @@ class UnnamedStruct30 extends ffi.Struct {
   external struct_wl_listener input_new;
 }
 
-class UnnamedStruct31 extends ffi.Struct {
+class UnnamedStruct32 extends ffi.Struct {
   external struct_wl_listener remove;
 
   external struct_wl_listener frame;
@@ -7770,14 +7964,14 @@ class struct_waybright_window extends ffi.Struct {
   @ffi.Int()
   external int is_popup;
 
-  external UnnamedStruct32 listeners;
+  external UnnamedStruct33 listeners;
 
   external ffi.Pointer<
           ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
       handle_event;
 }
 
-class UnnamedStruct32 extends ffi.Struct {
+class UnnamedStruct33 extends ffi.Struct {
   external struct_wl_listener remove;
 
   external struct_wl_listener show1;
@@ -7816,14 +8010,14 @@ class struct_waybright_pointer extends ffi.Struct {
   @ffi.Double()
   external double y;
 
-  external UnnamedStruct33 listeners;
+  external UnnamedStruct34 listeners;
 
   external ffi.Pointer<
           ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
       handle_event;
 }
 
-class UnnamedStruct33 extends ffi.Struct {
+class UnnamedStruct34 extends ffi.Struct {
   external struct_wl_listener remove;
 
   external struct_wl_listener move;
@@ -7842,14 +8036,14 @@ class struct_waybright_keyboard extends ffi.Struct {
 
   external ffi.Pointer<struct_wlr_keyboard> wlr_keyboard;
 
-  external UnnamedStruct34 listeners;
+  external UnnamedStruct35 listeners;
 
   external ffi.Pointer<
           ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
       handle_event;
 }
 
-class UnnamedStruct34 extends ffi.Struct {
+class UnnamedStruct35 extends ffi.Struct {
   external struct_wl_listener remove;
 
   external struct_wl_listener key;

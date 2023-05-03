@@ -27,7 +27,7 @@ And I like it. 🙂
 ## Requirements
 - wayland (I'm using *v1.21.0*)
 - wayland-protocols (I'm using *v1.27*)
-- wlroots (I'm using *v0.15.1*)
+- wlroots (I'm using *v0.16.2*)
 - whatever those three libraries require
 - make
 - dart

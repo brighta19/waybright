@@ -38,7 +38,7 @@ class PointerDevice extends InputDevice {
         _pointerInstances.remove(pointer);
       } else if (type == enum_wb_event_type.event_type_pointer_move) {
         var wlrEventPtr =
-            eventPtr.ref.event as Pointer<struct_wlr_event_pointer_motion>;
+            eventPtr.ref.event as Pointer<struct_wlr_pointer_motion_event>;
 
         var event = PointerRelativeMoveEvent(
           pointer,
@@ -50,7 +50,7 @@ class PointerDevice extends InputDevice {
         handleEvent(event);
       } else if (type == enum_wb_event_type.event_type_pointer_teleport) {
         var wlrEventPtr = eventPtr.ref.event
-            as Pointer<struct_wlr_event_pointer_motion_absolute>;
+            as Pointer<struct_wlr_pointer_motion_absolute_event>;
 
         // Imagine a layout where new monitors are added to the right.
         var outputWidthSum = 0;
@@ -88,7 +88,7 @@ class PointerDevice extends InputDevice {
         handleEvent(event);
       } else if (type == enum_wb_event_type.event_type_pointer_button) {
         var wlrEventPtr =
-            eventPtr.ref.event as Pointer<struct_wlr_event_pointer_button>;
+            eventPtr.ref.event as Pointer<struct_wlr_pointer_button_event>;
 
         var event = PointerButtonEvent(
           pointer,
@@ -100,7 +100,7 @@ class PointerDevice extends InputDevice {
         handleEvent(event);
       } else if (type == enum_wb_event_type.event_type_pointer_axis) {
         var wlrEventPtr =
-            eventPtr.ref.event as Pointer<struct_wlr_event_pointer_axis>;
+            eventPtr.ref.event as Pointer<struct_wlr_pointer_axis_event>;
 
         PointerAxisSource source;
         switch (wlrEventPtr.ref.source) {

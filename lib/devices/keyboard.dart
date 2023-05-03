@@ -24,7 +24,7 @@ class KeyboardDevice extends InputDevice {
         _keyboardInstances.remove(keyboard);
       } else if (type == enum_wb_event_type.event_type_keyboard_key) {
         var wlrEventPtr =
-            eventPtr.ref.event as Pointer<struct_wlr_event_keyboard_key>;
+            eventPtr.ref.event as Pointer<struct_wlr_keyboard_key_event>;
 
         var event = KeyboardKeyEvent(
           keyboard,

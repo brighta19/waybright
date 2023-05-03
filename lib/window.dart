@@ -140,7 +140,7 @@ class Window {
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
       _wblib.wlr_xdg_toplevel_set_maximized(
-          windowPtr.ref.wlr_xdg_surface, value);
+          windowPtr.ref.wlr_xdg_toplevel, value);
     }
   }
 
@@ -148,7 +148,7 @@ class Window {
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
       _wblib.wlr_xdg_toplevel_set_fullscreen(
-          windowPtr.ref.wlr_xdg_surface, value);
+          windowPtr.ref.wlr_xdg_toplevel, value);
     }
   }
 
@@ -156,7 +156,7 @@ class Window {
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
       _wblib.wlr_xdg_toplevel_set_activated(
-          windowPtr.ref.wlr_xdg_surface, value);
+          windowPtr.ref.wlr_xdg_toplevel, value);
     }
   }
 
@@ -293,7 +293,7 @@ class Window {
       var height0 = height ?? contentHeight;
 
       _wblib.wlr_xdg_toplevel_set_size(
-          windowPtr.ref.wlr_xdg_surface, width0, height0);
+          windowPtr.ref.wlr_xdg_toplevel, width0, height0);
     }
   }
 
