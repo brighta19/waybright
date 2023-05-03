@@ -5759,6 +5759,7 @@ abstract class enum_wl_surface_error {
   static const int WL_SURFACE_ERROR_INVALID_TRANSFORM = 1;
   static const int WL_SURFACE_ERROR_INVALID_SIZE = 2;
   static const int WL_SURFACE_ERROR_INVALID_OFFSET = 3;
+  static const int WL_SURFACE_ERROR_DEFUNCT_ROLE_OBJECT = 4;
 }
 
 abstract class enum_wl_seat_capability {
@@ -5790,6 +5791,11 @@ abstract class enum_wl_pointer_axis_source {
   static const int WL_POINTER_AXIS_SOURCE_FINGER = 1;
   static const int WL_POINTER_AXIS_SOURCE_CONTINUOUS = 2;
   static const int WL_POINTER_AXIS_SOURCE_WHEEL_TILT = 3;
+}
+
+abstract class enum_wl_pointer_axis_relative_direction {
+  static const int WL_POINTER_AXIS_RELATIVE_DIRECTION_IDENTICAL = 0;
+  static const int WL_POINTER_AXIS_RELATIVE_DIRECTION_INVERTED = 1;
 }
 
 abstract class enum_wl_keyboard_keymap_format {
@@ -5829,6 +5835,7 @@ abstract class enum_wl_output_mode {
 
 abstract class enum_wl_subcompositor_error {
   static const int WL_SUBCOMPOSITOR_ERROR_BAD_SURFACE = 0;
+  static const int WL_SUBCOMPOSITOR_ERROR_BAD_PARENT = 1;
 }
 
 abstract class enum_wl_subsurface_error {
