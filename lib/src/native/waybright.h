@@ -1,3 +1,5 @@
+#pragma once
+
 #include <wayland-server-core.h>
 #include <wlr/backend.h>
 #include <wlr/render/allocator.h>
@@ -168,6 +170,10 @@ struct waybright_keyboard {
     void(*handle_event)(int type, void* data);
 };
 
+
+int get_color_from_array(float* color_array);
+void set_color_to_array(int color, float* color_array);
+
 struct wlr_output_mode* waybright_get_wlr_output_mode_from_wl_list(struct wl_list *ptr);
 struct waybright* waybright_create();
 void waybright_destroy(struct waybright* wb);
@@ -179,6 +185,7 @@ void waybright_run_event_loop(struct waybright* wb);
 void waybright_close_socket(struct waybright* wb);
 struct waybright_image* waybright_load_png_image(struct waybright* wb, const char* path);
 
+void waybright_renderer_destroy(struct waybright_renderer* wb_renderer);
 void waybright_renderer_set_background_color(struct waybright_renderer* wb_renderer, int color);
 int waybright_renderer_get_background_color(struct waybright_renderer* wb_renderer);
 int waybright_renderer_get_fill_style(struct waybright_renderer* wb_renderer);
@@ -188,17 +195,21 @@ void waybright_renderer_fill_rect(struct waybright_renderer* wb_renderer, int x,
 void waybright_renderer_draw_window(struct waybright_renderer* wb_renderer, struct waybright_window* wb_window, int x, int y, int width, int height);
 void waybright_renderer_draw_image(struct waybright_renderer* wb_renderer, struct waybright_image* wb_image, int x, int y, int width, int height);
 
+void waybright_monitor_destroy(struct waybright_monitor* wb_monitor);
 void waybright_monitor_enable(struct waybright_monitor* wb_monitor);
 void waybright_monitor_disable(struct waybright_monitor* wb_monitor);
 
+void waybright_window_destroy(struct waybright_window* wb_window);
 void waybright_window_submit_pointer_move_event(struct waybright_window* wb_window, int time, int sx, int sy);
 void waybright_window_submit_pointer_button_event(struct waybright_window* wb_window, int time, int button, int pressed);
 void waybright_window_submit_pointer_axis_event(struct waybright_window* wb_window, int time, int orientation, double delta, int delta_discrete, int source);
 void waybright_window_submit_keyboard_key_event(struct waybright_window* wb_window, int time, int keyCode, int pressed);
 void waybright_window_submit_keyboard_modifiers_event(struct waybright_window* wb_window, struct waybright_keyboard* wb_keyboard);
 
+void waybright_pointer_destroy(struct waybright_pointer* wb_pointer);
 void waybright_pointer_focus_on_window(struct waybright_pointer* wb_pointer, struct waybright_window* wb_window, int sx, int sy);
 void waybright_pointer_clear_focus(struct waybright_pointer* wb_pointer);
 
+void waybright_keyboard_destroy(struct waybright_keyboard* wb_keyboard);
 void waybright_keyboard_focus_on_window(struct waybright_keyboard* wb_keyboard, struct waybright_window* wb_window);
 void waybright_keyboard_clear_focus(struct waybright_keyboard* wb_keyboard);

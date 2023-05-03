@@ -4,6 +4,7 @@ LIBS=$(shell pkg-config --cflags --libs wayland-server) \
 	$(shell pkg-config --cflags --libs wlroots) \
 	$(shell pkg-config --cflags --libs cairo) \
 	$(shell pkg-config --cflags --libs libdrm)
+SOURCE_FILES=$(shell echo lib/src/native/*.c)
 
 build-deps: build/waybright.so lib/src/generated/waybright_bindings.dart
 
@@ -13,9 +14,9 @@ lib/src/native/xdg-shell-protocol.h:
 	lib/src/native/xdg-shell-protocol.h
 
 so: build/waybright.so # shorthand
-build/waybright.so: lib/src/native/xdg-shell-protocol.h lib/src/native/waybright.c
+build/waybright.so: lib/src/native/xdg-shell-protocol.h $(SOURCE_FILES)
 	@mkdir -p build
-	cc -shared -o build/waybright.so lib/src/native/waybright.c \
+	cc -shared -o build/waybright.so $(SOURCE_FILES) \
 	-Wall -DWLR_USE_UNSTABLE -fPIC -Ilib/src/native/ $(LIBS)
 	@cp build/waybright.so example/waybright.so
 

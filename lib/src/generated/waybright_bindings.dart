@@ -4850,6 +4850,21 @@ class WaybrightLibrary {
           ffi.Pointer<struct_waybright_image> Function(
               ffi.Pointer<struct_waybright>, ffi.Pointer<ffi.Char>)>();
 
+  void waybright_renderer_destroy(
+    ffi.Pointer<struct_waybright_renderer> wb_renderer,
+  ) {
+    return _waybright_renderer_destroy(
+      wb_renderer,
+    );
+  }
+
+  late final _waybright_renderer_destroyPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_waybright_renderer>)>>(
+      'waybright_renderer_destroy');
+  late final _waybright_renderer_destroy = _waybright_renderer_destroyPtr
+      .asFunction<void Function(ffi.Pointer<struct_waybright_renderer>)>();
+
   void waybright_renderer_set_background_color(
     ffi.Pointer<struct_waybright_renderer> wb_renderer,
     int color,
@@ -5032,6 +5047,21 @@ class WaybrightLibrary {
           void Function(ffi.Pointer<struct_waybright_renderer>,
               ffi.Pointer<struct_waybright_image>, int, int, int, int)>();
 
+  void waybright_monitor_destroy(
+    ffi.Pointer<struct_waybright_monitor> wb_monitor,
+  ) {
+    return _waybright_monitor_destroy(
+      wb_monitor,
+    );
+  }
+
+  late final _waybright_monitor_destroyPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_waybright_monitor>)>>(
+      'waybright_monitor_destroy');
+  late final _waybright_monitor_destroy = _waybright_monitor_destroyPtr
+      .asFunction<void Function(ffi.Pointer<struct_waybright_monitor>)>();
+
   void waybright_monitor_enable(
     ffi.Pointer<struct_waybright_monitor> wb_monitor,
   ) {
@@ -5061,6 +5091,21 @@ class WaybrightLibrary {
       'waybright_monitor_disable');
   late final _waybright_monitor_disable = _waybright_monitor_disablePtr
       .asFunction<void Function(ffi.Pointer<struct_waybright_monitor>)>();
+
+  void waybright_window_destroy(
+    ffi.Pointer<struct_waybright_window> wb_window,
+  ) {
+    return _waybright_window_destroy(
+      wb_window,
+    );
+  }
+
+  late final _waybright_window_destroyPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_waybright_window>)>>(
+      'waybright_window_destroy');
+  late final _waybright_window_destroy = _waybright_window_destroyPtr
+      .asFunction<void Function(ffi.Pointer<struct_waybright_window>)>();
 
   void waybright_window_submit_pointer_move_event(
     ffi.Pointer<struct_waybright_window> wb_window,
@@ -5183,6 +5228,21 @@ class WaybrightLibrary {
           void Function(ffi.Pointer<struct_waybright_window>,
               ffi.Pointer<struct_waybright_keyboard>)>();
 
+  void waybright_pointer_destroy(
+    ffi.Pointer<struct_waybright_pointer> wb_pointer,
+  ) {
+    return _waybright_pointer_destroy(
+      wb_pointer,
+    );
+  }
+
+  late final _waybright_pointer_destroyPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_waybright_pointer>)>>(
+      'waybright_pointer_destroy');
+  late final _waybright_pointer_destroy = _waybright_pointer_destroyPtr
+      .asFunction<void Function(ffi.Pointer<struct_waybright_pointer>)>();
+
   void waybright_pointer_focus_on_window(
     ffi.Pointer<struct_waybright_pointer> wb_pointer,
     ffi.Pointer<struct_waybright_window> wb_window,
@@ -5223,6 +5283,21 @@ class WaybrightLibrary {
       'waybright_pointer_clear_focus');
   late final _waybright_pointer_clear_focus = _waybright_pointer_clear_focusPtr
       .asFunction<void Function(ffi.Pointer<struct_waybright_pointer>)>();
+
+  void waybright_keyboard_destroy(
+    ffi.Pointer<struct_waybright_keyboard> wb_keyboard,
+  ) {
+    return _waybright_keyboard_destroy(
+      wb_keyboard,
+    );
+  }
+
+  late final _waybright_keyboard_destroyPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_waybright_keyboard>)>>(
+      'waybright_keyboard_destroy');
+  late final _waybright_keyboard_destroy = _waybright_keyboard_destroyPtr
+      .asFunction<void Function(ffi.Pointer<struct_waybright_keyboard>)>();
 
   void waybright_keyboard_focus_on_window(
     ffi.Pointer<struct_waybright_keyboard> wb_keyboard,
