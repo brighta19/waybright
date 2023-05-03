@@ -26,6 +26,7 @@ part 'events/window/window_fullscreen.dart';
 part 'devices/pointer.dart';
 part 'devices/keyboard.dart';
 part 'input_device.dart';
+part 'image.dart';
 part 'socket.dart';
 part 'mode.dart';
 part 'monitor.dart';
@@ -143,6 +144,16 @@ class Waybright {
     if (type != null) {
       _eventHandlers[type] = handler;
     }
+  }
+
+  Future<Image> loadPngImage(String path) async {
+    var pathPtr = path.toNativeUtf8() as Pointer<Char>;
+    var imagePtr = _wblib.waybright_load_png_image(_wbPtr, pathPtr);
+    if (imagePtr == nullptr) {
+      throw Exception("Loading png image failed unexpectedly.");
+    }
+
+    return Image().._imagePtr = imagePtr;
   }
 
   /// Open a socket for the wayland server.

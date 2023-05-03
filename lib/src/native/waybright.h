@@ -70,6 +70,15 @@ struct waybright_renderer {
     float color_background[4];
 };
 
+struct waybright_image {
+    struct wlr_texture* wlr_texture;
+
+    const char* path;
+
+    int width;
+    int height;
+};
+
 struct waybright_monitor {
     struct waybright* wb;
     struct waybright_renderer* wb_renderer;
@@ -168,6 +177,7 @@ int waybright_init(struct waybright*);
 int waybright_open_socket(struct waybright* wb, const char* socket_name);
 void waybright_run_event_loop(struct waybright* wb);
 void waybright_close_socket(struct waybright* wb);
+struct waybright_image* waybright_load_png_image(struct waybright* wb, const char* path);
 
 void waybright_renderer_set_background_color(struct waybright_renderer* wb_renderer, int color);
 int waybright_renderer_get_background_color(struct waybright_renderer* wb_renderer);
@@ -175,7 +185,8 @@ int waybright_renderer_get_fill_style(struct waybright_renderer* wb_renderer);
 void waybright_renderer_set_fill_style(struct waybright_renderer* wb_renderer, int color);
 void waybright_renderer_clear_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height);
 void waybright_renderer_fill_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height);
-void waybright_renderer_draw_window(struct waybright_renderer* wb_renderer, struct waybright_window* wb_window, int x, int y);
+void waybright_renderer_draw_window(struct waybright_renderer* wb_renderer, struct waybright_window* wb_window, int x, int y, int width, int height);
+void waybright_renderer_draw_image(struct waybright_renderer* wb_renderer, struct waybright_image* wb_image, int x, int y, int width, int height);
 
 void waybright_monitor_enable(struct waybright_monitor* wb_monitor);
 void waybright_monitor_disable(struct waybright_monitor* wb_monitor);

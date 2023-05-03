@@ -55,12 +55,34 @@ class Renderer {
   }
 
   /// Draws a rectangle.
-  void drawWindow(Window window, num x, num y) {
+  void drawWindow(Window window, num x, num y, [int? width, int? height]) {
     var rendererPtr = _rendererPtr;
     var windowPtr = window._windowPtr;
     if (rendererPtr != null && windowPtr != null) {
       _wblib.waybright_renderer_draw_window(
-          rendererPtr, windowPtr, x.toInt(), y.toInt());
+        rendererPtr,
+        windowPtr,
+        x.toInt(),
+        y.toInt(),
+        width ?? window.drawingWidth,
+        height ?? window.drawingHeight,
+      );
+    }
+  }
+
+  /// Draws an image.
+  void drawImage(Image image, num x, num y, [int? width, int? height]) {
+    var rendererPtr = _rendererPtr;
+    var imagePtr = image._imagePtr;
+    if (rendererPtr != null && imagePtr != null) {
+      _wblib.waybright_renderer_draw_image(
+        rendererPtr,
+        imagePtr,
+        x.toInt(),
+        y.toInt(),
+        width ?? imagePtr.ref.width,
+        height ?? imagePtr.ref.height,
+      );
     }
   }
 }
