@@ -1,5 +1,6 @@
 #pragma once
 
+#include <malloc.h>
 #include <wayland-server-core.h>
 #include <wlr/backend.h>
 #include <wlr/render/allocator.h>
@@ -9,12 +10,11 @@
 #include <wlr/types/wlr_keyboard.h>
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_output_damage.h>
-#include <wlr/types/wlr_xdg_shell.h>
-#include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_pointer.h>
+#include <wlr/types/wlr_seat.h>
+#include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/edges.h>
 #include <xkbcommon/xkbcommon.h>
-#include <malloc.h>
 
 enum wb_event_type {
     event_type_monitor_new,

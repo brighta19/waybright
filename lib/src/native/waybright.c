@@ -2,6 +2,14 @@
 #include <cairo/cairo.h>
 #include <drm_fourcc.h>
 #include <wlr/render/wlr_texture.h>
+#include <wlr/types/wlr_data_control_v1.h>
+#include <wlr/types/wlr_data_device.h>
+#include <wlr/types/wlr_export_dmabuf_v1.h>
+#include <wlr/types/wlr_gamma_control_v1.h>
+#include <wlr/types/wlr_primary_selection_v1.h>
+#include <wlr/types/wlr_single_pixel_buffer_v1.h>
+#include <wlr/types/wlr_subcompositor.h>
+#include <wlr/types/wlr_viewporter.h>
 #include "waybright.h"
 #include "handlers.h"
 
@@ -75,6 +83,15 @@ int waybright_init(struct waybright* wb) {
     wb->wlr_seat = wlr_seat_create(wb->wl_display, "seat0");
     if (!wb->wlr_seat)
         return 1;
+
+    wlr_subcompositor_create(wb->wl_display);
+    wlr_data_device_manager_create(wb->wl_display);
+    wlr_export_dmabuf_manager_v1_create(wb->wl_display);
+    wlr_data_control_manager_v1_create(wb->wl_display);
+    wlr_gamma_control_manager_v1_create(wb->wl_display);
+    wlr_primary_selection_v1_device_manager_create(wb->wl_display);
+    wlr_viewporter_create(wb->wl_display);
+	wlr_single_pixel_buffer_manager_v1_create(wb->wl_display);
 
     wb->listeners.monitor_new.notify = handle_monitor_new_event;
     wl_signal_add(&wb->wlr_backend->events.new_output, &wb->listeners.monitor_new);
