@@ -181,7 +181,7 @@ int waybright_init(struct waybright*);
 
 /// @param socket_name can be NULL to auto-select a name
 int waybright_open_socket(struct waybright* wb, const char* socket_name);
-void waybright_run_event_loop(struct waybright* wb);
+void waybright_check_events(struct waybright* wb);
 void waybright_close_socket(struct waybright* wb);
 struct waybright_image* waybright_load_png_image(struct waybright* wb, const char* path);
 

@@ -13,22 +13,28 @@ class Socket {
 
   Socket(this.name);
 
-  /// Enters the wayland server's event loop.
-  ///
-  /// This function is synchronous (blocking).
-  void runEventLoop() {
-    var wbPtr = _wbPtr;
-    if (wbPtr != null && _isRunning) {
-      _wblib.waybright_run_event_loop(wbPtr);
-    }
+  Future<void> _checkEvents() async {
+    if (!_isRunning) return;
+    _wblib.waybright_check_events(_wbPtr!);
+    return Future(() => _checkEvents());
   }
 
-  /// Closes the wayland server,
+  Future<void> _runEventLoop() async {
+    return _checkEvents();
+  }
+
+  /// Enters the wayland server's event loop.
+  Future<void> runEventLoop() async {
+    return _runEventLoop();
+  }
+
+  void _close() {
+    _isRunning = false;
+    _wblib.waybright_close_socket(_wbPtr!);
+  }
+
+  /// Closes the wayland server.
   void close() {
-    var wbPtr = _wbPtr;
-    if (wbPtr != null && _isRunning) {
-      _wblib.waybright_close_socket(wbPtr);
-      _isRunning = false;
-    }
+    _close();
   }
 }

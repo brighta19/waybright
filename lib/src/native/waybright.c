@@ -131,8 +131,10 @@ int waybright_open_socket(struct waybright* wb, const char* socket_name) {
     return 0;
 }
 
-void waybright_run_event_loop(struct waybright* wb) {
-    wl_display_run(wb->wl_display);
+void waybright_check_events(struct waybright* wb) {
+    struct wl_event_loop* wl_event_loop = wl_display_get_event_loop(wb->wl_display);
+    wl_display_flush_clients(wb->wl_display);
+    wl_event_loop_dispatch(wl_event_loop, -1);
 }
 
 void waybright_close_socket(struct waybright* wb) {
