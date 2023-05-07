@@ -12,115 +12,79 @@ enum WindowEdge {
   topLeft,
 }
 
+class RemoveWindowEvent {}
+
+class ShowWindowEvent {}
+
+class HideWindowEvent {}
+
+WindowEdge _windowEdgeFromWlrResizeEvent(
+    Pointer<struct_wlr_xdg_toplevel_resize_event> eventPtr) {
+  switch (eventPtr.ref.edges) {
+    case enum_wlr_edges.WLR_EDGE_TOP:
+      return WindowEdge.top;
+    case enum_wlr_edges.WLR_EDGE_TOP | enum_wlr_edges.WLR_EDGE_RIGHT:
+      return WindowEdge.topRight;
+    case enum_wlr_edges.WLR_EDGE_RIGHT:
+      return WindowEdge.right;
+    case enum_wlr_edges.WLR_EDGE_BOTTOM | enum_wlr_edges.WLR_EDGE_RIGHT:
+      return WindowEdge.bottomRight;
+    case enum_wlr_edges.WLR_EDGE_BOTTOM:
+      return WindowEdge.bottom;
+    case enum_wlr_edges.WLR_EDGE_BOTTOM | enum_wlr_edges.WLR_EDGE_LEFT:
+      return WindowEdge.bottomLeft;
+    case enum_wlr_edges.WLR_EDGE_LEFT:
+      return WindowEdge.left;
+    case enum_wlr_edges.WLR_EDGE_TOP | enum_wlr_edges.WLR_EDGE_LEFT:
+      return WindowEdge.topLeft;
+    default:
+      return WindowEdge.none;
+  }
+}
+
 /// An application window.
 ///
 /// In wayland, this contains an xdg-surface from the xdg-shell protocol.
 class Window {
   static final _windowInstances = <Window>[];
 
-  static final _eventTypeFromString = {
-    'remove': enum_wb_event_type.event_type_window_remove,
-    'show': enum_wb_event_type.event_type_window_show,
-    'hide': enum_wb_event_type.event_type_window_hide,
-    'move': enum_wb_event_type.event_type_window_move,
-    'resize': enum_wb_event_type.event_type_window_resize,
-    'maximize': enum_wb_event_type.event_type_window_maximize,
-    'fullscreen': enum_wb_event_type.event_type_window_fullscreen,
-  };
-
-  static void _executeEventHandler(int type, Pointer<Void> data) {
+  static void _onEvent(int type, Pointer<Void> data) {
     var windows = _windowInstances.toList();
     for (var window in windows) {
       var eventPtr = data as Pointer<struct_waybright_window_event>;
       if (window._windowPtr != eventPtr.ref.wb_window) continue;
 
-      var handleEvent = window._eventHandlers[type];
-      if (handleEvent == null) continue;
-
-      if (type == enum_wb_event_type.event_type_window_show ||
-          type == enum_wb_event_type.event_type_window_hide) {
-        handleEvent();
-      } else if (type == enum_wb_event_type.event_type_window_move) {
-        // var wlrEventPtr =
-        //     eventPtr.ref.event as Pointer<struct_wlr_xdg_toplevel_move_event>;
-
-        var event = WindowMoveEvent(window);
-
-        handleEvent(event);
-      } else if (type == enum_wb_event_type.event_type_window_resize) {
-        var wlrEventPtr =
-            eventPtr.ref.event as Pointer<struct_wlr_xdg_toplevel_resize_event>;
-
-        WindowEdge edge;
-        switch (wlrEventPtr.ref.edges) {
-          case enum_wlr_edges.WLR_EDGE_TOP:
-            edge = WindowEdge.top;
-            break;
-          case enum_wlr_edges.WLR_EDGE_TOP | enum_wlr_edges.WLR_EDGE_RIGHT:
-            edge = WindowEdge.topRight;
-            break;
-          case enum_wlr_edges.WLR_EDGE_RIGHT:
-            edge = WindowEdge.right;
-            break;
-          case enum_wlr_edges.WLR_EDGE_BOTTOM | enum_wlr_edges.WLR_EDGE_RIGHT:
-            edge = WindowEdge.bottomRight;
-            break;
-          case enum_wlr_edges.WLR_EDGE_BOTTOM:
-            edge = WindowEdge.bottom;
-            break;
-          case enum_wlr_edges.WLR_EDGE_BOTTOM | enum_wlr_edges.WLR_EDGE_LEFT:
-            edge = WindowEdge.bottomLeft;
-            break;
-          case enum_wlr_edges.WLR_EDGE_LEFT:
-            edge = WindowEdge.left;
-            break;
-          case enum_wlr_edges.WLR_EDGE_TOP | enum_wlr_edges.WLR_EDGE_LEFT:
-            edge = WindowEdge.topLeft;
-            break;
-          default:
-            edge = WindowEdge.none;
-        }
-
-        var event = WindowResizeEvent(
-          window,
-          edge,
-        );
-
-        handleEvent(event);
-      } else if (type == enum_wb_event_type.event_type_window_maximize) {
-        handleEvent(WindowMaximizeEvent(window));
-      } else if (type == enum_wb_event_type.event_type_window_fullscreen) {
-        handleEvent(WindowFullscreenEvent(window));
-      } else if (type == enum_wb_event_type.event_type_window_remove) {
-        handleEvent();
-        _windowInstances.remove(window);
+      switch (type) {
+        case enum_wb_event_type.event_type_window_remove:
+          window.onRemove?.call(RemoveWindowEvent());
+          _windowInstances.remove(window);
+          break;
+        case enum_wb_event_type.event_type_window_show:
+          window.onShow?.call(ShowWindowEvent());
+          break;
+        case enum_wb_event_type.event_type_window_hide:
+          window.onHide?.call(HideWindowEvent());
+          break;
+        case enum_wb_event_type.event_type_window_move:
+          window.onMove?.call(MoveWindowEvent(window));
+          break;
+        case enum_wb_event_type.event_type_window_resize:
+          var wlrEventPtr = eventPtr.ref.event
+              as Pointer<struct_wlr_xdg_toplevel_resize_event>;
+          WindowEdge edge = _windowEdgeFromWlrResizeEvent(wlrEventPtr);
+          window.onResize?.call(ResizeWindowEvent(window, edge));
+          break;
+        case enum_wb_event_type.event_type_window_maximize:
+          window.onMaximize?.call(MaximizeWindowEvent(window));
+          break;
+        case enum_wb_event_type.event_type_window_fullscreen:
+          window.onFullscreen?.call(FullscreenWindowEvent(window));
+          break;
       }
     }
   }
 
-  /// The application id of this window.
-  String appId = "unknown-application";
-
-  /// The title of this window.
-  String title = "untitled";
-
-  /// Whether this window is a popup window.
-  bool isPopup;
-
-  final Map<int, Function> _eventHandlers = {};
   Pointer<struct_waybright_window>? _windowPtr;
-
-  Window(this.isPopup) {
-    _windowInstances.add(this);
-  }
-
-  /// Sets an event handler for this window.
-  void setEventHandler(String event, Function handler) {
-    var type = _eventTypeFromString[event];
-    if (type != null) {
-      _eventHandlers[type] = handler;
-    }
-  }
 
   void _ensureKeyboardFocus(KeyboardDevice keyboard) {
     if (keyboard.focusedWindow != this) {
@@ -160,11 +124,32 @@ class Window {
     }
   }
 
+  /// The application id of this window.
+  String appId = "unknown-application";
+
+  /// The title of this window.
+  String title = "untitled";
+
+  /// Whether this window is a popup window.
+  bool isPopup;
+
   /// The horizontal position of this window's drawing area.
   num drawingX = 0;
 
   /// The vertical position of this window's drawing area.
   num drawingY = 0;
+
+  void Function(RemoveWindowEvent event)? onRemove;
+  void Function(ShowWindowEvent event)? onShow;
+  void Function(HideWindowEvent event)? onHide;
+  void Function(MoveWindowEvent event)? onMove;
+  void Function(ResizeWindowEvent event)? onResize;
+  void Function(MaximizeWindowEvent event)? onMaximize;
+  void Function(FullscreenWindowEvent event)? onFullscreen;
+
+  Window(this.isPopup) {
+    _windowInstances.add(this);
+  }
 
   /// The horizontal size of this window's drawing area.
   int get drawingWidth =>

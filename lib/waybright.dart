@@ -6,7 +6,6 @@ import 'dart:collection';
 import 'package:ffi/ffi.dart';
 import 'src/generated/waybright_bindings.dart';
 
-part 'events/input_new.dart';
 part 'events/pointer/pointer_event.dart';
 part 'events/pointer/pointer_move.dart';
 part 'events/pointer/pointer_relative_move.dart';
@@ -42,21 +41,31 @@ String _toString(Pointer<Char> stringPtr) {
   return (stringPtr as Pointer<Utf8>).toDartString();
 }
 
+class NewMonitorEvent {
+  final Monitor monitor;
+
+  NewMonitorEvent(this.monitor);
+}
+
+class NewWindowEvent {
+  final Window window;
+
+  NewWindowEvent(this.window);
+}
+
+class NewInputEvent {
+  PointerDevice? pointer;
+  KeyboardDevice? keyboard;
+
+  NewInputEvent({this.pointer, this.keyboard});
+}
+
 /// A Waybright!
 class Waybright {
   static final _waybrightInstances = <Waybright>[];
 
-  static final _eventTypeFromString = {
-    'monitor-new': enum_wb_event_type.event_type_monitor_new,
-    'window-new': enum_wb_event_type.event_type_window_new,
-    'input-new': enum_wb_event_type.event_type_input_new,
-  };
-
-  static void _executeEventHandler(int type, Pointer<Void> data) {
+  static void _onEvent(int type, Pointer<Void> data) {
     for (var waybright in _waybrightInstances) {
-      var handleEvent = waybright._eventHandlers[type];
-      if (handleEvent == null) continue;
-
       if (type == enum_wb_event_type.event_type_monitor_new) {
         var monitorPtr = data as Pointer<struct_waybright_monitor>;
 
@@ -65,9 +74,9 @@ class Waybright {
           ..name = _toString(monitorPtr.ref.wlr_output.ref.name)
           .._monitorPtr = monitorPtr
           .._monitorPtr?.ref.handle_event =
-              Pointer.fromFunction(Monitor._executeEventHandler);
+              Pointer.fromFunction(Monitor._onEvent);
 
-        handleEvent(monitor);
+        waybright.onNewMonitor?.call(NewMonitorEvent(monitor));
       } else if (type == enum_wb_event_type.event_type_window_new) {
         var windowPtr = data as Pointer<struct_waybright_window>;
         var wlrXdgToplevel = windowPtr.ref.wlr_xdg_toplevel.ref;
@@ -77,35 +86,32 @@ class Waybright {
           ..title = _toString(wlrXdgToplevel.title)
           .._windowPtr = windowPtr
           .._windowPtr?.ref.handle_event =
-              Pointer.fromFunction(Window._executeEventHandler);
+              Pointer.fromFunction(Window._onEvent);
 
-        handleEvent(window);
+        waybright.onNewWindow?.call(NewWindowEvent(window));
       } else if (type == enum_wb_event_type.event_type_input_new) {
         var inputPtr = data as Pointer<struct_waybright_input>;
         var wlrInputDevice = inputPtr.ref.wlr_input_device.ref;
 
-        var inputEvent = InputNewEvent();
+        PointerDevice? pointer;
+        KeyboardDevice? keyboard;
 
         if (inputPtr.ref.pointer != nullptr) {
           var pointerPtr = inputPtr.ref.pointer;
 
-          var pointer = PointerDevice()
+          pointer = PointerDevice()
             ..name = _toString(wlrInputDevice.name)
             .._pointerPtr = pointerPtr
             .._pointerPtr?.ref.handle_event =
-                Pointer.fromFunction(PointerDevice._executeEventHandler);
-
-          inputEvent.pointer = pointer;
+                Pointer.fromFunction(PointerDevice._onEvent);
         } else if (inputPtr.ref.keyboard != nullptr) {
           var keyboardPtr = inputPtr.ref.keyboard;
 
-          var keyboard = KeyboardDevice()
+          keyboard = KeyboardDevice()
             ..name = _toString(wlrInputDevice.name)
             .._keyboardPtr = keyboardPtr
             .._keyboardPtr?.ref.handle_event =
-                Pointer.fromFunction(KeyboardDevice._executeEventHandler);
-
-          inputEvent.keyboard = keyboard;
+                Pointer.fromFunction(KeyboardDevice._onEvent);
         }
 
         int capabilities = enum_wl_seat_capability.WL_SEAT_CAPABILITY_POINTER;
@@ -117,36 +123,28 @@ class Waybright {
           capabilities,
         );
 
-        handleEvent(inputEvent);
+        waybright.onNewInput?.call(NewInputEvent(
+          pointer: pointer,
+          keyboard: keyboard,
+        ));
       }
     }
   }
 
-  final Map<int, Function> _eventHandlers = {};
   final Pointer<struct_waybright> _wbPtr = _wblib.waybright_create();
+  var _isRunning = false;
 
-  /// Creates a [Waybright] instance.
-  ///
-  /// Throws an [Exception] if an unexpected exception occurs.
-  Waybright() {
+  _initialize() {
     if (_wblib.waybright_init(_wbPtr) != 0) {
       _wblib.waybright_destroy(_wbPtr);
       throw Exception("Waybright instance creation failed unexpectedly.");
     }
 
-    _wbPtr.ref.handle_event = Pointer.fromFunction(_executeEventHandler);
+    _wbPtr.ref.handle_event = Pointer.fromFunction(_onEvent);
     _waybrightInstances.add(this);
   }
 
-  /// Sets an event handler for this [Waybright] instance.
-  void setEventHandler(String event, Function handler) {
-    var type = _eventTypeFromString[event];
-    if (type != null) {
-      _eventHandlers[type] = handler;
-    }
-  }
-
-  Future<Image> loadPngImage(String path) async {
+  Future<Image> _loadPngImage(String path) async {
     var pathPtr = path.toNativeUtf8() as Pointer<Char>;
     var imagePtr = _wblib.waybright_load_png_image(_wbPtr, pathPtr);
     if (imagePtr == nullptr) {
@@ -156,22 +154,52 @@ class Waybright {
     return Image().._imagePtr = imagePtr;
   }
 
-  /// Open a socket for the wayland server.
-  ///
-  /// If [socketName] is not set, a name will automatically be chosen.
-  /// Throws an [Exception] if a socket couldn't be created automatically, or, if
-  /// specified, the [socketName] is taken.
-  Future<Socket> openSocket([String? socketName]) async {
+  Future<void> _checkEvents() async {
+    if (!_isRunning) return;
+    _wblib.waybright_check_events(_wbPtr);
+    return Future(() => _checkEvents());
+  }
+
+  void _runEventLoop() {
+    _isRunning = true;
+    Future(() => _checkEvents());
+  }
+
+  String _openSocket([String? socketName]) {
     var namePtr = socketName == null
         ? nullptr
         : socketName.toNativeUtf8() as Pointer<Char>;
-    var statusCode = _wblib.waybright_open_socket(_wbPtr, namePtr);
 
-    if (statusCode != 0) {
+    if (_wblib.waybright_open_socket(_wbPtr, namePtr) != 0) {
       throw Exception("Opening wayland socket failed unexpectedly.");
     }
 
-    var name = _toString(_wbPtr.ref.socket_name);
-    return Socket(name).._wbPtr = _wbPtr;
+    this.socketName = _toString(_wbPtr.ref.socket_name);
+    _runEventLoop();
+    return this.socketName!;
   }
+
+  void _closeSocket() {
+    _isRunning = false;
+    _wblib.waybright_close_socket(_wbPtr);
+  }
+
+  String? socketName;
+
+  void Function(NewMonitorEvent event)? onNewMonitor;
+  void Function(NewWindowEvent event)? onNewWindow;
+  void Function(NewInputEvent event)? onNewInput;
+
+  get isRunning => _isRunning;
+
+  /// Creates a [Waybright] instance.
+  ///
+  /// Throws an [Exception] if an unexpected exception occurs.
+  Waybright() {
+    _initialize();
+  }
+
+  Future<Image> loadPngImage(String path) async => _loadPngImage(path);
+  String openSocket([String? socketName]) => _openSocket(socketName);
+  void closeSocket() => _closeSocket();
 }

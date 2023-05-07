@@ -1,5 +1,5 @@
 part of '../../waybright.dart';
 
-class WindowFullscreenEvent extends WindowEvent {
-  WindowFullscreenEvent(super.window);
+class FullscreenWindowEvent extends WindowEvent {
+  FullscreenWindowEvent(super.window);
 }

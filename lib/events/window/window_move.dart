@@ -1,5 +1,5 @@
 part of '../../waybright.dart';
 
-class WindowMoveEvent extends WindowEvent {
-  WindowMoveEvent(super.window);
+class MoveWindowEvent extends WindowEvent {
+  MoveWindowEvent(super.window);
 }

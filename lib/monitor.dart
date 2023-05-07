@@ -1,38 +1,31 @@
 part of "./waybright.dart";
 
+class RemoveMonitorEvent {}
+
+class MonitorFrameEvent {}
+
 /// A physical or virtual monitor.
 class Monitor {
   static final _monitorInstances = <Monitor>[];
 
-  static final _eventTypeFromString = {
-    'remove': enum_wb_event_type.event_type_monitor_remove,
-    'frame': enum_wb_event_type.event_type_monitor_frame,
-  };
-
-  static void _executeEventHandler(int type, Pointer<Void> data) {
+  static void _onEvent(int type, Pointer<Void> data) {
     var monitors = _monitorInstances.toList();
     for (var monitor in monitors) {
       var monitorPtr = data as Pointer<struct_waybright_monitor>;
       if (monitor._monitorPtr != monitorPtr) continue;
 
-      var handleEvent = monitor._eventHandlers[type];
-      if (handleEvent == null) continue;
-
-      handleEvent();
-
-      if (type == enum_wb_event_type.event_type_monitor_remove) {
-        _monitorInstances.remove(monitor);
+      switch (type) {
+        case enum_wb_event_type.event_type_monitor_remove:
+          monitor.onRemove?.call(RemoveMonitorEvent());
+          _monitorInstances.remove(monitor);
+          break;
+        case enum_wb_event_type.event_type_monitor_frame:
+          monitor.onFrame?.call(MonitorFrameEvent());
+          break;
       }
     }
   }
 
-  /// This monitor's name.
-  String name = "unknown-monitor";
-
-  /// This monitor's renderer.
-  final Renderer renderer;
-
-  final Map<int, Function> _eventHandlers = {};
   Pointer<struct_waybright_monitor>? _monitorPtr;
   bool _isEnabled = false;
   List<Mode> _modes = [];
@@ -40,20 +33,21 @@ class Monitor {
   Mode? _preferredMode;
   Mode _mode = Mode(0, 0, 0);
 
-  Monitor(this.renderer) {
-    _monitorInstances.add(this);
-  }
-
-  /// Sets an event handler for this monitor.
-  void setEventHandler(String event, Function handler) {
-    var type = _eventTypeFromString[event];
-    if (type != null) {
-      _eventHandlers[type] = handler;
+  void _enable() {
+    var monitorPtr = _monitorPtr;
+    if (monitorPtr != null) {
+      _wblib.waybright_monitor_enable(monitorPtr);
     }
+    _isEnabled = true;
   }
 
-  /// Whether this monitor is allowed to render or not.
-  get isEnabled => _isEnabled;
+  void _disable() {
+    var monitorPtr = _monitorPtr;
+    if (monitorPtr != null) {
+      _wblib.waybright_monitor_disable(monitorPtr);
+    }
+    _isEnabled = false;
+  }
 
   /// This monitor's modes (resolution + refresh rate).
   List<Mode> get modes {
@@ -117,21 +111,31 @@ class Monitor {
     _mode = mode;
   }
 
+  /// This monitor's name.
+  String name = "unknown-monitor";
+
+  /// This monitor's renderer.
+  final Renderer renderer;
+
+  void Function(RemoveMonitorEvent)? onRemove;
+  void Function(MonitorFrameEvent)? onFrame;
+
+  Monitor(this.renderer) {
+    _monitorInstances.add(this);
+  }
+
+  /// Whether this monitor is allowed to render or not.
+  get isEnabled => _isEnabled;
+
   /// Enables this monitor to start rendering.
   void enable() {
-    var monitorPtr = _monitorPtr;
-    if (monitorPtr != null) {
-      _wblib.waybright_monitor_enable(monitorPtr);
-    }
-    _isEnabled = true;
+    if (_isEnabled) return;
+    _enable();
   }
 
   /// Disables this monitor.
   void disable() {
-    var monitorPtr = _monitorPtr;
-    if (monitorPtr != null) {
-      _wblib.waybright_monitor_disable(monitorPtr);
-    }
-    _isEnabled = false;
+    if (!_isEnabled) return;
+    _disable();
   }
 }

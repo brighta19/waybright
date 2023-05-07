@@ -2,7 +2,6 @@ import 'package:waybright/waybright.dart';
 
 const backgroundColor = 0x111111ff;
 
-Socket? socket;
 Monitor? currentMonitor;
 Window? focusedWindow;
 KeyboardDevice? currentKeyboard;
@@ -25,244 +24,259 @@ get isAltPressed => isLeftAltPressed || isRightAltPressed;
 var isSwitchingWindows = false;
 var windowSwitchIndex = 0;
 
-void main(List<String> args) {
-  var waybright = Waybright();
+final compositor = Waybright();
 
-  waybright.setEventHandler("monitor-new", (Monitor monitor) {
-    var preferredMode = monitor.preferredMode;
-    if (preferredMode == null) {
-      socket?.close();
-      return;
+void onNewMonitor(NewMonitorEvent event) {
+  var monitor = event.monitor;
+  currentMonitor ??= monitor;
+
+  var preferredMode = monitor.preferredMode;
+  if (preferredMode == null) {
+    compositor.closeSocket();
+    return;
+  }
+
+  monitor.mode = preferredMode;
+  monitor.enable();
+
+  var renderer = monitor.renderer;
+  renderer.backgroundColor = backgroundColor;
+
+  monitor.onRemove = (event) {
+    if (monitor == currentMonitor) {
+      currentMonitor = null;
+    }
+  };
+
+  monitor.onFrame = (event) {
+    var list = windows.backToFrontIterable;
+    for (var window in list) {
+      if (window.isVisible) {
+        renderer.drawWindow(window, window.drawingX, window.drawingY);
+      }
     }
 
-    monitor.mode = preferredMode;
-    monitor.enable();
+    renderer.fillStyle = 0xffffffdd;
+    renderer.fillRect(cursorX, cursorY, 5, 5);
+  };
 
-    var renderer = monitor.renderer;
-    renderer.backgroundColor = backgroundColor;
+  cursorX = monitor.mode.width / 2;
+  cursorY = monitor.mode.height / 2;
+}
 
-    monitor.setEventHandler("frame", () {
-      var list = windows.backToFrontIterable;
-      for (var window in list) {
-        if (window.isVisible) {
-          renderer.drawWindow(window, window.drawingX, window.drawingY);
-        }
+void onNewWindow(NewWindowEvent event) {
+  var window = event.window;
+
+  windows.addToFront(window);
+
+  window.onRemove = (event) {
+    windows.remove(window);
+    if (window == focusedWindow) focusedWindow = null;
+  };
+
+  window.onShow = (event) {
+    window.drawingX = -window.offsetX;
+    window.drawingY = -window.offsetY;
+
+    focusedWindow?.unfocus();
+    window.focus();
+    focusedWindow = window;
+    windows.moveToFront(window);
+  };
+
+  window.onHide = (event) {
+    window.unfocus();
+  };
+
+  window.onMove = (event) {
+    cursorXAtGrab = cursorX;
+    cursorYAtGrab = cursorY;
+    isMovingWindow = true;
+  };
+
+  window.onResize = (event) {
+    cursorXAtGrab = cursorX;
+    cursorYAtGrab = cursorY;
+    isResizingWindow = true;
+  };
+}
+
+void onNewPointer(PointerDevice pointer) {
+  Window? getHoveredWindow() {
+    var list = windows.frontToBackIterable;
+    for (var window in list) {
+      if (!window.isVisible) continue;
+
+      var windowX = window.contentX;
+      var windowY = window.contentY;
+      var windowWidth = window.contentWidth;
+      var windowHeight = window.contentHeight;
+
+      if (cursorX >= windowX &&
+          cursorX < windowX + windowWidth &&
+          cursorY >= windowY &&
+          cursorY < windowY + windowHeight) {
+        return window;
       }
+    }
+    return null;
+  }
 
-      renderer.fillStyle = 0xffffffdd;
-      renderer.fillRect(cursorX, cursorY, 5, 5);
-    });
+  void handleMovement(PointerMoveEvent event) {
+    Window? hoveredWindow = getHoveredWindow();
 
-    cursorX = monitor.mode.width / 2;
-    cursorY = monitor.mode.height / 2;
-  });
+    if (hoveredWindow == null) return;
 
-  waybright.setEventHandler("window-new", (Window window) {
-    windows.addToFront(window);
+    var windowCursorX = cursorX - hoveredWindow.drawingX;
+    var windowCursorY = cursorY - hoveredWindow.drawingY;
 
-    window.setEventHandler("remove", () {
-      windows.remove(window);
-      if (window == focusedWindow) {
-        focusedWindow = null;
+    hoveredWindow.submitPointerMoveUpdate(PointerUpdate(
+      pointer,
+      event,
+      windowCursorX,
+      windowCursorY,
+    ));
+  }
+
+  pointer.onMove = (event) {
+    cursorX += event.deltaX;
+    cursorY += event.deltaY;
+
+    if (!isGrabbingWindow) handleMovement(event);
+  };
+
+  pointer.onTeleport = (event) {
+    cursorX = event.x;
+    cursorY = event.y;
+
+    if (!isGrabbingWindow) handleMovement(event);
+  };
+
+  pointer.onButton = (event) {
+    if (!event.isPressed) {
+      if (isMovingWindow) {
+        focusedWindow!.drawingX += cursorX - cursorXAtGrab;
+        focusedWindow!.drawingY += cursorY - cursorYAtGrab;
+      } else if (isResizingWindow) {
+        // resize
       }
-    });
+      isMovingWindow = false;
+      isResizingWindow = false;
+    }
 
-    window.setEventHandler("show", () {
-      window.drawingX = -window.offsetX;
-      window.drawingY = -window.offsetY;
+    var hoveredWindow = getHoveredWindow();
+    if (hoveredWindow == null) return;
 
+    if (hoveredWindow != focusedWindow) {
       focusedWindow?.unfocus();
-      window.focus();
-      focusedWindow = window;
-      windows.moveToFront(window);
-    });
-
-    window.setEventHandler("hide", () {
-      window.unfocus();
-    });
-
-    window.setEventHandler("move", (event) {
-      cursorXAtGrab = cursorX;
-      cursorYAtGrab = cursorY;
-      isMovingWindow = true;
-    });
-
-    window.setEventHandler("resize", (event) {
-      cursorXAtGrab = cursorX;
-      cursorYAtGrab = cursorY;
-      isResizingWindow = true;
-    });
-  });
-
-  waybright.setEventHandler("input-new", (InputNewEvent event) {
-    if (event.pointer != null) {
-      var pointer = event.pointer!;
-
-      Window? getHoveredWindow() {
-        var list = windows.frontToBackIterable;
-        for (var window in list) {
-          if (!window.isVisible) continue;
-
-          var windowX = window.contentX;
-          var windowY = window.contentY;
-          var windowWidth = window.contentWidth;
-          var windowHeight = window.contentHeight;
-
-          if (cursorX >= windowX &&
-              cursorX < windowX + windowWidth &&
-              cursorY >= windowY &&
-              cursorY < windowY + windowHeight) {
-            return window;
-          }
-        }
-        return null;
-      }
-
-      void handleMovement(PointerMoveEvent event) {
-        Window? hoveredWindow = getHoveredWindow();
-
-        if (hoveredWindow == null) return;
-
-        var windowCursorX = cursorX - hoveredWindow.drawingX;
-        var windowCursorY = cursorY - hoveredWindow.drawingY;
-
-        hoveredWindow.submitPointerMoveUpdate(PointerUpdate(
-          pointer,
-          event,
-          windowCursorX,
-          windowCursorY,
-        ));
-      }
-
-      pointer.setEventHandler("move", (PointerRelativeMoveEvent event) {
-        cursorX += event.deltaX;
-        cursorY += event.deltaY;
-
-        if (!isGrabbingWindow) handleMovement(event);
-      });
-
-      pointer.setEventHandler("teleport", (PointerAbsoluteMoveEvent event) {
-        cursorX = event.x;
-        cursorY = event.y;
-
-        if (!isGrabbingWindow) handleMovement(event);
-      });
-
-      pointer.setEventHandler("button", (PointerButtonEvent event) {
-        if (!event.isPressed) {
-          if (isMovingWindow) {
-            focusedWindow!.drawingX += cursorX - cursorXAtGrab;
-            focusedWindow!.drawingY += cursorY - cursorYAtGrab;
-          } else if (isResizingWindow) {
-            // resize
-          }
-          isMovingWindow = false;
-          isResizingWindow = false;
-        }
-
-        var hoveredWindow = getHoveredWindow();
-        if (hoveredWindow == null) return;
-
-        if (hoveredWindow != focusedWindow) {
-          focusedWindow?.unfocus();
-          hoveredWindow.focus();
-          focusedWindow = hoveredWindow;
-          windows.moveToFront(hoveredWindow);
-        }
-
-        var windowCursorX = cursorX - hoveredWindow.drawingX;
-        var windowCursorY = cursorY - hoveredWindow.drawingY;
-
-        hoveredWindow.submitPointerButtonUpdate(PointerUpdate(
-          pointer,
-          event,
-          windowCursorX,
-          windowCursorY,
-        ));
-      });
-
-      pointer.setEventHandler("axis", (PointerAxisEvent event) {
-        var hoveredWindow = getHoveredWindow();
-        if (hoveredWindow == null) return;
-
-        var windowCursorX = cursorX - hoveredWindow.drawingX;
-        var windowCursorY = cursorY - hoveredWindow.drawingY;
-
-        hoveredWindow.submitPointerAxisUpdate(PointerUpdate(
-          pointer,
-          event,
-          windowCursorX,
-          windowCursorY,
-        ));
-      });
+      hoveredWindow.focus();
+      focusedWindow = hoveredWindow;
+      windows.moveToFront(hoveredWindow);
     }
 
-    if (event.keyboard != null) {
-      var keyboard = event.keyboard!;
+    var windowCursorX = cursorX - hoveredWindow.drawingX;
+    var windowCursorY = cursorY - hoveredWindow.drawingY;
 
-      keyboard.setEventHandler("modifiers", (KeyboardModifiersEvent event) {
-        currentKeyboard = event.keyboard;
+    hoveredWindow.submitPointerButtonUpdate(PointerUpdate(
+      pointer,
+      event,
+      windowCursorX,
+      windowCursorY,
+    ));
+  };
 
-        focusedWindow?.submitKeyboardModifiersUpdate(KeyboardUpdate(
-          keyboard,
-          event,
-        ));
-      });
+  pointer.onAxis = (event) {
+    var hoveredWindow = getHoveredWindow();
+    if (hoveredWindow == null) return;
 
-      keyboard.setEventHandler("key", (KeyboardKeyEvent event) {
-        currentKeyboard = event.keyboard;
+    var windowCursorX = cursorX - hoveredWindow.drawingX;
+    var windowCursorY = cursorY - hoveredWindow.drawingY;
 
-        if (event.key == InputDeviceButton.altLeft) {
-          isLeftAltPressed = event.isPressed;
-        } else if (event.key == InputDeviceButton.altRight) {
-          isRightAltPressed = event.isPressed;
-        } else if (event.key == InputDeviceButton.escape && event.isPressed) {
-          if (isAltPressed) {
-            socket!.close();
-          }
-        } else if (event.key == InputDeviceButton.f1 && event.isPressed) {
-          if (isAltPressed) {
-            if (!isSwitchingWindows) {
-              isSwitchingWindows = true;
-              windowSwitchIndex = 0;
-              tempWindows = windows.frontToBackIterable.toList();
-            }
+    hoveredWindow.submitPointerAxisUpdate(PointerUpdate(
+      pointer,
+      event,
+      windowCursorX,
+      windowCursorY,
+    ));
+  };
+}
 
-            windowSwitchIndex = (windowSwitchIndex + 1) % tempWindows.length;
+void onNewKeyboard(KeyboardDevice keyboard) {
+  keyboard.onModifiers = (event) {
+    currentKeyboard = event.keyboard;
 
-            var i = 0;
-            for (var window in tempWindows) {
-              if (i == windowSwitchIndex) {
-                focusedWindow?.unfocus();
-                window.focus();
-                focusedWindow = window;
-                windows.moveToFront(window);
-                break;
-              }
-              i++;
-            }
-          }
-        }
+    focusedWindow?.submitKeyboardModifiersUpdate(KeyboardUpdate(
+      keyboard,
+      event,
+    ));
+  };
 
-        if (!isAltPressed && isSwitchingWindows) {
-          isSwitchingWindows = false;
-          tempWindows = [];
-        }
+  keyboard.onKey = (event) {
+    currentKeyboard = event.keyboard;
 
+    if (event.key == InputDeviceButton.altLeft) {
+      isLeftAltPressed = event.isPressed;
+    } else if (event.key == InputDeviceButton.altRight) {
+      isRightAltPressed = event.isPressed;
+    } else if (event.key == InputDeviceButton.escape && event.isPressed) {
+      if (isAltPressed) {
+        compositor.closeSocket();
+      }
+    } else if (event.key == InputDeviceButton.f1 && event.isPressed) {
+      if (isAltPressed) {
         if (!isSwitchingWindows) {
-          focusedWindow?.submitKeyboardKeyUpdate(KeyboardUpdate(
-            keyboard,
-            event,
-          ));
+          isSwitchingWindows = true;
+          windowSwitchIndex = 0;
+          tempWindows = windows.frontToBackIterable.toList();
         }
-      });
+
+        windowSwitchIndex = (windowSwitchIndex + 1) % tempWindows.length;
+
+        var i = 0;
+        for (var window in tempWindows) {
+          if (i == windowSwitchIndex) {
+            focusedWindow?.unfocus();
+            window.focus();
+            focusedWindow = window;
+            windows.moveToFront(window);
+            break;
+          }
+          i++;
+        }
+      }
     }
-  });
 
-  waybright.openSocket().then((Socket socket0) {
-    socket = socket0;
+    if (!isAltPressed && isSwitchingWindows) {
+      isSwitchingWindows = false;
+      tempWindows = [];
+    }
 
-    print("Socket running on WAYLAND_DISPLAY=${socket0.name}");
-    socket0.runEventLoop();
-  });
+    if (!isSwitchingWindows) {
+      focusedWindow?.submitKeyboardKeyUpdate(KeyboardUpdate(
+        keyboard,
+        event,
+      ));
+    }
+  };
+}
+
+void onNewInput(NewInputEvent event) {
+  if (event.pointer != null) {
+    onNewPointer(event.pointer!);
+  } else if (event.keyboard != null) {
+    onNewKeyboard(event.keyboard!);
+  }
+}
+
+void main(List<String> args) {
+  compositor.onNewMonitor = onNewMonitor;
+  compositor.onNewWindow = onNewWindow;
+  compositor.onNewInput = onNewInput;
+
+  try {
+    var socketName = compositor.openSocket();
+    print("Running on WAYLAND_DISPLAY=$socketName");
+  } catch (e) {
+    print(e);
+  }
 }

@@ -1,47 +1,37 @@
 part of '../waybright.dart';
 
+class RemoveKeyboardEvent {}
+
 /// A keyboard device.
 class KeyboardDevice extends InputDevice {
   static final _keyboardInstances = <KeyboardDevice>[];
 
-  static final _eventTypeFromString = {
-    'remove': enum_wb_event_type.event_type_keyboard_remove,
-    'key': enum_wb_event_type.event_type_keyboard_key,
-    'modifiers': enum_wb_event_type.event_type_keyboard_modifiers,
-  };
-
-  static void _executeEventHandler(int type, Pointer<Void> data) {
+  static void _onEvent(int type, Pointer<Void> data) {
     var keyboards = _keyboardInstances.toList();
     for (var keyboard in keyboards) {
       var eventPtr = data as Pointer<struct_waybright_keyboard_event>;
       if (keyboard._keyboardPtr != eventPtr.ref.wb_keyboard) continue;
 
-      var handleEvent = keyboard._eventHandlers[type];
-      if (handleEvent == null) continue;
+      switch (type) {
+        case enum_wb_event_type.event_type_keyboard_remove:
+          keyboard.onRemove?.call(RemoveKeyboardEvent());
+          _keyboardInstances.remove(keyboard);
+          break;
+        case enum_wb_event_type.event_type_keyboard_key:
+          var wlrEventPtr =
+              eventPtr.ref.event as Pointer<struct_wlr_keyboard_key_event>;
 
-      if (type == enum_wb_event_type.event_type_keyboard_remove) {
-        handleEvent();
-        _keyboardInstances.remove(keyboard);
-      } else if (type == enum_wb_event_type.event_type_keyboard_key) {
-        var wlrEventPtr =
-            eventPtr.ref.event as Pointer<struct_wlr_keyboard_key_event>;
-
-        var event = KeyboardKeyEvent(
-          keyboard,
-          wlrEventPtr.ref.keycode,
-          wlrEventPtr.ref.state ==
-              enum_wl_keyboard_key_state.WL_KEYBOARD_KEY_STATE_PRESSED,
-          wlrEventPtr.ref.time_msec,
-        );
-
-        handleEvent(event);
-      } else if (type == enum_wb_event_type.event_type_keyboard_modifiers) {
-        // var wlrEventPtr =
-        //     eventPtr.ref.event as Pointer<struct_wlr_keyboard_modifiers>;
-
-        var event = KeyboardModifiersEvent(keyboard);
-
-        handleEvent(event);
+          keyboard.onKey?.call(KeyboardKeyEvent(
+            keyboard,
+            wlrEventPtr.ref.keycode,
+            wlrEventPtr.ref.state ==
+                enum_wl_keyboard_key_state.WL_KEYBOARD_KEY_STATE_PRESSED,
+            wlrEventPtr.ref.time_msec,
+          ));
+          break;
+        case enum_wb_event_type.event_type_keyboard_modifiers:
+          keyboard.onModifiers?.call(KeyboardModifiersEvent(keyboard));
+          break;
       }
     }
   }
@@ -53,18 +43,13 @@ class KeyboardDevice extends InputDevice {
   Window? focusedWindow;
 
   Pointer<struct_waybright_keyboard>? _keyboardPtr;
-  final Map<int, Function> _eventHandlers = {};
+
+  void Function(RemoveKeyboardEvent)? onRemove;
+  void Function(KeyboardKeyEvent)? onKey;
+  void Function(KeyboardModifiersEvent)? onModifiers;
 
   KeyboardDevice() : super(InputDeviceType.keyboard) {
     _keyboardInstances.add(this);
-  }
-
-  /// Sets an event handler for this keyboard.
-  void setEventHandler(String event, Function handler) {
-    var type = _eventTypeFromString[event];
-    if (type != null) {
-      _eventHandlers[type] = handler;
-    }
   }
 
   /// Focuses this keyboard on a window.
