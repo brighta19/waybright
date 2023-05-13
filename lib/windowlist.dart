@@ -131,7 +131,7 @@ class WindowList {
   /// Adds [window] to the beginning of this list.
   void addToFront(Window window) {
     var windowEntryItem = _WindowEntryItem(window);
-    _linkedList.add(windowEntryItem);
+    _linkedList.addFirst(windowEntryItem);
     _hashMap[window] = windowEntryItem;
     _length++;
   }
