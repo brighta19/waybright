@@ -7,6 +7,7 @@ Window? focusedWindow;
 KeyboardDevice? currentKeyboard;
 
 var windows = WindowList();
+var popupWindows = <Window, WindowList>{};
 var tempWindows = <Window>[];
 var cursorX = 10.0;
 var cursorY = 10.0;
@@ -19,12 +20,10 @@ bool get isGrabbingWindow => isMovingWindow || isResizingWindow;
 
 var isLeftAltPressed = false;
 var isRightAltPressed = false;
-get isAltPressed => isLeftAltPressed || isRightAltPressed;
+bool get isAltPressed => isLeftAltPressed || isRightAltPressed;
 
 var isSwitchingWindows = false;
 var windowSwitchIndex = 0;
-
-final compositor = Waybright();
 
 void onNewMonitor(NewMonitorEvent event) {
   var monitor = event.monitor;
@@ -53,6 +52,15 @@ void onNewMonitor(NewMonitorEvent event) {
     for (var window in list) {
       if (window.isVisible) {
         renderer.drawWindow(window, window.drawingX, window.drawingY);
+
+        var popupList = popupWindows[window];
+        if (popupList != null) {
+          for (var popup in popupList.backToFrontIterable) {
+            if (popup.isVisible) {
+              renderer.drawWindow(popup, popup.drawingX, popup.drawingY);
+            }
+          }
+        }
       }
     }
 
@@ -64,6 +72,29 @@ void onNewMonitor(NewMonitorEvent event) {
   cursorY = monitor.mode.height / 2;
 }
 
+void onNewPopupWindow(NewPopupWindowEvent event) {
+  var window = event.window;
+  var parent = window.parent;
+  if (parent == null) return;
+
+  var popupList = popupWindows[parent];
+  if (popupList == null) {
+    popupList = WindowList();
+    popupWindows[parent] = popupList;
+  }
+
+  popupList.addToFront(window);
+
+  window.onRemove = (event) {
+    popupList?.remove(window);
+  };
+
+  window.onShow = (event) {
+    window.drawingX = window.popupX + parent.contentX;
+    window.drawingY = window.popupY + parent.contentY;
+  };
+}
+
 void onNewWindow(NewWindowEvent event) {
   var window = event.window;
 
@@ -71,6 +102,7 @@ void onNewWindow(NewWindowEvent event) {
 
   window.onRemove = (event) {
     windows.remove(window);
+    popupWindows.remove(window);
     if (window == focusedWindow) focusedWindow = null;
   };
 
@@ -99,13 +131,21 @@ void onNewWindow(NewWindowEvent event) {
     cursorYAtGrab = cursorY;
     isResizingWindow = true;
   };
+
+  window.onNewPopup = onNewPopupWindow;
 }
 
 void onNewPointer(PointerDevice pointer) {
-  Window? getHoveredWindow() {
+  Window? getHoveredWindowFromList(WindowList windows) {
     var list = windows.frontToBackIterable;
     for (var window in list) {
       if (!window.isVisible) continue;
+
+      var popupList = popupWindows[window];
+      if (popupList != null) {
+        var popup = getHoveredWindowFromList(popupList);
+        if (popup != null) return popup;
+      }
 
       var windowX = window.contentX;
       var windowY = window.contentY;
@@ -120,6 +160,10 @@ void onNewPointer(PointerDevice pointer) {
       }
     }
     return null;
+  }
+
+  Window? getHoveredWindow() {
+    return getHoveredWindowFromList(windows);
   }
 
   void handleMovement(PointerMoveEvent event) {
@@ -167,7 +211,7 @@ void onNewPointer(PointerDevice pointer) {
     var hoveredWindow = getHoveredWindow();
     if (hoveredWindow == null) return;
 
-    if (hoveredWindow != focusedWindow) {
+    if (!hoveredWindow.isPopup && hoveredWindow != focusedWindow) {
       focusedWindow?.unfocus();
       hoveredWindow.focus();
       focusedWindow = hoveredWindow;
@@ -267,6 +311,8 @@ void onNewInput(NewInputEvent event) {
     onNewKeyboard(event.keyboard!);
   }
 }
+
+final compositor = Waybright();
 
 void main(List<String> args) {
   compositor.onNewMonitor = onNewMonitor;

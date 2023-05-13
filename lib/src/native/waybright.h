@@ -29,6 +29,7 @@ enum wb_event_type {
     event_type_window_maximize,
     event_type_window_fullscreen,
     event_type_window_resize,
+    event_type_window_new_popup,
 
     event_type_input_new,
 
@@ -103,8 +104,7 @@ struct waybright_window {
     struct waybright* wb;
     struct wlr_xdg_surface* wlr_xdg_surface;
     struct wlr_xdg_toplevel* wlr_xdg_toplevel;
-
-    int is_popup;
+    struct wlr_xdg_popup* wlr_xdg_popup;
 
     struct {
         struct wl_listener remove;
@@ -114,6 +114,7 @@ struct waybright_window {
         struct wl_listener maximize;
         struct wl_listener fullscreen;
         struct wl_listener resize;
+        struct wl_listener new_popup;
     } listeners;
 
     void(*handle_event)(int type, void* data);

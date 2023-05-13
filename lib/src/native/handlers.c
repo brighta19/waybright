@@ -145,6 +145,33 @@ void handle_window_fullscreen_event(struct wl_listener *listener, void *data) {
         wb_window->handle_event(event_type_window_fullscreen, &wb_window_event);
 }
 
+void handle_window_new_popup_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_parent_window = wl_container_of(listener, wb_parent_window, listeners.new_popup);
+    struct waybright* wb = wb_parent_window->wb;
+    struct wlr_xdg_popup* wlr_xdg_popup = data;
+    struct wlr_xdg_surface* wlr_xdg_surface = wlr_xdg_popup->base;
+
+    struct waybright_window* wb_window = calloc(sizeof(struct waybright_window), 1);
+    wb_window->wb = wb;
+    wb_window->wlr_xdg_surface = wlr_xdg_surface;
+    wb_window->wlr_xdg_toplevel = wb_parent_window->wlr_xdg_toplevel;
+    wb_window->wlr_xdg_popup = wlr_xdg_popup;
+
+    wb_window->listeners.show.notify = handle_window_show_event;
+    wl_signal_add(&wlr_xdg_surface->events.map, &wb_window->listeners.show);
+    wb_window->listeners.hide.notify = handle_window_hide_event;
+    wl_signal_add(&wlr_xdg_surface->events.unmap, &wb_window->listeners.hide);
+    wb_window->listeners.remove.notify = handle_window_remove_event;
+    wl_signal_add(&wlr_xdg_surface->events.destroy, &wb_window->listeners.remove);
+    wb_window->listeners.new_popup.notify = handle_window_new_popup_event;
+    wl_signal_add(&wlr_xdg_surface->events.new_popup, &wb_window->listeners.new_popup);
+
+    struct waybright_window_event wb_window_event = { wb_parent_window, wb_window };
+
+    if (wb_parent_window->handle_event)
+        wb_parent_window->handle_event(event_type_window_new_popup, &wb_window_event);
+}
+
 void handle_window_new_event(struct wl_listener *listener, void *data) {
     struct waybright* wb = wl_container_of(listener, wb, listeners.window_new);
     struct wlr_xdg_surface *wlr_xdg_surface = data;
@@ -157,7 +184,6 @@ void handle_window_new_event(struct wl_listener *listener, void *data) {
     wb_window->wb = wb;
     wb_window->wlr_xdg_surface = wlr_xdg_surface;
     wb_window->wlr_xdg_toplevel = wlr_xdg_toplevel;
-    wb_window->is_popup = 0;
 
     wb_window->listeners.show.notify = handle_window_show_event;
     wl_signal_add(&wlr_xdg_surface->events.map, &wb_window->listeners.show);
@@ -174,6 +200,8 @@ void handle_window_new_event(struct wl_listener *listener, void *data) {
     wl_signal_add(&wlr_xdg_toplevel->events.request_fullscreen, &wb_window->listeners.fullscreen);
     wb_window->listeners.resize.notify = handle_window_resize_event;
     wl_signal_add(&wlr_xdg_toplevel->events.request_resize, &wb_window->listeners.resize);
+    wb_window->listeners.new_popup.notify = handle_window_new_popup_event;
+    wl_signal_add(&wlr_xdg_surface->events.new_popup, &wb_window->listeners.new_popup);
 
     // More events coming soon to a town near you!
 

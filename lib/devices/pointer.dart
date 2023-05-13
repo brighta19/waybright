@@ -148,9 +148,6 @@ class PointerDevice extends InputDevice {
   /// This pointer's name.
   String name = "unknown-pointer";
 
-  /// The window this pointer is focusing on.
-  Window? focusedWindow;
-
   Pointer<struct_waybright_pointer>? _pointerPtr;
 
   void Function(RemovePointerEvent)? onRemove;
@@ -161,6 +158,18 @@ class PointerDevice extends InputDevice {
 
   PointerDevice() : super(InputDeviceType.pointer) {
     _pointerInstances.add(this);
+  }
+
+  bool isFocusedOnWindow(Window window) {
+    var pointerPtr = _pointerPtr;
+    var windowPtr = window._windowPtr;
+    if (pointerPtr != null && windowPtr != null) {
+      return _wblib.wlr_seat_pointer_surface_has_focus(
+        windowPtr.ref.wb.ref.wlr_seat,
+        windowPtr.ref.wlr_xdg_surface.ref.surface,
+      );
+    }
+    return false;
   }
 
   /// Focuses this pointer on a window.
@@ -183,7 +192,6 @@ class PointerDevice extends InputDevice {
         windowCursorX.toInt(),
         windowCursorY.toInt(),
       );
-      focusedWindow = window;
     }
   }
 
@@ -192,7 +200,6 @@ class PointerDevice extends InputDevice {
     var pointerPtr = _pointerPtr;
     if (pointerPtr != null) {
       _wblib.waybright_pointer_clear_focus(pointerPtr);
-      focusedWindow = null;
     }
   }
 }

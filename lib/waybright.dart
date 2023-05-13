@@ -22,6 +22,8 @@ part 'events/window/window_move.dart';
 part 'events/window/window_resize.dart';
 part 'events/window/window_maximize.dart';
 part 'events/window/window_fullscreen.dart';
+part 'events/window/window_newpopup.dart';
+part 'events/monitor/monitor_frame.dart';
 part 'devices/pointer.dart';
 part 'devices/keyboard.dart';
 part 'input_device.dart';
@@ -81,12 +83,11 @@ class Waybright {
         var windowPtr = data as Pointer<struct_waybright_window>;
         var wlrXdgToplevel = windowPtr.ref.wlr_xdg_toplevel.ref;
 
-        var window = Window(windowPtr.ref.is_popup == 1)
-          ..appId = _toString(wlrXdgToplevel.app_id)
-          ..title = _toString(wlrXdgToplevel.title)
+        var window = Window(false)
           .._windowPtr = windowPtr
-          .._windowPtr?.ref.handle_event =
-              Pointer.fromFunction(Window._onEvent);
+          .._windowPtr?.ref.handle_event = Pointer.fromFunction(Window._onEvent)
+          ..appId = _toString(wlrXdgToplevel.app_id)
+          ..title = _toString(wlrXdgToplevel.title);
 
         waybright.onNewWindow?.call(NewWindowEvent(window));
       } else if (type == enum_wb_event_type.event_type_input_new) {

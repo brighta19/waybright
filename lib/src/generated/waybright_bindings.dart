@@ -7940,15 +7940,16 @@ abstract class enum_wb_event_type {
   static const int event_type_window_maximize = 8;
   static const int event_type_window_fullscreen = 9;
   static const int event_type_window_resize = 10;
-  static const int event_type_input_new = 11;
-  static const int event_type_pointer_remove = 12;
-  static const int event_type_pointer_move = 13;
-  static const int event_type_pointer_teleport = 14;
-  static const int event_type_pointer_button = 15;
-  static const int event_type_pointer_axis = 16;
-  static const int event_type_keyboard_remove = 17;
-  static const int event_type_keyboard_key = 18;
-  static const int event_type_keyboard_modifiers = 19;
+  static const int event_type_window_new_popup = 11;
+  static const int event_type_input_new = 12;
+  static const int event_type_pointer_remove = 13;
+  static const int event_type_pointer_move = 14;
+  static const int event_type_pointer_teleport = 15;
+  static const int event_type_pointer_button = 16;
+  static const int event_type_pointer_axis = 17;
+  static const int event_type_keyboard_remove = 18;
+  static const int event_type_keyboard_key = 19;
+  static const int event_type_keyboard_modifiers = 20;
 }
 
 class struct_waybright_renderer extends ffi.Struct {
@@ -8043,8 +8044,7 @@ class struct_waybright_window extends ffi.Struct {
 
   external ffi.Pointer<struct_wlr_xdg_toplevel> wlr_xdg_toplevel;
 
-  @ffi.Int()
-  external int is_popup;
+  external ffi.Pointer<struct_wlr_xdg_popup> wlr_xdg_popup;
 
   external UnnamedStruct33 listeners;
 
@@ -8067,6 +8067,8 @@ class UnnamedStruct33 extends ffi.Struct {
   external struct_wl_listener fullscreen;
 
   external struct_wl_listener resize;
+
+  external struct_wl_listener new_popup;
 }
 
 class struct_waybright_input extends ffi.Struct {

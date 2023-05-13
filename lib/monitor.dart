@@ -2,8 +2,6 @@ part of "./waybright.dart";
 
 class RemoveMonitorEvent {}
 
-class MonitorFrameEvent {}
-
 /// A physical or virtual monitor.
 class Monitor {
   static final _monitorInstances = <Monitor>[];
@@ -20,7 +18,7 @@ class Monitor {
           _monitorInstances.remove(monitor);
           break;
         case enum_wb_event_type.event_type_monitor_frame:
-          monitor.onFrame?.call(MonitorFrameEvent());
+          monitor.onFrame?.call(MonitorFrameEvent(monitor));
           break;
       }
     }

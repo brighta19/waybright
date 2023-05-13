@@ -39,9 +39,6 @@ class KeyboardDevice extends InputDevice {
   /// This keyboard's name.
   String name = "unknown-keyboard";
 
-  /// The window this keyboard is focusing on.
-  Window? focusedWindow;
-
   Pointer<struct_waybright_keyboard>? _keyboardPtr;
 
   void Function(RemoveKeyboardEvent)? onRemove;
@@ -50,6 +47,16 @@ class KeyboardDevice extends InputDevice {
 
   KeyboardDevice() : super(InputDeviceType.keyboard) {
     _keyboardInstances.add(this);
+  }
+
+  bool isFocusedOnWindow(Window window) {
+    var keyboardPtr = _keyboardPtr;
+    var windowPtr = window._windowPtr;
+    if (keyboardPtr != null && windowPtr != null) {
+      return windowPtr.ref.wlr_xdg_surface.ref.surface ==
+          windowPtr.ref.wb.ref.wlr_seat.ref.keyboard_state.focused_surface;
+    }
+    return false;
   }
 
   /// Focuses this keyboard on a window.
@@ -70,7 +77,6 @@ class KeyboardDevice extends InputDevice {
         keyboardPtr,
         windowPtr,
       );
-      focusedWindow = window;
     }
   }
 
@@ -79,7 +85,6 @@ class KeyboardDevice extends InputDevice {
     var keyboardPtr = _keyboardPtr;
     if (keyboardPtr != null) {
       _wblib.waybright_keyboard_clear_focus(keyboardPtr);
-      focusedWindow = null;
     }
   }
 }

@@ -80,6 +80,16 @@ class Window {
         case enum_wb_event_type.event_type_window_fullscreen:
           window.onFullscreen?.call(FullscreenWindowEvent(window));
           break;
+        case enum_wb_event_type.event_type_window_new_popup:
+          var popupWindowPtr =
+              eventPtr.ref.event as Pointer<struct_waybright_window>;
+          var popup = Window(true)
+            .._windowPtr = popupWindowPtr
+            .._windowPtr?.ref.handle_event =
+                Pointer.fromFunction(Window._onEvent)
+            ..parent = window;
+          window.onNewPopup?.call(NewPopupWindowEvent(popup));
+          break;
       }
     }
   }
@@ -87,14 +97,14 @@ class Window {
   Pointer<struct_waybright_window>? _windowPtr;
 
   void _ensureKeyboardFocus(KeyboardDevice keyboard) {
-    if (keyboard.focusedWindow != this) {
+    if (!keyboard.isFocusedOnWindow(this)) {
       keyboard.clearFocus();
       keyboard.focusOnWindow(this);
     }
   }
 
   void _ensurePointerFocus(PointerDevice pointer, num cursorX, num cursorY) {
-    if (pointer.focusedWindow != this) {
+    if (!pointer.isFocusedOnWindow(this)) {
       pointer.clearFocus();
       pointer.focusOnWindow(this, cursorX, cursorY);
     }
@@ -139,6 +149,9 @@ class Window {
   /// The vertical position of this window's drawing area.
   num drawingY = 0;
 
+  /// The parent window of this window, if this is a popup window.
+  Window? parent;
+
   void Function(RemoveWindowEvent event)? onRemove;
   void Function(ShowWindowEvent event)? onShow;
   void Function(HideWindowEvent event)? onHide;
@@ -146,6 +159,7 @@ class Window {
   void Function(ResizeWindowEvent event)? onResize;
   void Function(MaximizeWindowEvent event)? onMaximize;
   void Function(FullscreenWindowEvent event)? onFullscreen;
+  void Function(NewPopupWindowEvent event)? onNewPopup;
 
   Window(this.isPopup) {
     _windowInstances.add(this);
@@ -181,20 +195,29 @@ class Window {
   int get contentHeight =>
       _windowPtr?.ref.wlr_xdg_surface.ref.current.geometry.height ?? 0;
 
+  /// The horizontal position of this popup window relative to its parent.
+  num get popupX => _windowPtr?.ref.wlr_xdg_popup.ref.current.geometry.x ?? 0;
+
+  /// The vertical position of this popup window relative to its parent.
+  num get popupY => _windowPtr?.ref.wlr_xdg_popup.ref.current.geometry.y ?? 0;
+
   /// Whether this window is considered visible.
   bool get isVisible => _windowPtr?.ref.wlr_xdg_surface.ref.mapped ?? false;
 
   /// Whether this window is considered maximized.
-  bool get isMaximized =>
-      _windowPtr?.ref.wlr_xdg_toplevel.ref.current.maximized ?? false;
+  bool get isMaximized => isPopup
+      ? false
+      : (_windowPtr?.ref.wlr_xdg_toplevel.ref.current.maximized ?? false);
 
   /// Whether this window is considered fullscreen.
-  bool get isFullscreen =>
-      _windowPtr?.ref.wlr_xdg_toplevel.ref.current.fullscreen ?? false;
+  bool get isFullscreen => isPopup
+      ? false
+      : (_windowPtr?.ref.wlr_xdg_toplevel.ref.current.fullscreen ?? false);
 
   /// Whether this window is focused.
-  bool get isFocused =>
-      _windowPtr?.ref.wlr_xdg_toplevel.ref.current.activated ?? false;
+  bool get isFocused => isPopup
+      ? false
+      : (_windowPtr?.ref.wlr_xdg_toplevel.ref.current.activated ?? false);
 
   /// Tells this window to maximize.
   ///
@@ -204,6 +227,8 @@ class Window {
   ///
   /// If [width] or [height] are provided, the window will submit the new size.
   void maximize({int? width, int? height}) {
+    if (isPopup) return;
+
     _setMaximizeAttribute(true);
     if (width != null || height != null) {
       submitNewSize(width: width, height: height);
@@ -218,6 +243,8 @@ class Window {
   ///
   /// If [width] or [height] are provided, the window will submit the new size.
   void unmaximize({int? width, int? height}) {
+    if (isPopup) return;
+
     _setMaximizeAttribute(false);
     if (width != null || height != null) {
       submitNewSize(width: width, height: height);
@@ -232,6 +259,8 @@ class Window {
   ///
   /// If [width] or [height] are provided, the window will submit the new size.
   void fullscreen({int? width, int? height}) {
+    if (isPopup) return;
+
     _setFullscreenAttribute(true);
     if (width != null || height != null) {
       submitNewSize(width: width, height: height);
@@ -257,14 +286,22 @@ class Window {
   /// It will *not* consider itself focused until the compositor has confirmed
   /// the focus change. Track the [isFocused] property to know when it is
   /// focused.
-  void focus() => _setFocusedAttribute(true);
+  void focus() {
+    if (isPopup) return;
+
+    _setFocusedAttribute(true);
+  }
 
   /// Tells this window to unfocus.
   ///
   /// It will *not* consider itself unfocused
   /// until the compositor has confirmed the focus change. Track the
   /// [isFocused] property to know when it is unfocused.
-  void unfocus() => _setFocusedAttribute(false);
+  void unfocus() {
+    if (isPopup) return;
+
+    _setFocusedAttribute(false);
+  }
 
   /// Submits a new size for this window.
   ///
@@ -272,6 +309,8 @@ class Window {
   /// accept this size or choose a different size, so track the [contentWidth]
   /// and [contentHeight] properties to know the actual size.
   void submitNewSize({int? width, int? height}) {
+    if (isPopup) return;
+
     var windowPtr = _windowPtr;
     if (windowPtr != null) {
       var width0 = width ?? contentWidth;
