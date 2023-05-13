@@ -43,7 +43,8 @@ void handle_monitor_frame_event(struct wl_listener *listener, void *data) {
     wlr_renderer_end(wlr_renderer);
 
     // Submit my frame to the output.
-    wlr_output_commit(wlr_output);
+    if (!wlr_output_commit(wlr_output))
+        wlr_output_schedule_frame(wlr_output);
 }
 
 void handle_monitor_new_event(struct wl_listener *listener, void *data) {
