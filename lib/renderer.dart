@@ -55,7 +55,8 @@ class Renderer {
   }
 
   /// Draws a rectangle.
-  void drawWindow(Window window, num x, num y, [int? width, int? height]) {
+  void drawWindow(Window window, num x, num y,
+      {int? width, int? height, double? alpha}) {
     var rendererPtr = _rendererPtr;
     var windowPtr = window._windowPtr;
     if (rendererPtr != null && windowPtr != null) {
@@ -66,12 +67,14 @@ class Renderer {
         y.toInt(),
         width ?? window.drawingWidth,
         height ?? window.drawingHeight,
+        alpha ?? 1.0,
       );
     }
   }
 
   /// Draws an image.
-  void drawImage(Image image, num x, num y, [int? width, int? height]) {
+  void drawImage(Image image, num x, num y,
+      {int? width, int? height, double? alpha}) {
     var rendererPtr = _rendererPtr;
     var imagePtr = image._imagePtr;
     if (rendererPtr != null && imagePtr != null) {
@@ -82,6 +85,7 @@ class Renderer {
         y.toInt(),
         width ?? imagePtr.ref.width,
         height ?? imagePtr.ref.height,
+        alpha ?? 1.0,
       );
     }
   }

@@ -4990,6 +4990,7 @@ class WaybrightLibrary {
     int y,
     int width,
     int height,
+    double alpha,
   ) {
     return _waybright_renderer_draw_window(
       wb_renderer,
@@ -4998,6 +4999,7 @@ class WaybrightLibrary {
       y,
       width,
       height,
+      alpha,
     );
   }
 
@@ -5009,11 +5011,18 @@ class WaybrightLibrary {
               ffi.Int,
               ffi.Int,
               ffi.Int,
-              ffi.Int)>>('waybright_renderer_draw_window');
+              ffi.Int,
+              ffi.Float)>>('waybright_renderer_draw_window');
   late final _waybright_renderer_draw_window =
       _waybright_renderer_draw_windowPtr.asFunction<
-          void Function(ffi.Pointer<struct_waybright_renderer>,
-              ffi.Pointer<struct_waybright_window>, int, int, int, int)>();
+          void Function(
+              ffi.Pointer<struct_waybright_renderer>,
+              ffi.Pointer<struct_waybright_window>,
+              int,
+              int,
+              int,
+              int,
+              double)>();
 
   void waybright_renderer_draw_image(
     ffi.Pointer<struct_waybright_renderer> wb_renderer,
@@ -5022,6 +5031,7 @@ class WaybrightLibrary {
     int y,
     int width,
     int height,
+    double alpha,
   ) {
     return _waybright_renderer_draw_image(
       wb_renderer,
@@ -5030,6 +5040,7 @@ class WaybrightLibrary {
       y,
       width,
       height,
+      alpha,
     );
   }
 
@@ -5041,11 +5052,18 @@ class WaybrightLibrary {
               ffi.Int,
               ffi.Int,
               ffi.Int,
-              ffi.Int)>>('waybright_renderer_draw_image');
+              ffi.Int,
+              ffi.Float)>>('waybright_renderer_draw_image');
   late final _waybright_renderer_draw_image =
       _waybright_renderer_draw_imagePtr.asFunction<
-          void Function(ffi.Pointer<struct_waybright_renderer>,
-              ffi.Pointer<struct_waybright_image>, int, int, int, int)>();
+          void Function(
+              ffi.Pointer<struct_waybright_renderer>,
+              ffi.Pointer<struct_waybright_image>,
+              int,
+              int,
+              int,
+              int,
+              double)>();
 
   void waybright_monitor_destroy(
     ffi.Pointer<struct_waybright_monitor> wb_monitor,

@@ -193,8 +193,8 @@ int waybright_renderer_get_fill_style(struct waybright_renderer* wb_renderer);
 void waybright_renderer_set_fill_style(struct waybright_renderer* wb_renderer, int color);
 void waybright_renderer_clear_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height);
 void waybright_renderer_fill_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height);
-void waybright_renderer_draw_window(struct waybright_renderer* wb_renderer, struct waybright_window* wb_window, int x, int y, int width, int height);
-void waybright_renderer_draw_image(struct waybright_renderer* wb_renderer, struct waybright_image* wb_image, int x, int y, int width, int height);
+void waybright_renderer_draw_window(struct waybright_renderer* wb_renderer, struct waybright_window* wb_window, int x, int y, int width, int height, float alpha);
+void waybright_renderer_draw_image(struct waybright_renderer* wb_renderer, struct waybright_image* wb_image, int x, int y, int width, int height, float alpha);
 
 void waybright_monitor_destroy(struct waybright_monitor* wb_monitor);
 void waybright_monitor_enable(struct waybright_monitor* wb_monitor);

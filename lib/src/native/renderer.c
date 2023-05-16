@@ -41,7 +41,7 @@ void waybright_renderer_fill_rect(struct waybright_renderer* wb_renderer, int x,
     wlr_render_rect(wlr_renderer, &wlr_box, wb_renderer->color_fill, wlr_output->transform_matrix);
 }
 
-void waybright_renderer_draw_window(struct waybright_renderer* wb_renderer, struct waybright_window* wb_window, int x, int y, int width, int height) {
+void waybright_renderer_draw_window(struct waybright_renderer* wb_renderer, struct waybright_window* wb_window, int x, int y, int width, int height, float alpha) {
     struct wlr_output* wlr_output = wb_renderer->wlr_output;
     struct wlr_renderer* wlr_renderer = wlr_output->renderer;
     struct wlr_surface* wlr_surface = wb_window->wlr_xdg_surface->surface;
@@ -61,14 +61,14 @@ void waybright_renderer_draw_window(struct waybright_renderer* wb_renderer, stru
         0.0, 0.0, 1.0
     };
 
-    wlr_render_texture(wlr_renderer, wlr_texture, matrix, 0, 0, 1.0);
+    wlr_render_texture(wlr_renderer, wlr_texture, matrix, 0, 0, alpha);
 
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
     wlr_surface_send_frame_done(wlr_surface, &now);
 }
 
-void waybright_renderer_draw_image(struct waybright_renderer* wb_renderer, struct waybright_image* wb_image, int x, int y, int width, int height) {
+void waybright_renderer_draw_image(struct waybright_renderer* wb_renderer, struct waybright_image* wb_image, int x, int y, int width, int height, float alpha) {
     struct wlr_output* wlr_output = wb_renderer->wlr_output;
     struct wlr_renderer* wlr_renderer = wlr_output->renderer;
 
@@ -87,5 +87,5 @@ void waybright_renderer_draw_image(struct waybright_renderer* wb_renderer, struc
         0.0, 0.0, 1.0
     };
 
-    wlr_render_texture(wlr_renderer, wlr_texture, matrix, 0, 0, 1.0);
+    wlr_render_texture(wlr_renderer, wlr_texture, matrix, 0, 0, alpha);
 }

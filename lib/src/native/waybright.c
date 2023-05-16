@@ -15,16 +15,16 @@
 
 int get_color_from_array(float* color_array) {
     return ((int)(color_array[0] * 0xff) << 24) +
-        ((int)(color_array[1] * 0xff) << 16) +
-        ((int)(color_array[2] * 0xff) << 8) +
-        (color_array[3] * 0xff);
+           ((int)(color_array[1] * 0xff) << 16) +
+           ((int)(color_array[2] * 0xff) << 8) +
+                 (color_array[3] * 0xff);
 }
 
 void set_color_to_array(int color, float* color_array) {
     color_array[0] = ((color & 0xff000000) >> 24) / (float)0xff;
     color_array[1] = ((color & 0x00ff0000) >> 16) / (float)0xff;
-    color_array[2] = ((color & 0x0000ff00) >> 8) / (float)0xff;
-    color_array[3] = (color & 0x000000ff) / (float)0xff;
+    color_array[2] = ((color & 0x0000ff00) >> 8)  / (float)0xff;
+    color_array[3] =  (color & 0x000000ff)        / (float)0xff;
 }
 
 struct wlr_output_mode* waybright_get_wlr_output_mode_from_wl_list(struct wl_list *ptr) {
