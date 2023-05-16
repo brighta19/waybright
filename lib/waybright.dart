@@ -6,6 +6,8 @@ import 'dart:collection';
 import 'package:ffi/ffi.dart';
 import 'src/generated/waybright_bindings.dart';
 
+export 'animation.dart';
+
 part 'events/pointer/pointer_event.dart';
 part 'events/pointer/pointer_move.dart';
 part 'events/pointer/pointer_relative_move.dart';
@@ -28,7 +30,6 @@ part 'devices/pointer.dart';
 part 'devices/keyboard.dart';
 part 'input_device.dart';
 part 'image.dart';
-part 'socket.dart';
 part 'mode.dart';
 part 'monitor.dart';
 part 'renderer.dart';
