@@ -49,6 +49,14 @@ class KeyboardDevice extends InputDevice {
     _keyboardInstances.add(this);
   }
 
+  bool isFocusedOnAWindow() {
+    var keyboardPtr = _keyboardPtr;
+    return keyboardPtr == null
+        ? false
+        : keyboardPtr.ref.wb.ref.wlr_seat.ref.keyboard_state.focused_surface !=
+            nullptr;
+  }
+
   bool isFocusedOnWindow(Window window) {
     var keyboardPtr = _keyboardPtr;
     var windowPtr = window._windowPtr;

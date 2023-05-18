@@ -160,6 +160,14 @@ class PointerDevice extends InputDevice {
     _pointerInstances.add(this);
   }
 
+  bool isFocusedOnAWindow() {
+    var pointerPtr = _pointerPtr;
+    return pointerPtr == null
+        ? false
+        : pointerPtr.ref.wb.ref.wlr_seat.ref.pointer_state.focused_surface !=
+            nullptr;
+  }
+
   bool isFocusedOnWindow(Window window) {
     var pointerPtr = _pointerPtr;
     var windowPtr = window._windowPtr;
