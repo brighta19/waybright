@@ -26,5 +26,7 @@ void handle_keyboard_new_event(struct waybright* wb, struct waybright_keyboard* 
 
 void handle_input_new_event(struct wl_listener *listener, void *data);
 
+void handle_cursor_image_event(struct wl_listener *listener, void *data);
+
 void handle_image_ready_event(struct wl_listener *listener, void *data);
 void handle_image_destroy_event(struct wl_listener *listener, void *data);

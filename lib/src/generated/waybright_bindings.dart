@@ -7999,7 +7999,8 @@ abstract class enum_wb_event_type {
   static const int event_type_keyboard_remove = 18;
   static const int event_type_keyboard_key = 19;
   static const int event_type_keyboard_modifiers = 20;
-  static const int event_type_image_destroy = 21;
+  static const int event_type_cursor_image = 21;
+  static const int event_type_image_destroy = 22;
 }
 
 class struct_waybright_renderer extends ffi.Struct {
@@ -8031,6 +8032,12 @@ class struct_waybright_image extends ffi.Struct {
 
   @ffi.Int()
   external int height;
+
+  @ffi.Int()
+  external int offset_x;
+
+  @ffi.Int()
+  external int offset_y;
 
   external ffi.Pointer<
           ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
@@ -8090,6 +8097,8 @@ class UnnamedStruct32 extends ffi.Struct {
   external struct_wl_listener window_new;
 
   external struct_wl_listener input_new;
+
+  external struct_wl_listener cursor_image;
 }
 
 class UnnamedStruct33 extends ffi.Struct {

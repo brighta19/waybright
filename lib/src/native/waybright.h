@@ -43,6 +43,8 @@ enum wb_event_type {
     event_type_keyboard_key,
     event_type_keyboard_modifiers,
 
+    event_type_cursor_image,
+
     event_type_image_destroy,
 };
 
@@ -62,6 +64,7 @@ struct waybright {
         struct wl_listener monitor_new;
         struct wl_listener window_new;
         struct wl_listener input_new;
+        struct wl_listener cursor_image;
     } listeners;
 
     void(*handle_event)(int type, void* data);
@@ -89,6 +92,8 @@ struct waybright_image {
 
     int width;
     int height;
+    int offset_x;
+    int offset_y;
 
     void(*handle_event)(int type, void* data);
 };

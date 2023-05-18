@@ -405,3 +405,22 @@ void handle_image_destroy_event(struct wl_listener *listener, void *data) {
 
     waybright_image_destroy(wb_image);
 }
+
+void handle_cursor_image_event(struct wl_listener *listener, void *data) {
+    struct waybright* wb = wl_container_of(listener, wb, listeners.cursor_image);
+    struct wlr_seat_pointer_request_set_cursor_event* event = data;
+    struct wlr_surface* wlr_surface = event->surface;
+
+    if (!wlr_surface) {
+        if (wb->handle_event)
+            wb->handle_event(event_type_cursor_image, NULL);
+        return;
+    }
+
+    struct waybright_image* wb_image = waybright_image_create(wlr_surface);
+    wb_image->offset_x = -event->hotspot_x;
+    wb_image->offset_y = -event->hotspot_y;
+
+    if (wb->handle_event)
+        wb->handle_event(event_type_cursor_image, wb_image);
+}

@@ -38,4 +38,7 @@ class Image {
 
   /// The height of this image.
   int get height => _imagePtr?.ref.height ?? 0;
+
+  int get offsetX => _imagePtr?.ref.offset_x ?? 0;
+  int get offsetY => _imagePtr?.ref.offset_y ?? 0;
 }

@@ -8,6 +8,7 @@ import 'src/generated/waybright_bindings.dart';
 
 export 'animation.dart';
 
+part 'events/cursor/cursor_image.dart';
 part 'events/pointer/pointer_event.dart';
 part 'events/pointer/pointer_move.dart';
 part 'events/pointer/pointer_relative_move.dart';
@@ -129,6 +130,18 @@ class Waybright {
           pointer: pointer,
           keyboard: keyboard,
         ));
+      } else if (type == enum_wb_event_type.event_type_cursor_image) {
+        var imagePtr = data as Pointer<struct_waybright_image>;
+
+        if (imagePtr == nullptr) {
+          waybright.onCursorImage?.call(CursorImageEvent(null));
+        } else {
+          var image = Image()
+            .._imagePtr = imagePtr
+            .._imagePtr?.ref.handle_event =
+                Pointer.fromFunction(Image._onEvent);
+          waybright.onCursorImage?.call(CursorImageEvent(image));
+        }
       }
     }
   }
@@ -193,6 +206,7 @@ class Waybright {
   void Function(NewMonitorEvent event)? onNewMonitor;
   void Function(NewWindowEvent event)? onNewWindow;
   void Function(NewInputEvent event)? onNewInput;
+  void Function(CursorImageEvent event)? onCursorImage;
 
   get isRunning => _isRunning;
 

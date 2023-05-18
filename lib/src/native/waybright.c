@@ -99,6 +99,8 @@ int waybright_init(struct waybright* wb) {
     wl_signal_add(&wb->wlr_xdg_shell->events.new_surface, &wb->listeners.window_new);
     wb->listeners.input_new.notify = handle_input_new_event;
     wl_signal_add(&wb->wlr_backend->events.new_input, &wb->listeners.input_new);
+	wb->listeners.cursor_image.notify = handle_cursor_image_event;
+	wl_signal_add(&wb->wlr_seat->events.request_set_cursor, &wb->listeners.cursor_image);
 
     return 0;
 }

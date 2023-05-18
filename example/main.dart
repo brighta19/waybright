@@ -5,6 +5,7 @@ const backgroundColor = 0x111111ff;
 Monitor? currentMonitor;
 Window? focusedWindow;
 KeyboardDevice? currentKeyboard;
+Image? cursorImage;
 
 var windows = WindowList();
 var popupWindows = <Window, WindowList>{};
@@ -65,8 +66,12 @@ void onNewMonitor(NewMonitorEvent event) {
       }
     }
 
-    renderer.fillStyle = 0xffffffdd;
-    renderer.fillRect(cursorX, cursorY, 5, 5);
+    if (cursorImage == null) {
+      renderer.fillStyle = 0xffffffdd;
+      renderer.fillRect(cursorX, cursorY, 5, 5);
+    } else if (cursorImage!.isReady) {
+      renderer.drawImage(cursorImage!, cursorX, cursorY);
+    }
   };
 
   cursorX = monitor.mode.width / 2;
@@ -170,7 +175,10 @@ void onNewPointer(PointerDevice pointer) {
   void handleMovement(PointerMoveEvent event) {
     Window? hoveredWindow = getHoveredWindow();
 
-    if (hoveredWindow == null) return;
+    if (hoveredWindow == null) {
+      cursorImage = null;
+      return;
+    }
 
     var windowCursorX = cursorX - hoveredWindow.drawingX;
     var windowCursorY = cursorY - hoveredWindow.drawingY;
@@ -313,12 +321,17 @@ void onNewInput(NewInputEvent event) {
   }
 }
 
+void onCursorImage(CursorImageEvent event) {
+  cursorImage = event.image;
+}
+
 final compositor = Waybright();
 
 void main(List<String> args) {
   compositor.onNewMonitor = onNewMonitor;
   compositor.onNewWindow = onNewWindow;
   compositor.onNewInput = onNewInput;
+  compositor.onCursorImage = onCursorImage;
 
   try {
     var socketName = compositor.openSocket();
