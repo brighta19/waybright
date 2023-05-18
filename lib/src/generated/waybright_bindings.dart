@@ -5352,6 +5352,37 @@ class WaybrightLibrary {
   late final _waybright_keyboard_clear_focus =
       _waybright_keyboard_clear_focusPtr
           .asFunction<void Function(ffi.Pointer<struct_waybright_keyboard>)>();
+
+  void waybright_image_destroy(
+    ffi.Pointer<struct_waybright_image> wb_image,
+  ) {
+    return _waybright_image_destroy(
+      wb_image,
+    );
+  }
+
+  late final _waybright_image_destroyPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<struct_waybright_image>)>>('waybright_image_destroy');
+  late final _waybright_image_destroy = _waybright_image_destroyPtr
+      .asFunction<void Function(ffi.Pointer<struct_waybright_image>)>();
+
+  ffi.Pointer<struct_waybright_image> waybright_image_create(
+    ffi.Pointer<struct_wlr_surface> wlr_surface,
+  ) {
+    return _waybright_image_create(
+      wlr_surface,
+    );
+  }
+
+  late final _waybright_image_createPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<struct_waybright_image> Function(
+              ffi.Pointer<struct_wlr_surface>)>>('waybright_image_create');
+  late final _waybright_image_create = _waybright_image_createPtr.asFunction<
+      ffi.Pointer<struct_waybright_image> Function(
+          ffi.Pointer<struct_wlr_surface>)>();
 }
 
 abstract class enum_wl_iterator_result {
@@ -7968,6 +7999,7 @@ abstract class enum_wb_event_type {
   static const int event_type_keyboard_remove = 18;
   static const int event_type_keyboard_key = 19;
   static const int event_type_keyboard_modifiers = 20;
+  static const int event_type_image_destroy = 21;
 }
 
 class struct_waybright_renderer extends ffi.Struct {
@@ -7983,15 +8015,32 @@ class struct_waybright_renderer extends ffi.Struct {
 }
 
 class struct_waybright_image extends ffi.Struct {
+  external ffi.Pointer<struct_wlr_surface> wlr_surface;
+
   external ffi.Pointer<struct_wlr_texture> wlr_texture;
 
+  @ffi.Bool()
+  external bool is_ready;
+
   external ffi.Pointer<ffi.Char> path;
+
+  external UnnamedStruct31 listeners;
 
   @ffi.Int()
   external int width;
 
   @ffi.Int()
   external int height;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
+      handle_event;
+}
+
+class UnnamedStruct31 extends ffi.Struct {
+  external struct_wl_listener ready;
+
+  external struct_wl_listener destroy;
 }
 
 class struct_waybright_monitor extends ffi.Struct {
@@ -8001,7 +8050,7 @@ class struct_waybright_monitor extends ffi.Struct {
 
   external ffi.Pointer<struct_wlr_output> wlr_output;
 
-  external UnnamedStruct32 listeners;
+  external UnnamedStruct33 listeners;
 
   external ffi.Pointer<
           ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
@@ -8028,14 +8077,14 @@ class struct_waybright extends ffi.Struct {
 
   external ffi.Pointer<ffi.Char> socket_name;
 
-  external UnnamedStruct31 listeners;
+  external UnnamedStruct32 listeners;
 
   external ffi.Pointer<
           ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
       handle_event;
 }
 
-class UnnamedStruct31 extends ffi.Struct {
+class UnnamedStruct32 extends ffi.Struct {
   external struct_wl_listener monitor_new;
 
   external struct_wl_listener window_new;
@@ -8043,7 +8092,7 @@ class UnnamedStruct31 extends ffi.Struct {
   external struct_wl_listener input_new;
 }
 
-class UnnamedStruct32 extends ffi.Struct {
+class UnnamedStruct33 extends ffi.Struct {
   external struct_wl_listener remove;
 
   external struct_wl_listener frame;
@@ -8064,14 +8113,14 @@ class struct_waybright_window extends ffi.Struct {
 
   external ffi.Pointer<struct_wlr_xdg_popup> wlr_xdg_popup;
 
-  external UnnamedStruct33 listeners;
+  external UnnamedStruct34 listeners;
 
   external ffi.Pointer<
           ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
       handle_event;
 }
 
-class UnnamedStruct33 extends ffi.Struct {
+class UnnamedStruct34 extends ffi.Struct {
   external struct_wl_listener remove;
 
   external struct_wl_listener show1;
@@ -8112,14 +8161,14 @@ class struct_waybright_pointer extends ffi.Struct {
   @ffi.Double()
   external double y;
 
-  external UnnamedStruct34 listeners;
+  external UnnamedStruct35 listeners;
 
   external ffi.Pointer<
           ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
       handle_event;
 }
 
-class UnnamedStruct34 extends ffi.Struct {
+class UnnamedStruct35 extends ffi.Struct {
   external struct_wl_listener remove;
 
   external struct_wl_listener move;
@@ -8138,14 +8187,14 @@ class struct_waybright_keyboard extends ffi.Struct {
 
   external ffi.Pointer<struct_wlr_keyboard> wlr_keyboard;
 
-  external UnnamedStruct35 listeners;
+  external UnnamedStruct36 listeners;
 
   external ffi.Pointer<
           ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
       handle_event;
 }
 
-class UnnamedStruct35 extends ffi.Struct {
+class UnnamedStruct36 extends ffi.Struct {
   external struct_wl_listener remove;
 
   external struct_wl_listener key;

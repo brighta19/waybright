@@ -383,3 +383,25 @@ void handle_input_new_event(struct wl_listener *listener, void *data) {
     if (wb->handle_event)
         wb->handle_event(event_type_input_new, wb_input);
 }
+
+void handle_image_ready_event(struct wl_listener *listener, void *data) {
+    struct waybright_image* wb_image = wl_container_of(listener, wb_image, listeners.ready);
+    struct wlr_texture* wlr_texture = wlr_surface_get_texture(wb_image->wlr_surface);
+
+    if (!wlr_texture)
+        return;
+
+    wb_image->wlr_texture = wlr_texture;
+    wb_image->width = wlr_texture->width;
+    wb_image->height = wlr_texture->height;
+    wb_image->is_ready = true;
+}
+
+void handle_image_destroy_event(struct wl_listener *listener, void *data) {
+    struct waybright_image* wb_image = wl_container_of(listener, wb_image, listeners.destroy);
+
+    if (wb_image->handle_event)
+        wb_image->handle_event(event_type_image_destroy, wb_image);
+
+    waybright_image_destroy(wb_image);
+}

@@ -27,7 +27,8 @@ var windowSwitchIndex = 0;
 
 void onNewMonitor(NewMonitorEvent event) {
   var monitor = event.monitor;
-  currentMonitor ??= monitor;
+  if (currentMonitor != null) return;
+  currentMonitor = monitor;
 
   var preferredMode = monitor.preferredMode;
   if (preferredMode == null) {

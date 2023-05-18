@@ -42,6 +42,8 @@ enum wb_event_type {
     event_type_keyboard_remove,
     event_type_keyboard_key,
     event_type_keyboard_modifiers,
+
+    event_type_image_destroy,
 };
 
 struct waybright {
@@ -74,12 +76,21 @@ struct waybright_renderer {
 };
 
 struct waybright_image {
+    struct wlr_surface* wlr_surface;
     struct wlr_texture* wlr_texture;
 
+    bool is_ready;
     const char* path;
+
+    struct {
+        struct wl_listener ready;
+        struct wl_listener destroy;
+    } listeners;
 
     int width;
     int height;
+
+    void(*handle_event)(int type, void* data);
 };
 
 struct waybright_monitor {
@@ -214,3 +225,6 @@ void waybright_pointer_clear_focus(struct waybright_pointer* wb_pointer);
 void waybright_keyboard_destroy(struct waybright_keyboard* wb_keyboard);
 void waybright_keyboard_focus_on_window(struct waybright_keyboard* wb_keyboard, struct waybright_window* wb_window);
 void waybright_keyboard_clear_focus(struct waybright_keyboard* wb_keyboard);
+
+void waybright_image_destroy(struct waybright_image* wb_image);
+struct waybright_image* waybright_image_create(struct wlr_surface* wlr_surface);

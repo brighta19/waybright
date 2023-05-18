@@ -153,7 +153,9 @@ class Waybright {
       throw Exception("Loading png image failed unexpectedly.");
     }
 
-    return Image().._imagePtr = imagePtr;
+    return Image()
+      .._imagePtr = imagePtr
+      .._imagePtr?.ref.handle_event = Pointer.fromFunction(Image._onEvent);
   }
 
   Future<void> _checkEvents() async {
