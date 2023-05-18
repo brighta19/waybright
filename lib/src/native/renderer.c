@@ -2,6 +2,7 @@
 
 #include <time.h>
 #include "waybright.h"
+#include <wlr/render/gles2.h>
 
 void waybright_renderer_destroy(struct waybright_renderer* wb_renderer) {
     if (!wb_renderer) return;
@@ -86,6 +87,12 @@ void waybright_renderer_draw_image(struct waybright_renderer* wb_renderer, struc
         0.0, (float)height / wlr_texture->height, (float)y,
         0.0, 0.0, 1.0
     };
+
+    // A fix for the assertion failure on wlr_texture_is_gles2(wlr_texture).
+    // The pointer to the texture's implementation is different from the
+    // pointer to the renderer's implementation.
+    if (wlr_renderer_is_gles2(wlr_renderer) && !wlr_texture_is_gles2(wlr_texture))
+        return;
 
     wlr_render_texture(wlr_renderer, wlr_texture, matrix, 0, 0, alpha);
 }
