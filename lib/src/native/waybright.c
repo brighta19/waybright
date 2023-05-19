@@ -179,6 +179,7 @@ struct waybright_image* waybright_load_png_image(struct waybright* wb, const cha
     wb_image->wlr_texture = wlr_texture;
     wb_image->width = width;
     wb_image->height = height;
+    wb_image->is_ready = true;
 
     return wb_image;
 }
