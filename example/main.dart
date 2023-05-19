@@ -26,6 +26,36 @@ bool get isAltPressed => isLeftAltPressed || isRightAltPressed;
 var isSwitchingWindows = false;
 var windowSwitchIndex = 0;
 
+Window? getHoveredWindowFromList(WindowList windows) {
+  var list = windows.frontToBackIterable;
+  for (var window in list) {
+    if (!window.isVisible) continue;
+
+    var popupList = popupWindows[window];
+    if (popupList != null) {
+      var popup = getHoveredWindowFromList(popupList);
+      if (popup != null) return popup;
+    }
+
+    var windowX = window.contentX;
+    var windowY = window.contentY;
+    var windowWidth = window.contentWidth;
+    var windowHeight = window.contentHeight;
+
+    if (cursorX >= windowX &&
+        cursorX < windowX + windowWidth &&
+        cursorY >= windowY &&
+        cursorY < windowY + windowHeight) {
+      return window;
+    }
+  }
+  return null;
+}
+
+Window? getHoveredWindow() {
+  return getHoveredWindowFromList(windows);
+}
+
 void onNewMonitor(NewMonitorEvent event) {
   var monitor = event.monitor;
   if (currentMonitor != null) return;
@@ -66,7 +96,7 @@ void onNewMonitor(NewMonitorEvent event) {
       }
     }
 
-    if (cursorImage == null) {
+    if (cursorImage == null && getHoveredWindow() == null) {
       renderer.fillStyle = 0xffffffdd;
       renderer.fillRect(cursorX, cursorY, 5, 5);
     } else if (cursorImage!.isReady) {
@@ -142,36 +172,6 @@ void onNewWindow(NewWindowEvent event) {
 }
 
 void onNewPointer(PointerDevice pointer) {
-  Window? getHoveredWindowFromList(WindowList windows) {
-    var list = windows.frontToBackIterable;
-    for (var window in list) {
-      if (!window.isVisible) continue;
-
-      var popupList = popupWindows[window];
-      if (popupList != null) {
-        var popup = getHoveredWindowFromList(popupList);
-        if (popup != null) return popup;
-      }
-
-      var windowX = window.contentX;
-      var windowY = window.contentY;
-      var windowWidth = window.contentWidth;
-      var windowHeight = window.contentHeight;
-
-      if (cursorX >= windowX &&
-          cursorX < windowX + windowWidth &&
-          cursorY >= windowY &&
-          cursorY < windowY + windowHeight) {
-        return window;
-      }
-    }
-    return null;
-  }
-
-  Window? getHoveredWindow() {
-    return getHoveredWindowFromList(windows);
-  }
-
   void handleMovement(PointerMoveEvent event) {
     Window? hoveredWindow = getHoveredWindow();
 
