@@ -28,6 +28,11 @@ class Image {
     _imageInstances.add(this);
   }
 
+  Image._fromPointer(Pointer<struct_waybright_image> this._imagePtr) {
+    _imageInstances.add(this);
+    _imagePtr?.ref.handle_event = Pointer.fromFunction(_onEvent);
+  }
+
   bool get isReady => _imagePtr?.ref.is_ready ?? false;
 
   /// The path to this image.

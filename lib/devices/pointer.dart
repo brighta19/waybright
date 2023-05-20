@@ -160,6 +160,12 @@ class PointerDevice extends InputDevice {
     _pointerInstances.add(this);
   }
 
+  PointerDevice._fromPointer(Pointer<struct_waybright_pointer> this._pointerPtr)
+      : super(InputDeviceType.pointer) {
+    _pointerInstances.add(this);
+    _pointerPtr?.ref.handle_event = Pointer.fromFunction(_onEvent);
+  }
+
   bool isFocusedOnAWindow() {
     var pointerPtr = _pointerPtr;
     return pointerPtr == null

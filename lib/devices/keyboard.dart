@@ -49,6 +49,13 @@ class KeyboardDevice extends InputDevice {
     _keyboardInstances.add(this);
   }
 
+  KeyboardDevice._fromPointer(
+    Pointer<struct_waybright_keyboard> this._keyboardPtr,
+  ) : super(InputDeviceType.keyboard) {
+    _keyboardInstances.add(this);
+    _keyboardPtr?.ref.handle_event = Pointer.fromFunction(_onEvent);
+  }
+
   bool isFocusedOnAWindow() {
     var keyboardPtr = _keyboardPtr;
     return keyboardPtr == null

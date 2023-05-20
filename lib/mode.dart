@@ -16,6 +16,11 @@ class Mode {
   /// Creates a [Mode] instance.
   Mode(this.width, this.height, this.refreshRate);
 
+  Mode._fromPointer(Pointer<struct_wlr_output_mode> this._outputModePtr)
+      : width = _outputModePtr.ref.width,
+        height = _outputModePtr.ref.height,
+        refreshRate = _outputModePtr.ref.refresh;
+
   @override
   String toString() => "(${width}x$height @ ${refreshRate}mHz)";
 }

@@ -55,17 +55,13 @@ class Monitor {
     if (monitorPtr != null) {
       var head = monitorPtr.ref.wlr_output.ref.modes.next;
       var link = head;
-      Pointer<struct_wlr_output_mode> item;
+      Pointer<struct_wlr_output_mode> outputModePtr;
       while (link.ref.next != head) {
-        item = _wblib.waybright_get_wlr_output_mode_from_wl_list(link);
-        var mode = Mode(
-          item.ref.width,
-          item.ref.height,
-          item.ref.refresh,
-        ).._outputModePtr = item;
+        outputModePtr = _wblib.waybright_get_wlr_output_mode_from_wl_list(link);
+        var mode = Mode._fromPointer(outputModePtr);
 
         // While I find modes, find the preferred mode
-        if (item.ref.preferred) {
+        if (outputModePtr.ref.preferred) {
           _preferredMode = mode;
         }
 
@@ -120,6 +116,14 @@ class Monitor {
 
   Monitor(this.renderer) {
     _monitorInstances.add(this);
+  }
+
+  Monitor._fromPointer(
+    Pointer<struct_waybright_monitor> this._monitorPtr,
+    this.renderer,
+  ) {
+    _monitorInstances.add(this);
+    _monitorPtr?.ref.handle_event = Pointer.fromFunction(_onEvent);
   }
 
   /// Whether this monitor is allowed to render or not.

@@ -2,7 +2,9 @@ part of "./waybright.dart";
 
 /// A renderer.
 class Renderer {
-  Pointer<struct_waybright_renderer>? _rendererPtr;
+  final Pointer<struct_waybright_renderer>? _rendererPtr;
+
+  Renderer._fromPointer(Pointer<struct_waybright_renderer> this._rendererPtr);
 
   /// The background color of this monitor.
   int get backgroundColor {

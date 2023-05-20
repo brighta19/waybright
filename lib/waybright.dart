@@ -73,21 +73,16 @@ class Waybright {
       if (type == enum_wb_event_type.event_type_monitor_new) {
         var monitorPtr = data as Pointer<struct_waybright_monitor>;
 
-        var renderer = Renderer().._rendererPtr = monitorPtr.ref.wb_renderer;
-        var monitor = Monitor(renderer)
-          ..name = _toString(monitorPtr.ref.wlr_output.ref.name)
-          .._monitorPtr = monitorPtr
-          .._monitorPtr?.ref.handle_event =
-              Pointer.fromFunction(Monitor._onEvent);
+        var renderer = Renderer._fromPointer(monitorPtr.ref.wb_renderer);
+        var monitor = Monitor._fromPointer(monitorPtr, renderer)
+          ..name = _toString(monitorPtr.ref.wlr_output.ref.name);
 
         waybright.onNewMonitor?.call(NewMonitorEvent(monitor));
       } else if (type == enum_wb_event_type.event_type_window_new) {
         var windowPtr = data as Pointer<struct_waybright_window>;
         var wlrXdgToplevel = windowPtr.ref.wlr_xdg_toplevel.ref;
 
-        var window = Window(false)
-          .._windowPtr = windowPtr
-          .._windowPtr?.ref.handle_event = Pointer.fromFunction(Window._onEvent)
+        var window = Window._fromPointer(windowPtr, false)
           ..appId = _toString(wlrXdgToplevel.app_id)
           ..title = _toString(wlrXdgToplevel.title);
 
@@ -102,19 +97,13 @@ class Waybright {
         if (inputPtr.ref.pointer != nullptr) {
           var pointerPtr = inputPtr.ref.pointer;
 
-          pointer = PointerDevice()
-            ..name = _toString(wlrInputDevice.name)
-            .._pointerPtr = pointerPtr
-            .._pointerPtr?.ref.handle_event =
-                Pointer.fromFunction(PointerDevice._onEvent);
+          pointer = PointerDevice._fromPointer(pointerPtr)
+            ..name = _toString(wlrInputDevice.name);
         } else if (inputPtr.ref.keyboard != nullptr) {
           var keyboardPtr = inputPtr.ref.keyboard;
 
-          keyboard = KeyboardDevice()
-            ..name = _toString(wlrInputDevice.name)
-            .._keyboardPtr = keyboardPtr
-            .._keyboardPtr?.ref.handle_event =
-                Pointer.fromFunction(KeyboardDevice._onEvent);
+          keyboard = KeyboardDevice._fromPointer(keyboardPtr)
+            ..name = _toString(wlrInputDevice.name);
         }
 
         int capabilities = enum_wl_seat_capability.WL_SEAT_CAPABILITY_POINTER;
@@ -136,10 +125,7 @@ class Waybright {
         if (imagePtr == nullptr) {
           waybright.onCursorImage?.call(CursorImageEvent(null));
         } else {
-          var image = Image()
-            .._imagePtr = imagePtr
-            .._imagePtr?.ref.handle_event =
-                Pointer.fromFunction(Image._onEvent);
+          var image = Image._fromPointer(imagePtr);
           waybright.onCursorImage?.call(CursorImageEvent(image));
         }
       }
@@ -155,8 +141,8 @@ class Waybright {
       throw Exception("Waybright instance creation failed unexpectedly.");
     }
 
-    _wbPtr.ref.handle_event = Pointer.fromFunction(_onEvent);
     _waybrightInstances.add(this);
+    _wbPtr.ref.handle_event = Pointer.fromFunction(_onEvent);
   }
 
   Future<Image> _loadPngImage(String path) async {
@@ -166,9 +152,7 @@ class Waybright {
       throw Exception("Loading png image failed unexpectedly.");
     }
 
-    return Image()
-      .._imagePtr = imagePtr
-      .._imagePtr?.ref.handle_event = Pointer.fromFunction(Image._onEvent);
+    return Image._fromPointer(imagePtr);
   }
 
   Future<void> _checkEvents() async {

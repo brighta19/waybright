@@ -83,10 +83,7 @@ class Window {
         case enum_wb_event_type.event_type_window_new_popup:
           var popupWindowPtr =
               eventPtr.ref.event as Pointer<struct_waybright_window>;
-          var popup = Window(true)
-            .._windowPtr = popupWindowPtr
-            .._windowPtr?.ref.handle_event =
-                Pointer.fromFunction(Window._onEvent)
+          var popup = Window._fromPointer(popupWindowPtr, true)
             ..parent = window;
           window.onNewPopup?.call(NewPopupWindowEvent(popup));
           break;
@@ -163,6 +160,14 @@ class Window {
 
   Window(this.isPopup) {
     _windowInstances.add(this);
+  }
+
+  Window._fromPointer(
+    Pointer<struct_waybright_window> this._windowPtr,
+    this.isPopup,
+  ) {
+    _windowInstances.add(this);
+    _windowPtr?.ref.handle_event = Pointer.fromFunction(_onEvent);
   }
 
   /// The horizontal size of this window's drawing area.
