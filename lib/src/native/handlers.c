@@ -417,7 +417,7 @@ void handle_cursor_image_event(struct wl_listener *listener, void *data) {
         return;
     }
 
-    struct waybright_image* wb_image = waybright_image_create(wlr_surface);
+    struct waybright_image* wb_image = waybright_image_create_from_surface(wlr_surface);
     wb_image->offset_x = -event->hotspot_x;
     wb_image->offset_y = -event->hotspot_y;
 

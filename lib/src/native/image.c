@@ -7,7 +7,7 @@ void waybright_image_destroy(struct waybright_image* wb_image) {
     free(wb_image);
 }
 
-struct waybright_image* waybright_image_create(struct wlr_surface* wlr_surface) {
+struct waybright_image* waybright_image_create_from_surface(struct wlr_surface* wlr_surface) {
     struct waybright_image* wb_image = calloc(sizeof(struct waybright_image), 1);
     wb_image->wlr_surface = wlr_surface;
 
@@ -27,6 +27,17 @@ struct waybright_image* waybright_image_create(struct wlr_surface* wlr_surface) 
 
         wb_image->is_ready = false;
     }
+
+    return wb_image;
+}
+
+struct waybright_image* waybright_image_create_from_texture(struct wlr_texture* wlr_texture) {
+    struct waybright_image* wb_image = malloc(sizeof(struct waybright_image));
+
+    wb_image->wlr_texture = wlr_texture;
+    wb_image->width = wlr_texture->width;
+    wb_image->height = wlr_texture->height;
+    wb_image->is_ready = true;
 
     return wb_image;
 }

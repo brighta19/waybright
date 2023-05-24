@@ -5368,21 +5368,41 @@ class WaybrightLibrary {
   late final _waybright_image_destroy = _waybright_image_destroyPtr
       .asFunction<void Function(ffi.Pointer<struct_waybright_image>)>();
 
-  ffi.Pointer<struct_waybright_image> waybright_image_create(
+  ffi.Pointer<struct_waybright_image> waybright_image_create_from_surface(
     ffi.Pointer<struct_wlr_surface> wlr_surface,
   ) {
-    return _waybright_image_create(
+    return _waybright_image_create_from_surface(
       wlr_surface,
     );
   }
 
-  late final _waybright_image_createPtr = _lookup<
-      ffi.NativeFunction<
+  late final _waybright_image_create_from_surfacePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<struct_waybright_image> Function(
+                  ffi.Pointer<struct_wlr_surface>)>>(
+      'waybright_image_create_from_surface');
+  late final _waybright_image_create_from_surface =
+      _waybright_image_create_from_surfacePtr.asFunction<
           ffi.Pointer<struct_waybright_image> Function(
-              ffi.Pointer<struct_wlr_surface>)>>('waybright_image_create');
-  late final _waybright_image_create = _waybright_image_createPtr.asFunction<
-      ffi.Pointer<struct_waybright_image> Function(
-          ffi.Pointer<struct_wlr_surface>)>();
+              ffi.Pointer<struct_wlr_surface>)>();
+
+  ffi.Pointer<struct_waybright_image> waybright_image_create_from_texture(
+    ffi.Pointer<struct_wlr_texture> wlr_texture,
+  ) {
+    return _waybright_image_create_from_texture(
+      wlr_texture,
+    );
+  }
+
+  late final _waybright_image_create_from_texturePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<struct_waybright_image> Function(
+                  ffi.Pointer<struct_wlr_texture>)>>(
+      'waybright_image_create_from_texture');
+  late final _waybright_image_create_from_texture =
+      _waybright_image_create_from_texturePtr.asFunction<
+          ffi.Pointer<struct_waybright_image> Function(
+              ffi.Pointer<struct_wlr_texture>)>();
 }
 
 abstract class enum_wl_iterator_result {
@@ -5539,14 +5559,14 @@ class struct_wlr_allocator_interface extends ffi.Struct {
   external ffi.Pointer<
       ffi.NativeFunction<
           ffi.Pointer<struct_wlr_buffer> Function(
-              ffi.Pointer<struct_wlr_allocator>,
-              ffi.Int,
-              ffi.Int,
-              ffi.Pointer<struct_wlr_drm_format>)>> create_buffer;
+              ffi.Pointer<struct_wlr_allocator> alloc,
+              ffi.Int width,
+              ffi.Int height,
+              ffi.Pointer<struct_wlr_drm_format> format)>> create_buffer;
 
   external ffi.Pointer<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_allocator>)>> destroy;
+          ffi.Void Function(ffi.Pointer<struct_wlr_allocator> alloc)>> destroy;
 }
 
 class struct_wlr_buffer extends ffi.Struct {
@@ -5978,8 +5998,8 @@ class struct_wlr_addon_interface extends ffi.Struct {
   external ffi.Pointer<ffi.Char> name;
 
   external ffi.Pointer<
-          ffi.NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_addon>)>>
-      destroy;
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_addon> addon)>> destroy;
 }
 
 class struct_wlr_shm_attributes extends ffi.Struct {
@@ -6469,16 +6489,16 @@ class struct_wlr_surface_role extends ffi.Struct {
 
   external ffi.Pointer<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_surface>)>> commit;
+          ffi.Void Function(ffi.Pointer<struct_wlr_surface> surface)>> commit;
 
   external ffi.Pointer<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_surface>,
-              ffi.Pointer<struct_wlr_surface_state>)>> precommit;
+          ffi.Void Function(ffi.Pointer<struct_wlr_surface> surface,
+              ffi.Pointer<struct_wlr_surface_state> state)>> precommit;
 
   external ffi.Pointer<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_surface>)>> destroy;
+          ffi.Void Function(ffi.Pointer<struct_wlr_surface> surface)>> destroy;
 }
 
 class UnnamedStruct10 extends ffi.Struct {
@@ -7193,36 +7213,49 @@ class struct_wlr_seat_pointer_grab extends ffi.Struct {
 class struct_wlr_pointer_grab_interface extends ffi.Struct {
   external ffi.Pointer<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_seat_pointer_grab>,
-              ffi.Pointer<struct_wlr_surface>, ffi.Double, ffi.Double)>> enter;
-
-  external ffi.Pointer<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<struct_wlr_seat_pointer_grab>)>>
-      clear_focus;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_seat_pointer_grab>,
-              ffi.Uint32, ffi.Double, ffi.Double)>> motion;
+          ffi.Void Function(
+              ffi.Pointer<struct_wlr_seat_pointer_grab> grab,
+              ffi.Pointer<struct_wlr_surface> surface,
+              ffi.Double sx,
+              ffi.Double sy)>> enter;
 
   external ffi.Pointer<
       ffi.NativeFunction<
-          ffi.Uint32 Function(ffi.Pointer<struct_wlr_seat_pointer_grab>,
-              ffi.Uint32, ffi.Uint32, ffi.Int32)>> button;
+          ffi.Void Function(
+              ffi.Pointer<struct_wlr_seat_pointer_grab> grab)>> clear_focus;
 
   external ffi.Pointer<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_seat_pointer_grab>,
-              ffi.Uint32, ffi.Int32, ffi.Double, ffi.Int32, ffi.Int32)>> axis;
+          ffi.Void Function(ffi.Pointer<struct_wlr_seat_pointer_grab> grab,
+              ffi.Uint32 time_msec, ffi.Double sx, ffi.Double sy)>> motion;
 
   external ffi.Pointer<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_seat_pointer_grab>)>> frame;
+          ffi.Uint32 Function(
+              ffi.Pointer<struct_wlr_seat_pointer_grab> grab,
+              ffi.Uint32 time_msec,
+              ffi.Uint32 button,
+              ffi.Int32 state)>> button;
 
   external ffi.Pointer<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_seat_pointer_grab>)>> cancel;
+          ffi.Void Function(
+              ffi.Pointer<struct_wlr_seat_pointer_grab> grab,
+              ffi.Uint32 time_msec,
+              ffi.Int32 orientation,
+              ffi.Double value,
+              ffi.Int32 value_discrete,
+              ffi.Int32 source)>> axis;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<struct_wlr_seat_pointer_grab> grab)>> frame;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<struct_wlr_seat_pointer_grab> grab)>> cancel;
 }
 
 class UnnamedStruct18 extends ffi.Struct {
@@ -7265,31 +7298,31 @@ class struct_wlr_keyboard_grab_interface extends ffi.Struct {
   external ffi.Pointer<
       ffi.NativeFunction<
           ffi.Void Function(
-              ffi.Pointer<struct_wlr_seat_keyboard_grab>,
-              ffi.Pointer<struct_wlr_surface>,
-              ffi.Pointer<ffi.Uint32>,
-              ffi.Size,
-              ffi.Pointer<struct_wlr_keyboard_modifiers>)>> enter;
-
-  external ffi.Pointer<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<struct_wlr_seat_keyboard_grab>)>>
-      clear_focus;
+              ffi.Pointer<struct_wlr_seat_keyboard_grab> grab,
+              ffi.Pointer<struct_wlr_surface> surface,
+              ffi.Pointer<ffi.Uint32> keycodes,
+              ffi.Size num_keycodes,
+              ffi.Pointer<struct_wlr_keyboard_modifiers> modifiers)>> enter;
 
   external ffi.Pointer<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_seat_keyboard_grab>,
-              ffi.Uint32, ffi.Uint32, ffi.Uint32)>> key;
+          ffi.Void Function(
+              ffi.Pointer<struct_wlr_seat_keyboard_grab> grab)>> clear_focus;
 
   external ffi.Pointer<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_seat_keyboard_grab>,
-              ffi.Pointer<struct_wlr_keyboard_modifiers>)>> modifiers;
+          ffi.Void Function(ffi.Pointer<struct_wlr_seat_keyboard_grab> grab,
+              ffi.Uint32 time_msec, ffi.Uint32 key, ffi.Uint32 state)>> key;
 
   external ffi.Pointer<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<struct_wlr_seat_keyboard_grab>)>>
-      cancel;
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_wlr_seat_keyboard_grab> grab,
+              ffi.Pointer<struct_wlr_keyboard_modifiers> modifiers)>> modifiers;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<struct_wlr_seat_keyboard_grab> grab)>> cancel;
 }
 
 class UnnamedStruct19 extends ffi.Struct {
@@ -7323,36 +7356,46 @@ class struct_wlr_seat_touch_grab extends ffi.Struct {
 class struct_wlr_touch_grab_interface extends ffi.Struct {
   external ffi.Pointer<
       ffi.NativeFunction<
-          ffi.Uint32 Function(ffi.Pointer<struct_wlr_seat_touch_grab>,
-              ffi.Uint32, ffi.Pointer<struct_wlr_touch_point>)>> down;
+          ffi.Uint32 Function(
+              ffi.Pointer<struct_wlr_seat_touch_grab> grab,
+              ffi.Uint32 time_msec,
+              ffi.Pointer<struct_wlr_touch_point> point)>> down;
 
   external ffi.Pointer<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_seat_touch_grab>, ffi.Uint32,
-              ffi.Pointer<struct_wlr_touch_point>)>> up;
+          ffi.Void Function(
+              ffi.Pointer<struct_wlr_seat_touch_grab> grab,
+              ffi.Uint32 time_msec,
+              ffi.Pointer<struct_wlr_touch_point> point)>> up;
 
   external ffi.Pointer<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_seat_touch_grab>, ffi.Uint32,
-              ffi.Pointer<struct_wlr_touch_point>)>> motion;
+          ffi.Void Function(
+              ffi.Pointer<struct_wlr_seat_touch_grab> grab,
+              ffi.Uint32 time_msec,
+              ffi.Pointer<struct_wlr_touch_point> point)>> motion;
 
   external ffi.Pointer<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_seat_touch_grab>, ffi.Uint32,
-              ffi.Pointer<struct_wlr_touch_point>)>> enter;
+          ffi.Void Function(
+              ffi.Pointer<struct_wlr_seat_touch_grab> grab,
+              ffi.Uint32 time_msec,
+              ffi.Pointer<struct_wlr_touch_point> point)>> enter;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_wlr_seat_touch_grab> grab)>>
+      frame;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_wlr_seat_touch_grab> grab)>>
+      cancel;
 
   external ffi.Pointer<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_seat_touch_grab>)>> frame;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_seat_touch_grab>)>> cancel;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wlr_seat_touch_grab>,
-              ffi.Pointer<struct_wlr_surface>)>> wl_cancel;
+          ffi.Void Function(ffi.Pointer<struct_wlr_seat_touch_grab> grab,
+              ffi.Pointer<struct_wlr_surface> surface)>> wl_cancel;
 }
 
 class struct_wlr_touch_point extends ffi.Struct {
@@ -8040,7 +8083,8 @@ class struct_waybright_image extends ffi.Struct {
   external int offset_y;
 
   external ffi.Pointer<
-          ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int type, ffi.Pointer<ffi.Void> data)>>
       handle_event;
 }
 
@@ -8060,7 +8104,8 @@ class struct_waybright_monitor extends ffi.Struct {
   external UnnamedStruct33 listeners;
 
   external ffi.Pointer<
-          ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int type, ffi.Pointer<ffi.Void> data)>>
       handle_event;
 }
 
@@ -8087,7 +8132,8 @@ class struct_waybright extends ffi.Struct {
   external UnnamedStruct32 listeners;
 
   external ffi.Pointer<
-          ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int type, ffi.Pointer<ffi.Void> data)>>
       handle_event;
 }
 
@@ -8125,7 +8171,8 @@ class struct_waybright_window extends ffi.Struct {
   external UnnamedStruct34 listeners;
 
   external ffi.Pointer<
-          ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int type, ffi.Pointer<ffi.Void> data)>>
       handle_event;
 }
 
@@ -8173,7 +8220,8 @@ class struct_waybright_pointer extends ffi.Struct {
   external UnnamedStruct35 listeners;
 
   external ffi.Pointer<
-          ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int type, ffi.Pointer<ffi.Void> data)>>
       handle_event;
 }
 
@@ -8199,7 +8247,8 @@ class struct_waybright_keyboard extends ffi.Struct {
   external UnnamedStruct36 listeners;
 
   external ffi.Pointer<
-          ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<ffi.Void>)>>
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int type, ffi.Pointer<ffi.Void> data)>>
       handle_event;
 }
 

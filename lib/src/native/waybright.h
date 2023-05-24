@@ -232,4 +232,5 @@ void waybright_keyboard_focus_on_window(struct waybright_keyboard* wb_keyboard, 
 void waybright_keyboard_clear_focus(struct waybright_keyboard* wb_keyboard);
 
 void waybright_image_destroy(struct waybright_image* wb_image);
-struct waybright_image* waybright_image_create(struct wlr_surface* wlr_surface);
+struct waybright_image* waybright_image_create_from_surface(struct wlr_surface* wlr_surface);
+struct waybright_image* waybright_image_create_from_texture(struct wlr_texture* wlr_texture);
