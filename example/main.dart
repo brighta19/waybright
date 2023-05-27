@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:waybright/waybright.dart';
 
 const backgroundColor = 0x111111ff;
@@ -7,8 +9,8 @@ Window? focusedWindow;
 KeyboardDevice? currentKeyboard;
 Image? cursorImage;
 
-var windows = WindowList();
-var popupWindows = <Window, WindowList>{};
+var windows = Queue<Window>();
+var popupWindows = <Window, Queue<Window>>{};
 var tempWindows = <Window>[];
 var cursorX = 10.0;
 var cursorY = 10.0;
@@ -26,9 +28,8 @@ bool get isAltPressed => isLeftAltPressed || isRightAltPressed;
 var isSwitchingWindows = false;
 var windowSwitchIndex = 0;
 
-Window? getHoveredWindowFromList(WindowList windows) {
-  var list = windows.frontToBackIterable;
-  for (var window in list) {
+Window? getHoveredWindowFromList(Queue<Window> windows) {
+  for (var window in windows) {
     if (!window.isVisible) continue;
 
     var popupList = popupWindows[window];
@@ -80,14 +81,14 @@ void onNewMonitor(NewMonitorEvent event) {
   };
 
   monitor.onFrame = (event) {
-    var list = windows.backToFrontIterable;
+    var list = windows.toList().reversed;
     for (var window in list) {
       if (window.isVisible) {
         renderer.drawWindow(window, window.drawingX, window.drawingY);
 
         var popupList = popupWindows[window];
         if (popupList != null) {
-          for (var popup in popupList.backToFrontIterable) {
+          for (var popup in popupList.toList().reversed) {
             if (popup.isVisible) {
               renderer.drawWindow(popup, popup.drawingX, popup.drawingY);
             }
@@ -99,7 +100,7 @@ void onNewMonitor(NewMonitorEvent event) {
     if (cursorImage == null && getHoveredWindow() == null) {
       renderer.fillStyle = 0xffffffdd;
       renderer.fillRect(cursorX, cursorY, 5, 5);
-    } else if (cursorImage!.isReady) {
+    } else if (cursorImage != null && cursorImage!.isReady) {
       renderer.drawImage(cursorImage!, cursorX, cursorY);
     }
   };
@@ -115,11 +116,11 @@ void onNewPopupWindow(NewPopupWindowEvent event) {
 
   var popupList = popupWindows[parent];
   if (popupList == null) {
-    popupList = WindowList();
+    popupList = Queue<Window>();
     popupWindows[parent] = popupList;
   }
 
-  popupList.addToFront(window);
+  popupList.addFirst(window);
 
   window.onRemove = (event) {
     popupList?.remove(window);
@@ -134,7 +135,7 @@ void onNewPopupWindow(NewPopupWindowEvent event) {
 void onNewWindow(NewWindowEvent event) {
   var window = event.window;
 
-  windows.addToFront(window);
+  windows.addFirst(window);
 
   window.onRemove = (event) {
     windows.remove(window);
@@ -149,7 +150,8 @@ void onNewWindow(NewWindowEvent event) {
     focusedWindow?.unfocus();
     window.focus();
     focusedWindow = window;
-    windows.moveToFront(window);
+    windows.remove(window);
+    windows.addFirst(window);
   };
 
   window.onHide = (event) {
@@ -224,7 +226,8 @@ void onNewPointer(PointerDevice pointer) {
       focusedWindow?.unfocus();
       hoveredWindow.focus();
       focusedWindow = hoveredWindow;
-      windows.moveToFront(hoveredWindow);
+      windows.remove(hoveredWindow);
+      windows.addFirst(hoveredWindow);
     }
 
     var windowCursorX = cursorX - hoveredWindow.drawingX;
@@ -280,7 +283,7 @@ void onNewKeyboard(KeyboardDevice keyboard) {
         if (!isSwitchingWindows) {
           isSwitchingWindows = true;
           windowSwitchIndex = 0;
-          tempWindows = windows.frontToBackIterable.toList();
+          tempWindows = windows.toList();
         }
 
         windowSwitchIndex = (windowSwitchIndex + 1) % tempWindows.length;
@@ -291,7 +294,8 @@ void onNewKeyboard(KeyboardDevice keyboard) {
             focusedWindow?.unfocus();
             window.focus();
             focusedWindow = window;
-            windows.moveToFront(window);
+            windows.remove(window);
+            windows.addFirst(window);
             break;
           }
           i++;
@@ -301,7 +305,6 @@ void onNewKeyboard(KeyboardDevice keyboard) {
 
     if (!isAltPressed && isSwitchingWindows) {
       isSwitchingWindows = false;
-      tempWindows = [];
     }
 
     if (!isSwitchingWindows) {

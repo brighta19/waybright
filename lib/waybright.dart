@@ -2,7 +2,6 @@
 library;
 
 import 'dart:ffi';
-import 'dart:collection';
 import 'package:ffi/ffi.dart';
 import 'src/generated/waybright_bindings.dart';
 
@@ -35,7 +34,6 @@ part 'mode.dart';
 part 'monitor.dart';
 part 'renderer.dart';
 part 'window.dart';
-part 'windowlist.dart';
 
 final WaybrightLibrary _wblib =
     WaybrightLibrary(DynamicLibrary.open("./waybright.so"));
@@ -155,10 +153,10 @@ class Waybright {
     return Image._fromPointer(imagePtr);
   }
 
-  Future<void> _checkEvents() async {
+  void _checkEvents() {
     if (!_isRunning) return;
     _wblib.waybright_check_events(_wbPtr);
-    return Future(() => _checkEvents());
+    Future(() => _checkEvents());
   }
 
   void _runEventLoop() {
