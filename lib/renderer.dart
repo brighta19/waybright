@@ -91,4 +91,15 @@ class Renderer {
       );
     }
   }
+
+  Image? captureWindowFrame(Window window) {
+    var rendererPtr = _rendererPtr;
+    var windowPtr = window._windowPtr;
+    if (rendererPtr != null && windowPtr != null) {
+      var imagePtr = _wblib.waybright_renderer_capture_window_frame(
+          rendererPtr, windowPtr);
+      return imagePtr == nullptr ? null : Image._fromPointer(imagePtr);
+    }
+    return null;
+  }
 }

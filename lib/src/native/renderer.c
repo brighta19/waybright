@@ -96,3 +96,35 @@ void waybright_renderer_draw_image(struct waybright_renderer* wb_renderer, struc
 
     wlr_render_texture(wlr_renderer, wlr_texture, matrix, 0, 0, alpha);
 }
+
+struct waybright_image* waybright_renderer_capture_window_frame(struct waybright_renderer* wb_renderer, struct waybright_window* wb_window) {
+    struct wlr_surface* wlr_surface = wb_window->wlr_xdg_surface->surface;
+    struct wlr_renderer* wlr_renderer = wb_renderer->wlr_renderer;
+
+    struct wlr_buffer* wlr_buffer = wlr_surface->buffer->source;
+    if (!wlr_buffer) {
+        printf("wlr_buffer is NULL\n");
+        fflush(stdout);
+        return NULL;
+    }
+
+    wlr_buffer_lock(wlr_buffer);
+
+    struct wlr_texture* wlr_texture = wlr_texture_from_buffer(wlr_renderer, wlr_buffer);
+
+    wlr_buffer_unlock(wlr_buffer);
+
+    if (!wlr_texture) {
+        printf("wlr_texture is NULL\n");
+        fflush(stdout);
+        return NULL;
+    }
+
+    struct waybright_image* wb_image = malloc(sizeof(struct waybright_image));
+    wb_image->wlr_texture = wlr_texture;
+    wb_image->width = wlr_texture->width;
+    wb_image->height = wlr_texture->height;
+    wb_image->is_ready = true;
+
+    return wb_image;
+}

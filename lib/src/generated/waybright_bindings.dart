@@ -5065,6 +5065,28 @@ class WaybrightLibrary {
               int,
               double)>();
 
+  ffi.Pointer<struct_waybright_image> waybright_renderer_capture_window_frame(
+    ffi.Pointer<struct_waybright_renderer> wb_renderer,
+    ffi.Pointer<struct_waybright_window> wb_window,
+  ) {
+    return _waybright_renderer_capture_window_frame(
+      wb_renderer,
+      wb_window,
+    );
+  }
+
+  late final _waybright_renderer_capture_window_framePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<struct_waybright_image> Function(
+                  ffi.Pointer<struct_waybright_renderer>,
+                  ffi.Pointer<struct_waybright_window>)>>(
+      'waybright_renderer_capture_window_frame');
+  late final _waybright_renderer_capture_window_frame =
+      _waybright_renderer_capture_window_framePtr.asFunction<
+          ffi.Pointer<struct_waybright_image> Function(
+              ffi.Pointer<struct_waybright_renderer>,
+              ffi.Pointer<struct_waybright_window>)>();
+
   void waybright_monitor_destroy(
     ffi.Pointer<struct_waybright_monitor> wb_monitor,
   ) {
