@@ -93,12 +93,12 @@ int waybright_init(struct waybright* wb) {
     wlr_viewporter_create(wb->wl_display);
 	wlr_single_pixel_buffer_manager_v1_create(wb->wl_display);
 
-    wb->listeners.monitor_new.notify = handle_monitor_new_event;
-    wl_signal_add(&wb->wlr_backend->events.new_output, &wb->listeners.monitor_new);
-    wb->listeners.window_new.notify = handle_window_new_event;
-    wl_signal_add(&wb->wlr_xdg_shell->events.new_surface, &wb->listeners.window_new);
     wb->listeners.input_new.notify = handle_input_new_event;
     wl_signal_add(&wb->wlr_backend->events.new_input, &wb->listeners.input_new);
+    wb->listeners.monitor_new.notify = handle_monitor_new_event;
+    wl_signal_add(&wb->wlr_backend->events.new_output, &wb->listeners.monitor_new);
+    wb->listeners.new_xdg_surface.notify = handle_new_xdg_surface_event;
+    wl_signal_add(&wb->wlr_xdg_shell->events.new_surface, &wb->listeners.new_xdg_surface);
 	wb->listeners.cursor_image.notify = handle_cursor_image_event;
 	wl_signal_add(&wb->wlr_seat->events.request_set_cursor, &wb->listeners.cursor_image);
 

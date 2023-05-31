@@ -4,14 +4,19 @@ void handle_monitor_remove_event(struct wl_listener *listener, void *data);
 void handle_monitor_frame_event(struct wl_listener *listener, void *data);
 void handle_monitor_new_event(struct wl_listener *listener, void *data);
 
-void handle_window_show_event(struct wl_listener *listener, void *data);
-void handle_window_hide_event(struct wl_listener *listener, void *data);
-void handle_window_remove_event(struct wl_listener *listener, void *data);
-void handle_window_move_event(struct wl_listener *listener, void *data);
-void handle_window_resize_event(struct wl_listener *listener, void *data);
-void handle_window_maximize_event(struct wl_listener *listener, void *data);
-void handle_window_fullscreen_event(struct wl_listener *listener, void *data);
-void handle_window_new_event(struct wl_listener *listener, void *data);
+void handle_new_xdg_surface_event(struct wl_listener *listener, void *data);
+void handle_xdg_surface_map_event(struct wl_listener *listener, void *data);
+void handle_xdg_surface_unmap_event(struct wl_listener *listener, void *data);
+void handle_xdg_surface_destroy_event(struct wl_listener *listener, void *data);
+void handle_xdg_toplevel_request_move_event(struct wl_listener *listener, void *data);
+void handle_xdg_toplevel_request_resize_event(struct wl_listener *listener, void *data);
+void handle_xdg_toplevel_request_maximize_event(struct wl_listener *listener, void *data);
+void handle_xdg_toplevel_request_minimize_event(struct wl_listener *listener, void *data);
+void handle_xdg_toplevel_request_fullscreen_event(struct wl_listener *listener, void *data);
+void handle_xdg_toplevel_request_show_window_menu_event(struct wl_listener *listener, void *data);
+void handle_xdg_toplevel_set_title_event(struct wl_listener *listener, void *data);
+void handle_xdg_toplevel_set_app_id_event(struct wl_listener *listener, void *data);
+void handle_xdg_toplevel_set_parent_event(struct wl_listener *listener, void *data);
 
 void handle_pointer_teleport_event(struct wl_listener *listener, void *data);
 void handle_pointer_axis_event(struct wl_listener *listener, void *data);

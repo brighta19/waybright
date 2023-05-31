@@ -2,16 +2,36 @@ import 'dart:collection';
 
 import 'package:waybright/waybright.dart';
 
+class MyWindow {
+  final Window w;
+  MyWindow? parent;
+
+  num textureX = 0;
+  num textureY = 0;
+
+  num get x => textureX + w.offsetX;
+  num get y => textureY + w.offsetY;
+  set x(num x) => textureX = x - w.offsetX;
+  set y(num y) => textureY = y - w.offsetY;
+
+  int get width => w.width;
+  int get height => w.height;
+  num get textureWidth => w.textureWidth;
+  num get textureHeight => w.textureHeight;
+
+  MyWindow(this.w);
+}
+
 const backgroundColor = 0x111111ff;
 
 Monitor? currentMonitor;
-Window? focusedWindow;
+MyWindow? focusedWindow;
 KeyboardDevice? currentKeyboard;
 Image? cursorImage;
 
-var windows = Queue<Window>();
-var popupWindows = <Window, Queue<Window>>{};
-var tempWindows = <Window>[];
+var windows = Queue<MyWindow>();
+var popupWindows = <MyWindow, Queue<MyWindow>>{};
+var tempWindows = <MyWindow>[];
 var cursorX = 10.0;
 var cursorY = 10.0;
 
@@ -28,9 +48,9 @@ bool get isAltPressed => isLeftAltPressed || isRightAltPressed;
 var isSwitchingWindows = false;
 var windowSwitchIndex = 0;
 
-Window? getHoveredWindowFromList(Queue<Window> windows) {
+MyWindow? getHoveredWindowFromList(Queue<MyWindow> windows) {
   for (var window in windows) {
-    if (!window.isVisible) continue;
+    if (!window.w.hasTexture) continue;
 
     var popupList = popupWindows[window];
     if (popupList != null) {
@@ -38,10 +58,10 @@ Window? getHoveredWindowFromList(Queue<Window> windows) {
       if (popup != null) return popup;
     }
 
-    var windowX = window.contentX;
-    var windowY = window.contentY;
-    var windowWidth = window.contentWidth;
-    var windowHeight = window.contentHeight;
+    var windowX = window.x;
+    var windowY = window.y;
+    var windowWidth = window.width;
+    var windowHeight = window.height;
 
     if (cursorX >= windowX &&
         cursorX < windowX + windowWidth &&
@@ -53,7 +73,7 @@ Window? getHoveredWindowFromList(Queue<Window> windows) {
   return null;
 }
 
-Window? getHoveredWindow() {
+MyWindow? getHoveredWindow() {
   return getHoveredWindowFromList(windows);
 }
 
@@ -83,14 +103,14 @@ void onNewMonitor(NewMonitorEvent event) {
   monitor.onFrame = (event) {
     var list = windows.toList().reversed;
     for (var window in list) {
-      if (window.isVisible) {
-        renderer.drawWindow(window, window.drawingX, window.drawingY);
+      if (window.w.hasTexture) {
+        renderer.drawWindow(window.w, window.textureX, window.textureY);
 
         var popupList = popupWindows[window];
         if (popupList != null) {
           for (var popup in popupList.toList().reversed) {
-            if (popup.isVisible) {
-              renderer.drawWindow(popup, popup.drawingX, popup.drawingY);
+            if (popup.w.hasTexture) {
+              renderer.drawWindow(popup.w, popup.textureX, popup.textureY);
             }
           }
         }
@@ -109,83 +129,84 @@ void onNewMonitor(NewMonitorEvent event) {
   cursorY = monitor.mode.height / 2;
 }
 
-void onNewPopupWindow(NewPopupWindowEvent event) {
-  var window = event.window;
+void onNewPopupWindow(MyWindow window) {
   var parent = window.parent;
   if (parent == null) return;
 
   var popupList = popupWindows[parent];
   if (popupList == null) {
-    popupList = Queue<Window>();
+    popupList = Queue<MyWindow>();
     popupWindows[parent] = popupList;
   }
 
   popupList.addFirst(window);
 
-  window.onRemove = (event) {
+  window.w.onDestroying = (event) {
     popupList?.remove(window);
   };
 
-  window.onShow = (event) {
-    window.drawingX = window.popupX + parent.contentX;
-    window.drawingY = window.popupY + parent.contentY;
+  window.w.onTextureSet = (event) {
+    window.x = window.w.popupX + parent.x;
+    window.y = window.w.popupY + parent.y;
   };
 }
 
-void onNewWindow(NewWindowEvent event) {
-  var window = event.window;
-
+void onWindowCreate(WindowCreateEvent event) {
+  var window = MyWindow(event.window);
   windows.addFirst(window);
 
-  window.onRemove = (event) {
+  window.w.onDestroying = (event) {
     windows.remove(window);
     popupWindows.remove(window);
     if (window == focusedWindow) focusedWindow = null;
   };
 
-  window.onShow = (event) {
-    window.drawingX = -window.offsetX;
-    window.drawingY = -window.offsetY;
+  window.w.onTextureSet = (event) {
+    window.x = 0;
+    window.y = 0;
 
-    focusedWindow?.unfocus();
-    window.focus();
+    focusedWindow?.w.deactivate();
+    window.w.activate();
     focusedWindow = window;
     windows.remove(window);
     windows.addFirst(window);
   };
 
-  window.onHide = (event) {
-    window.unfocus();
+  window.w.onTextureUnsetting = (event) {
+    window.w.deactivate();
   };
 
-  window.onMove = (event) {
+  window.w.onMoveRequest = (event) {
     cursorXAtGrab = cursorX;
     cursorYAtGrab = cursorY;
     isMovingWindow = true;
   };
 
-  window.onResize = (event) {
+  window.w.onResizeRequest = (event) {
     cursorXAtGrab = cursorX;
     cursorYAtGrab = cursorY;
     isResizingWindow = true;
   };
 
-  window.onNewPopup = onNewPopupWindow;
+  window.w.onPopupCreate = (event) {
+    var popup = MyWindow(event.window)..parent = window;
+    onNewPopupWindow(popup);
+  };
 }
 
 void onNewPointer(PointerDevice pointer) {
   void handleMovement(PointerMoveEvent event) {
-    Window? hoveredWindow = getHoveredWindow();
+    MyWindow? hoveredWindow = getHoveredWindow();
 
     if (hoveredWindow == null) {
       cursorImage = null;
       return;
     }
 
-    var windowCursorX = cursorX - hoveredWindow.drawingX;
-    var windowCursorY = cursorY - hoveredWindow.drawingY;
+    var windowCursorX = cursorX - hoveredWindow.textureX;
+    var windowCursorY = cursorY - hoveredWindow.textureY;
 
-    hoveredWindow.submitPointerMoveUpdate(PointerUpdate(
+    hoveredWindow.w.submitPointerMoveUpdate(PointerUpdate(
       pointer,
       event,
       windowCursorX,
@@ -210,8 +231,8 @@ void onNewPointer(PointerDevice pointer) {
   pointer.onButton = (event) {
     if (!event.isPressed) {
       if (isMovingWindow) {
-        focusedWindow!.drawingX += cursorX - cursorXAtGrab;
-        focusedWindow!.drawingY += cursorY - cursorYAtGrab;
+        focusedWindow!.textureX += cursorX - cursorXAtGrab;
+        focusedWindow!.textureY += cursorY - cursorYAtGrab;
       } else if (isResizingWindow) {
         // resize
       }
@@ -222,18 +243,18 @@ void onNewPointer(PointerDevice pointer) {
     var hoveredWindow = getHoveredWindow();
     if (hoveredWindow == null) return;
 
-    if (!hoveredWindow.isPopup && hoveredWindow != focusedWindow) {
-      focusedWindow?.unfocus();
-      hoveredWindow.focus();
+    if (!hoveredWindow.w.isPopup && hoveredWindow != focusedWindow) {
+      focusedWindow?.w.deactivate();
+      hoveredWindow.w.activate();
       focusedWindow = hoveredWindow;
       windows.remove(hoveredWindow);
       windows.addFirst(hoveredWindow);
     }
 
-    var windowCursorX = cursorX - hoveredWindow.drawingX;
-    var windowCursorY = cursorY - hoveredWindow.drawingY;
+    var windowCursorX = cursorX - hoveredWindow.textureX;
+    var windowCursorY = cursorY - hoveredWindow.textureY;
 
-    hoveredWindow.submitPointerButtonUpdate(PointerUpdate(
+    hoveredWindow.w.submitPointerButtonUpdate(PointerUpdate(
       pointer,
       event,
       windowCursorX,
@@ -245,10 +266,10 @@ void onNewPointer(PointerDevice pointer) {
     var hoveredWindow = getHoveredWindow();
     if (hoveredWindow == null) return;
 
-    var windowCursorX = cursorX - hoveredWindow.drawingX;
-    var windowCursorY = cursorY - hoveredWindow.drawingY;
+    var windowCursorX = cursorX - hoveredWindow.textureX;
+    var windowCursorY = cursorY - hoveredWindow.textureY;
 
-    hoveredWindow.submitPointerAxisUpdate(PointerUpdate(
+    hoveredWindow.w.submitPointerAxisUpdate(PointerUpdate(
       pointer,
       event,
       windowCursorX,
@@ -261,7 +282,7 @@ void onNewKeyboard(KeyboardDevice keyboard) {
   keyboard.onModifiers = (event) {
     currentKeyboard = event.keyboard;
 
-    focusedWindow?.submitKeyboardModifiersUpdate(KeyboardUpdate(
+    focusedWindow?.w.submitKeyboardModifiersUpdate(KeyboardUpdate(
       keyboard,
       event,
     ));
@@ -291,8 +312,8 @@ void onNewKeyboard(KeyboardDevice keyboard) {
         var i = 0;
         for (var window in tempWindows) {
           if (i == windowSwitchIndex) {
-            focusedWindow?.unfocus();
-            window.focus();
+            focusedWindow?.w.deactivate();
+            window.w.activate();
             focusedWindow = window;
             windows.remove(window);
             windows.addFirst(window);
@@ -308,7 +329,7 @@ void onNewKeyboard(KeyboardDevice keyboard) {
     }
 
     if (!isSwitchingWindows) {
-      focusedWindow?.submitKeyboardKeyUpdate(KeyboardUpdate(
+      focusedWindow?.w.submitKeyboardKeyUpdate(KeyboardUpdate(
         keyboard,
         event,
       ));
@@ -332,7 +353,7 @@ final compositor = Waybright();
 
 void main(List<String> args) {
   compositor.onNewMonitor = onNewMonitor;
-  compositor.onNewWindow = onNewWindow;
+  compositor.onWindowCreate = onWindowCreate;
   compositor.onNewInput = onNewInput;
   compositor.onCursorImage = onCursorImage;
 

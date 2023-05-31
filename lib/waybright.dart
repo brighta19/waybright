@@ -19,12 +19,7 @@ part 'events/keyboard/keyboard_event.dart';
 part 'events/keyboard/keyboard_key.dart';
 part 'events/keyboard/keyboard_modifiers.dart';
 part 'events/keyboard/keyboard_update.dart';
-part 'events/window/window_event.dart';
-part 'events/window/window_move.dart';
-part 'events/window/window_resize.dart';
-part 'events/window/window_maximize.dart';
-part 'events/window/window_fullscreen.dart';
-part 'events/window/window_newpopup.dart';
+part 'events/window_events.dart';
 part 'events/monitor/monitor_frame.dart';
 part 'devices/pointer.dart';
 part 'devices/keyboard.dart';
@@ -47,12 +42,6 @@ class NewMonitorEvent {
   final Monitor monitor;
 
   NewMonitorEvent(this.monitor);
-}
-
-class NewWindowEvent {
-  final Window window;
-
-  NewWindowEvent(this.window);
 }
 
 class NewInputEvent {
@@ -78,13 +67,10 @@ class Waybright {
         waybright.onNewMonitor?.call(NewMonitorEvent(monitor));
       } else if (type == enum_wb_event_type.event_type_window_new) {
         var windowPtr = data as Pointer<struct_waybright_window>;
-        var wlrXdgToplevel = windowPtr.ref.wlr_xdg_toplevel.ref;
 
-        var window = Window._fromPointer(windowPtr, false)
-          ..appId = _toString(wlrXdgToplevel.app_id)
-          ..title = _toString(wlrXdgToplevel.title);
+        var window = Window._fromPointer(windowPtr);
 
-        waybright.onNewWindow?.call(NewWindowEvent(window));
+        waybright.onWindowCreate?.call(WindowCreateEvent(window));
       } else if (type == enum_wb_event_type.event_type_input_new) {
         var inputPtr = data as Pointer<struct_waybright_input>;
         var wlrInputDevice = inputPtr.ref.wlr_input_device.ref;
@@ -186,7 +172,7 @@ class Waybright {
   String? socketName;
 
   void Function(NewMonitorEvent event)? onNewMonitor;
-  void Function(NewWindowEvent event)? onNewWindow;
+  void Function(WindowCreateEvent event)? onWindowCreate;
   void Function(NewInputEvent event)? onNewInput;
   void Function(CursorImageEvent event)? onCursorImage;
 

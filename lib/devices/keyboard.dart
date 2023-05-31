@@ -66,18 +66,15 @@ class KeyboardDevice extends InputDevice {
 
   bool isFocusedOnWindow(Window window) {
     var keyboardPtr = _keyboardPtr;
-    var windowPtr = window._windowPtr;
-    if (keyboardPtr != null && windowPtr != null) {
-      return windowPtr.ref.wlr_xdg_surface.ref.surface ==
-          windowPtr.ref.wb.ref.wlr_seat.ref.keyboard_state.focused_surface;
+    if (keyboardPtr != null) {
+      return window._windowPtr.ref.wlr_xdg_surface.ref.surface ==
+          window._windowPtr.ref.wb.ref.wlr_seat.ref.keyboard_state
+              .focused_surface;
     }
     return false;
   }
 
   /// Focuses this keyboard on a window.
-  ///
-  /// [windowCursorX] and [windowCursorY] specifies where the keyboard would
-  /// enter the window.
   ///
   /// Submitting keyboard events to a window will not work unless this method
   /// is called.
@@ -86,11 +83,10 @@ class KeyboardDevice extends InputDevice {
   /// window multiple times.
   void focusOnWindow(Window window) {
     var keyboardPtr = _keyboardPtr;
-    var windowPtr = window._windowPtr;
-    if (keyboardPtr != null && windowPtr != null) {
+    if (keyboardPtr != null) {
       _wblib.waybright_keyboard_focus_on_window(
         keyboardPtr,
-        windowPtr,
+        window._windowPtr,
       );
     }
   }

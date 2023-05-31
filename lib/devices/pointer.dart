@@ -176,11 +176,10 @@ class PointerDevice extends InputDevice {
 
   bool isFocusedOnWindow(Window window) {
     var pointerPtr = _pointerPtr;
-    var windowPtr = window._windowPtr;
-    if (pointerPtr != null && windowPtr != null) {
+    if (pointerPtr != null) {
       return _wblib.wlr_seat_pointer_surface_has_focus(
-        windowPtr.ref.wb.ref.wlr_seat,
-        windowPtr.ref.wlr_xdg_surface.ref.surface,
+        window._windowPtr.ref.wb.ref.wlr_seat,
+        window._windowPtr.ref.wlr_xdg_surface.ref.surface,
       );
     }
     return false;
@@ -198,11 +197,10 @@ class PointerDevice extends InputDevice {
   /// window multiple times.
   void focusOnWindow(Window window, num windowCursorX, num windowCursorY) {
     var pointerPtr = _pointerPtr;
-    var windowPtr = window._windowPtr;
-    if (pointerPtr != null && windowPtr != null) {
+    if (pointerPtr != null) {
       _wblib.waybright_pointer_focus_on_window(
         pointerPtr,
-        windowPtr,
+        window._windowPtr,
         windowCursorX.toInt(),
         windowCursorY.toInt(),
       );

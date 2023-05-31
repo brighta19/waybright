@@ -60,15 +60,14 @@ class Renderer {
   void drawWindow(Window window, num x, num y,
       {int? width, int? height, double? alpha}) {
     var rendererPtr = _rendererPtr;
-    var windowPtr = window._windowPtr;
-    if (rendererPtr != null && windowPtr != null) {
+    if (rendererPtr != null) {
       _wblib.waybright_renderer_draw_window(
         rendererPtr,
-        windowPtr,
+        window._windowPtr,
         x.toInt(),
         y.toInt(),
-        width ?? window.drawingWidth,
-        height ?? window.drawingHeight,
+        width ?? window.textureWidth,
+        height ?? window.textureHeight,
         alpha ?? 1.0,
       );
     }
@@ -94,10 +93,9 @@ class Renderer {
 
   Image? captureWindowFrame(Window window) {
     var rendererPtr = _rendererPtr;
-    var windowPtr = window._windowPtr;
-    if (rendererPtr != null && windowPtr != null) {
+    if (rendererPtr != null) {
       var imagePtr = _wblib.waybright_renderer_capture_window_frame(
-          rendererPtr, windowPtr);
+          rendererPtr, window._windowPtr);
       return imagePtr == nullptr ? null : Image._fromPointer(imagePtr);
     }
     return null;

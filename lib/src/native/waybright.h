@@ -22,14 +22,20 @@ enum wb_event_type {
     event_type_monitor_frame,
 
     event_type_window_new,
-    event_type_window_remove,
-    event_type_window_show,
-    event_type_window_hide,
-    event_type_window_move,
-    event_type_window_maximize,
-    event_type_window_fullscreen,
-    event_type_window_resize,
+    event_type_window_destroy,
+    event_type_window_map,
+    event_type_window_unmap,
     event_type_window_new_popup,
+    event_type_window_commit,
+    event_type_window_request_move,
+    event_type_window_request_resize,
+    event_type_window_request_maximize,
+    event_type_window_request_minimize,
+    event_type_window_request_fullscreen,
+    event_type_window_request_show_window_menu,
+    event_type_window_set_title,
+    event_type_window_set_app_id,
+    event_type_window_set_parent,
 
     event_type_input_new,
 
@@ -62,7 +68,7 @@ struct waybright {
 
     struct {
         struct wl_listener monitor_new;
-        struct wl_listener window_new;
+        struct wl_listener new_xdg_surface;
         struct wl_listener input_new;
         struct wl_listener cursor_image;
     } listeners;
@@ -123,14 +129,20 @@ struct waybright_window {
     struct wlr_xdg_popup* wlr_xdg_popup;
 
     struct {
-        struct wl_listener remove;
-        struct wl_listener show;
-        struct wl_listener hide;
-        struct wl_listener move;
-        struct wl_listener maximize;
-        struct wl_listener fullscreen;
-        struct wl_listener resize;
+        struct wl_listener destroy;
+        struct wl_listener map;
+        struct wl_listener unmap;
         struct wl_listener new_popup;
+        struct wl_listener commit;
+        struct wl_listener request_move;
+        struct wl_listener request_maximize;
+        struct wl_listener request_minimize;
+        struct wl_listener request_fullscreen;
+        struct wl_listener request_show_window_menu;
+        struct wl_listener request_resize;
+        struct wl_listener set_title;
+        struct wl_listener set_app_id;
+        struct wl_listener set_parent;
     } listeners;
 
     void(*handle_event)(int type, void* data);

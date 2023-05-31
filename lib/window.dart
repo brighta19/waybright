@@ -1,5 +1,13 @@
 part of "./waybright.dart";
 
+// TODO: maybe split normal (toplevel) windows and popups into separate
+// classes
+// TODO: add set bounds method
+// TODO: add set tiled method
+// TODO: use xdg positioner for popup windows
+// TODO: add user events to window events
+// TODO: maybe create texture class
+
 enum WindowEdge {
   none,
   top,
@@ -12,13 +20,7 @@ enum WindowEdge {
   topLeft,
 }
 
-class RemoveWindowEvent {}
-
-class ShowWindowEvent {}
-
-class HideWindowEvent {}
-
-WindowEdge _windowEdgeFromWlrResizeEvent(
+WindowEdge _getEdgeFromWlrResizeEvent(
     Pointer<struct_wlr_xdg_toplevel_resize_event> eventPtr) {
   switch (eventPtr.ref.edges) {
     case enum_wlr_edges.WLR_EDGE_TOP:
@@ -42,56 +44,141 @@ WindowEdge _windowEdgeFromWlrResizeEvent(
   }
 }
 
-/// An application window.
+/// An application's window.
 ///
-/// In wayland, this contains an xdg-surface from the xdg-shell protocol.
+/// In wayland, this most closely corresponds to a `xdg_surface` from the
+/// `xdg-shell` protocol.
+///
+/// The compositor could create its own Window class, storing this window as a
+/// property while adding additional properties, such as a window position.
 class Window {
-  static final _windowInstances = <Window>[];
+  static final _windowInstances = <Pointer<struct_waybright_window>, Window>{};
 
   static void _onEvent(int type, Pointer<Void> data) {
-    var windows = _windowInstances.toList();
-    for (var window in windows) {
-      var eventPtr = data as Pointer<struct_waybright_window_event>;
-      if (window._windowPtr != eventPtr.ref.wb_window) continue;
+    var eventPtr = data as Pointer<struct_waybright_window_event>;
+    var window = _windowInstances[eventPtr.ref.wb_window];
+    if (window == null) throw Error();
 
-      switch (type) {
-        case enum_wb_event_type.event_type_window_remove:
-          window.onRemove?.call(RemoveWindowEvent());
-          _windowInstances.remove(window);
-          break;
-        case enum_wb_event_type.event_type_window_show:
-          window.onShow?.call(ShowWindowEvent());
-          break;
-        case enum_wb_event_type.event_type_window_hide:
-          window.onHide?.call(HideWindowEvent());
-          break;
-        case enum_wb_event_type.event_type_window_move:
-          window.onMove?.call(MoveWindowEvent(window));
-          break;
-        case enum_wb_event_type.event_type_window_resize:
-          var wlrEventPtr = eventPtr.ref.event
-              as Pointer<struct_wlr_xdg_toplevel_resize_event>;
-          WindowEdge edge = _windowEdgeFromWlrResizeEvent(wlrEventPtr);
-          window.onResize?.call(ResizeWindowEvent(window, edge));
-          break;
-        case enum_wb_event_type.event_type_window_maximize:
-          window.onMaximize?.call(MaximizeWindowEvent(window));
-          break;
-        case enum_wb_event_type.event_type_window_fullscreen:
-          window.onFullscreen?.call(FullscreenWindowEvent(window));
-          break;
-        case enum_wb_event_type.event_type_window_new_popup:
-          var popupWindowPtr =
-              eventPtr.ref.event as Pointer<struct_waybright_window>;
-          var popup = Window._fromPointer(popupWindowPtr, true)
-            ..parent = window;
-          window.onNewPopup?.call(NewPopupWindowEvent(popup));
-          break;
-      }
+    switch (type) {
+      case enum_wb_event_type.event_type_window_destroy:
+        window.onDestroying?.call(WindowDestroyingEvent(window));
+        _windowInstances.remove(window._windowPtr);
+        break;
+      case enum_wb_event_type.event_type_window_map:
+        window.onTextureSet?.call(WindowTextureSetEvent(window));
+        break;
+      case enum_wb_event_type.event_type_window_unmap:
+        window.onTextureUnsetting?.call(WindowTextureUnsettingEvent(window));
+        break;
+      case enum_wb_event_type.event_type_window_new_popup:
+        var popupWindowPtr =
+            eventPtr.ref.event as Pointer<struct_waybright_window>;
+        var popup = Window._fromPointer(popupWindowPtr);
+        window.onPopupCreate?.call(WindowPopupCreateEvent(popup));
+        break;
+      case enum_wb_event_type.event_type_window_commit:
+        if (window._wasActive && !window.isActive) {
+          window.onDeactivate?.call(WindowDeactivateEvent(window));
+        } else if (!window._wasActive && window.isActive) {
+          window.onActivate?.call(WindowActivateEvent(window));
+        }
+        if (window._wasMaximized && !window.isMaximized) {
+          window.onUnmaximize?.call(WindowUnmaximizeEvent(window));
+        } else if (!window._wasMaximized && window.isMaximized) {
+          window.onMaximize?.call(WindowMaximizeEvent(window));
+        }
+        if (window._wasFullscreen && !window.isFullscreen) {
+          window.onUnfullscreen?.call(WindowUnfullscreenEvent(window));
+        } else if (!window._wasFullscreen && window.isFullscreen) {
+          window.onFullscreen?.call(WindowFullscreenEvent(window));
+        }
+        if (window._previousWidth != window.textureWidth ||
+            window._previousHeight != window.textureHeight) {
+          window.onResize?.call(WindowResizeEvent(
+              window, window._previousWidth, window._previousHeight));
+        }
+
+        window._previousWidth = window.textureWidth;
+        window._previousHeight = window.textureHeight;
+        window._wasActive = window.isActive;
+        window._wasMaximized = window.isMaximized;
+        window._wasFullscreen = window.isFullscreen;
+        break;
+      case enum_wb_event_type.event_type_window_request_move:
+        window.onMoveRequest?.call(WindowMoveRequestEvent(window));
+        break;
+      case enum_wb_event_type.event_type_window_request_resize:
+        var wlrEventPtr =
+            eventPtr.ref.event as Pointer<struct_wlr_xdg_toplevel_resize_event>;
+        WindowEdge edge = _getEdgeFromWlrResizeEvent(wlrEventPtr);
+        window.onResizeRequest?.call(WindowResizeRequestEvent(window, edge));
+        break;
+      case enum_wb_event_type.event_type_window_request_maximize:
+        var hadRequestedMaximzed =
+            window._wlrToplevelPtr.ref.requested.maximized;
+        if (hadRequestedMaximzed) {
+          window.onMaximizeRequest?.call(WindowMaximizeRequestEvent(window));
+        } else {
+          window.onUnmaximizeRequest
+              ?.call(WindowUnmaximizeRequestEvent(window));
+        }
+        break;
+      case enum_wb_event_type.event_type_window_request_minimize:
+        window.onMinimizeRequest?.call(WindowMinimizeRequestEvent(window));
+        break;
+      case enum_wb_event_type.event_type_window_request_fullscreen:
+        var hadRequestedFullscreen =
+            window._wlrToplevelPtr.ref.requested.fullscreen;
+        if (hadRequestedFullscreen) {
+          window.onFullscreenRequest
+              ?.call(WindowFullscreenRequestEvent(window));
+        } else {
+          window.onUnfullscreenRequest
+              ?.call(WindowUnfullscreenRequestEvent(window));
+        }
+        break;
+      case enum_wb_event_type.event_type_window_request_show_window_menu:
+        var wlrEventPtr = eventPtr.ref.event
+            as Pointer<struct_wlr_xdg_toplevel_show_window_menu_event>;
+        window.onWindowMenuRequest?.call(WindowMenuRequestEvent(
+            window, wlrEventPtr.ref.x, wlrEventPtr.ref.y));
+        break;
+      case enum_wb_event_type.event_type_window_set_title:
+        window.onTitleChange?.call(WindowTitleChangeEvent(window));
+        break;
+      case enum_wb_event_type.event_type_window_set_app_id:
+        window.onAppIdChange?.call(WindowAppIdChangeEvent(window));
+        break;
+      case enum_wb_event_type.event_type_window_set_parent:
+        var parentPtr = window._windowPtr.ref.wlr_xdg_toplevel.ref.parent;
+        window.parent = _windowInstances[parentPtr];
+        window.onParentChange?.call(WindowParentChangeEvent(window));
+        break;
+      default:
+        throw Error();
     }
   }
 
-  Pointer<struct_waybright_window>? _windowPtr;
+  final Pointer<struct_waybright_window> _windowPtr;
+  Pointer<struct_wlr_xdg_surface> get _wlrSurfacePtr =>
+      _windowPtr.ref.wlr_xdg_surface;
+  Pointer<struct_wlr_xdg_toplevel> get _wlrToplevelPtr =>
+      _windowPtr.ref.wlr_xdg_toplevel;
+  Pointer<struct_wlr_xdg_popup> get _wlrPopupPtr =>
+      _windowPtr.ref.wlr_xdg_popup;
+
+  var _previousWidth = 0;
+  var _previousHeight = 0;
+  var _wasActive = false;
+  var _wasMaximized = false;
+  var _wasFullscreen = false;
+
+  Window._fromPointer(
+    this._windowPtr,
+  ) : isPopup = _windowPtr.ref.wlr_xdg_popup != nullptr {
+    _windowInstances[_windowPtr] = this;
+    _windowPtr.ref.handle_event = Pointer.fromFunction(_onEvent);
+  }
 
   void _ensureKeyboardFocus(KeyboardDevice keyboard) {
     if (!keyboard.isFocusedOnWindow(this)) {
@@ -108,237 +195,408 @@ class Window {
   }
 
   void _setMaximizeAttribute(bool value) {
-    var windowPtr = _windowPtr;
-    if (windowPtr != null) {
-      _wblib.wlr_xdg_toplevel_set_maximized(
-          windowPtr.ref.wlr_xdg_toplevel, value);
-    }
+    _wblib.wlr_xdg_toplevel_set_maximized(_wlrToplevelPtr, value);
   }
 
   void _setFullscreenAttribute(bool value) {
-    var windowPtr = _windowPtr;
-    if (windowPtr != null) {
-      _wblib.wlr_xdg_toplevel_set_fullscreen(
-          windowPtr.ref.wlr_xdg_toplevel, value);
-    }
+    _wblib.wlr_xdg_toplevel_set_fullscreen(_wlrToplevelPtr, value);
   }
 
-  void _setFocusedAttribute(bool value) {
-    var windowPtr = _windowPtr;
-    if (windowPtr != null) {
-      _wblib.wlr_xdg_toplevel_set_activated(
-          windowPtr.ref.wlr_xdg_toplevel, value);
-    }
+  void _setActiveAttribute(bool value) {
+    _wblib.wlr_xdg_toplevel_set_activated(_wlrToplevelPtr, value);
   }
 
-  /// The application id of this window.
-  String appId = "unknown-application";
+  void _setResizingAttribute(bool value) {
+    _wblib.wlr_xdg_toplevel_set_resizing(_wlrToplevelPtr, value);
+  }
 
-  /// The title of this window.
-  String title = "untitled";
+  void _setSize({int? width, int? height}) {
+    width ??= this.width;
+    height ??= this.height;
+
+    _wblib.wlr_xdg_toplevel_set_size(_wlrToplevelPtr, width, height);
+  }
+
+  /// A handler that is called when the window is being destroyed.
+  void Function(WindowDestroyingEvent event)? onDestroying;
+
+  /// A handler that is called when the window's texture is set.
+  ///
+  /// This means that this window is ready to be rendered using its texture.
+  void Function(WindowTextureSetEvent event)? onTextureSet;
+
+  /// A handler that is called when the window's texture is being unset.
+  ///
+  /// This means that this window won't have a texture to be rendered.
+  void Function(WindowTextureUnsettingEvent event)? onTextureUnsetting;
+
+  /// A handler that is called when a new popup window is created.
+  ///
+  /// Popups can be context menus, tooltips, etc., which are short-lived
+  /// windows.
+  void Function(WindowPopupCreateEvent event)? onPopupCreate;
+
+  /// A handler that is called when the window has been activated.
+  ///
+  /// The window had drawn itself in its active state.
+  void Function(WindowActivateEvent event)? onActivate;
+
+  /// A handler that is called when the window has been deactivated.
+  ///
+  /// The window had drawn itself in its inactive state.
+  void Function(WindowDeactivateEvent event)? onDeactivate;
+
+  /// A handler that is called when the window requests to be moved.
+  ///
+  /// The move functionality is handled by the compositor, not the window.
+  void Function(WindowMoveRequestEvent event)? onMoveRequest;
+
+  /// A handler that is called when the window requests to be resized.
+  ///
+  /// The resize functionality is handled by the compositor. As the compositor
+  /// resizes, it can submit new sizes to the window, which can then resize and
+  /// draw itself accordingly.
+  ///
+  /// The compositor should probably wait for the window to be resized before
+  /// repositioning it.
+  void Function(WindowResizeRequestEvent event)? onResizeRequest;
+
+  /// A handler that is called when the window has been resized.
+  ///
+  /// The window has drawn itself in its new size. The compositor can reposition
+  ///  the window here if it so desires.
+  void Function(WindowResizeEvent event)? onResize;
+
+  /// A handler that is called when the window requests to be maximized.
+  ///
+  /// The maximize functionality is handled by the compositor. The compositor
+  /// can submit new sizes to the window, which can then resize and draw itself
+  /// accordingly.
+  ///
+  /// If the compositor wants to reposition the window, it is recommended to
+  /// wait for the window to be maximized before repositioning it using the
+  /// [onMaximize] handler.
+  void Function(WindowMaximizeRequestEvent event)? onMaximizeRequest;
+
+  /// A handler that is called when the window has been maximized.
+  ///
+  /// The window had reszied and drawn itself in its maximized state. The
+  /// compositor can reposition the window here if it so desires.
+  ///
+  /// The [onResize] handler is called after this handler.
+  void Function(WindowMaximizeEvent event)? onMaximize;
+
+  /// A handler that is called when the window requests to be unmaximized.
+  ///
+  /// The unmaximize functionality is handled by the compositor. The compositor
+  /// can submit new sizes to the window, which can then resize and draw itself
+  /// accordingly.
+  ///
+  /// If the compositor wants to reposition the window, it is recommended to
+  /// wait for the window to be unmaximized before repositioning it using the
+  /// [onUnmaximize] handler.
+  void Function(WindowUnmaximizeRequestEvent event)? onUnmaximizeRequest;
+
+  /// A handler that is called when the window has been unmaximized.
+  ///
+  /// The window had reszied and drawn itself in its unmaximized state. The
+  /// compositor can reposition the window here if it so desires.
+  ///
+  /// The [onResize] handler is called after this handler.
+  void Function(WindowUnmaximizeEvent event)? onUnmaximize;
+
+  /// A handler that is called when the window requests to be minimized.
+  ///
+  /// The minimize functionality is handled by the compositor, not the window.
+  /// The window wouldn't know whether it is actually minimized or not.
+  void Function(WindowMinimizeRequestEvent event)? onMinimizeRequest;
+
+  /// A handler that is called when the window requests to be fullscreen.
+  ///
+  /// The fullscreen functionality is handled by the compositor. The compositor
+  /// can submit new sizes to the window, which can then resize and draw itself
+  /// accordingly.
+  ///
+  /// If the compositor wants to reposition the window, it is recommended to
+  /// wait for the window to be fullscreen before repositioning it using the
+  /// [onFullscreen] handler.
+  void Function(WindowFullscreenRequestEvent event)? onFullscreenRequest;
+
+  /// A handler that is called when the window has been fullscreened.
+  ///
+  /// The window had reszied and drawn itself in its fullscreened state. The
+  /// compositor can reposition the window here if it so desires.
+  ///
+  /// The [onResize] handler is called after this handler.
+  void Function(WindowFullscreenEvent event)? onFullscreen;
+
+  /// A handler that is called when the window requests to be unfullscreen.
+  ///
+  /// The unfullscreen functionality is handled by the compositor. The
+  /// compositor can submit new sizes to the window, which can then resize and
+  /// draw itself accordingly.
+  ///
+  /// If the compositor wants to reposition the window, it is recommended to
+  /// wait for the window to be unfullscreen before repositioning it using the
+  /// [onUnfullscreen] handler.
+  void Function(WindowUnfullscreenRequestEvent event)? onUnfullscreenRequest;
+
+  /// A handler that is called when the window has been unfullscreened.
+  ///
+  /// The window had reszied and drawn itself in its unfullscreened state. The
+  /// compositor can reposition the window here if it so desires.
+  ///
+  /// The [onResize] handler is called after this handler.
+  void Function(WindowUnfullscreenEvent event)? onUnfullscreen;
+
+  /// A handler that is called when the window requests to show a window menu.
+  ///
+  /// This is if the compositor wants to show a context menu for this window.
+  /// A window's own context menu would be a popup window; therefore, it would
+  /// not request a window menu.
+  void Function(WindowMenuRequestEvent event)? onWindowMenuRequest;
+
+  /// A handler that is called when the window's title changes.
+  ///
+  /// It has already taken effect by the time this handler is called.
+  void Function(WindowTitleChangeEvent event)? onTitleChange;
+
+  /// A handler that is called when the window's application id changes.
+  ///
+  /// It has already taken effect by the time this handler is called.
+  void Function(WindowAppIdChangeEvent event)? onAppIdChange;
+
+  /// A handler that is called when the window's parent changes.
+  ///
+  /// It has already taken effect by the time this handler is called.
+  void Function(WindowParentChangeEvent event)? onParentChange;
 
   /// Whether this window is a popup window.
-  bool isPopup;
+  ///
+  /// Popups are short-lived windows that are usually used for context menus,
+  /// tooltips, etc.
+  final bool isPopup;
 
-  /// The horizontal position of this window's drawing area.
-  num drawingX = 0;
-
-  /// The vertical position of this window's drawing area.
-  num drawingY = 0;
-
-  /// The parent window of this window, if this is a popup window.
+  /// The parent window of this popup window, if applicable.
+  ///
+  /// The parent itself may be a popup window.
   Window? parent;
 
-  void Function(RemoveWindowEvent event)? onRemove;
-  void Function(ShowWindowEvent event)? onShow;
-  void Function(HideWindowEvent event)? onHide;
-  void Function(MoveWindowEvent event)? onMove;
-  void Function(ResizeWindowEvent event)? onResize;
-  void Function(MaximizeWindowEvent event)? onMaximize;
-  void Function(FullscreenWindowEvent event)? onFullscreen;
-  void Function(NewPopupWindowEvent event)? onNewPopup;
+  /// The id of the application that owns this window.
+  ///
+  /// Popups do not have an application id set and will return an empty string.
+  String get applicationId =>
+      isPopup ? "" : _toString(_wlrToplevelPtr.ref.app_id);
 
-  Window(this.isPopup) {
-    _windowInstances.add(this);
-  }
-
-  Window._fromPointer(
-    Pointer<struct_waybright_window> this._windowPtr,
-    this.isPopup,
-  ) {
-    _windowInstances.add(this);
-    _windowPtr?.ref.handle_event = Pointer.fromFunction(_onEvent);
-  }
-
-  /// The horizontal size of this window's drawing area.
-  int get drawingWidth =>
-      _windowPtr?.ref.wlr_xdg_surface.ref.surface.ref.current.width ?? 0;
-
-  /// The vertical size of this window's drawing area.
-  int get drawingHeight =>
-      _windowPtr?.ref.wlr_xdg_surface.ref.surface.ref.current.height ?? 0;
-
-  /// The horizontal offset of this window's content.
-  num get offsetX =>
-      _windowPtr?.ref.wlr_xdg_surface.ref.current.geometry.x ?? 0;
-
-  /// The vertical offset of this window's content.
-  num get offsetY =>
-      _windowPtr?.ref.wlr_xdg_surface.ref.current.geometry.y ?? 0;
-
-  /// The horizontal position of this window's content.
-  num get contentX => drawingX + offsetX;
-
-  /// The vertical position of this window's content.
-  num get contentY => drawingY + offsetY;
+  /// The title of this window.
+  ///
+  /// Popups do not have a title set and will return an empty string.
+  String get title => isPopup ? "" : _toString(_wlrToplevelPtr.ref.title);
 
   /// The horizontal size of this window's content.
-  int get contentWidth =>
-      _windowPtr?.ref.wlr_xdg_surface.ref.current.geometry.width ?? 0;
+  int get width => _wlrSurfacePtr.ref.current.geometry.width;
 
   /// The vertical size of this window's content.
-  int get contentHeight =>
-      _windowPtr?.ref.wlr_xdg_surface.ref.current.geometry.height ?? 0;
+  int get height => _wlrSurfacePtr.ref.current.geometry.height;
+
+  /// The horizontal size of this window's texture.
+  int get textureWidth => _wlrSurfacePtr.ref.surface.ref.current.width;
+
+  /// The vertical size of this window's texture.
+  int get textureHeight => _wlrSurfacePtr.ref.surface.ref.current.height;
+
+  /// The horizontal offset of this window's content.
+  num get offsetX => _wlrSurfacePtr.ref.current.geometry.x;
+
+  /// The vertical offset of this window's content.
+  num get offsetY => _wlrSurfacePtr.ref.current.geometry.y;
 
   /// The horizontal position of this popup window relative to its parent.
-  num get popupX => _windowPtr?.ref.wlr_xdg_popup.ref.current.geometry.x ?? 0;
+  /// This will always be `0` if not a popup window.
+  num get popupX => isPopup ? _wlrPopupPtr.ref.current.geometry.x : 0;
 
   /// The vertical position of this popup window relative to its parent.
-  num get popupY => _windowPtr?.ref.wlr_xdg_popup.ref.current.geometry.y ?? 0;
+  ///
+  /// This will always be `0` if not a popup window.
+  num get popupY => isPopup ? _wlrPopupPtr.ref.current.geometry.y : 0;
 
-  /// Whether this window is considered visible.
-  bool get isVisible => _windowPtr?.ref.wlr_xdg_surface.ref.mapped ?? false;
+  /// Whether this window has a texture.
+  bool get hasTexture => _wlrSurfacePtr.ref.mapped;
 
   /// Whether this window is considered maximized.
-  bool get isMaximized => isPopup
-      ? false
-      : (_windowPtr?.ref.wlr_xdg_toplevel.ref.current.maximized ?? false);
+  ///
+  /// This will always be `false` if this is a popup window.
+  bool get isMaximized =>
+      isPopup ? false : _wlrToplevelPtr.ref.current.maximized;
 
   /// Whether this window is considered fullscreen.
-  bool get isFullscreen => isPopup
-      ? false
-      : (_windowPtr?.ref.wlr_xdg_toplevel.ref.current.fullscreen ?? false);
+  ///
+  /// This will always be `false` if this is a popup window.
+  bool get isFullscreen =>
+      isPopup ? false : _wlrToplevelPtr.ref.current.fullscreen;
 
-  /// Whether this window is focused.
-  bool get isFocused => isPopup
-      ? false
-      : (_windowPtr?.ref.wlr_xdg_toplevel.ref.current.activated ?? false);
+  /// Whether this window is considered active.
+  ///
+  /// The window may draw itself to indicate that it is in focus, regardless of
+  /// if input devices are focused on it.
+  ///
+  /// This will always be false if  this is a popup window.
+  bool get isActive => isPopup ? false : _wlrToplevelPtr.ref.current.activated;
+
+  /// Whether this window is considered resizing.
+  ///
+  /// If true, the window believes that it is being resized by the user and may
+  /// draw itself accordingly.
+  ///
+  /// This will always be `false` if this is a popup window.
+  bool get isResizing => isPopup ? false : _wlrToplevelPtr.ref.current.resizing;
 
   /// Tells this window to maximize.
   ///
-  /// It will *not* consider itself maximized until the compositor has confirmed
-  /// the maximize change. Track the [isMaximized] property to know when it is
-  /// maximized.
+  /// If [width] or [height] are provided, the window will also submit the new
+  /// size.
   ///
-  /// If [width] or [height] are provided, the window will submit the new size.
+  /// If the window successfully maximizes, the [onMaximize] handler will be
+  /// called.
+  ///
+  /// Does nothing if this is a popup window.
   void maximize({int? width, int? height}) {
     if (isPopup) return;
 
     _setMaximizeAttribute(true);
     if (width != null || height != null) {
-      submitNewSize(width: width, height: height);
+      requestSize(width: width, height: height);
     }
   }
 
   /// Tells this window to unmaximize.
   ///
-  /// It will *not* consider itself unmaximized until the compositor has
-  /// confirmed the maximize change. Track the [isMaximized] property to know when
-  /// it is unmaximized.
+  /// If [width] or [height] are provided, the window will also submit the new
+  /// size.
   ///
-  /// If [width] or [height] are provided, the window will submit the new size.
+  /// If the window successfully unmaximizes, the [onUnmaximize] handler will be
+  /// called.
+  ///
+  /// Does nothing if this is a popup window.
   void unmaximize({int? width, int? height}) {
     if (isPopup) return;
 
     _setMaximizeAttribute(false);
     if (width != null || height != null) {
-      submitNewSize(width: width, height: height);
+      requestSize(width: width, height: height);
     }
   }
 
   /// Tells this window to fullscreen.
   ///
-  /// It will *not* consider itself fullscreen until the compositor has
-  /// confirmed the fullscreen change. Track the [isFullscreen] property to know
-  /// when it is fullscreened.
+  /// If [width] or [height] are provided, the window will also submit the new
+  /// size.
   ///
-  /// If [width] or [height] are provided, the window will submit the new size.
+  /// If the window successfully fullscreens, the [onFullscreen] handler will be
+  /// called.
+  ///
+  /// Does nothing if this is a popup window.
   void fullscreen({int? width, int? height}) {
     if (isPopup) return;
 
     _setFullscreenAttribute(true);
     if (width != null || height != null) {
-      submitNewSize(width: width, height: height);
+      requestSize(width: width, height: height);
     }
   }
 
   /// Tells this window to unfullscreen.
   ///
-  /// It will *not* consider itself unfullscreen until the compositor has
-  /// confirmed the focus change. Track the [isFullscreen] property to know when
-  /// it is unfullscreened.
+  /// If [width] or [height] are provided, the window will also submit the new
+  /// size.
   ///
-  /// If [width] or [height] are provided, the window will submit the new size.
+  /// If the window successfully unfullscreens, the [onUnfullscreen] handler
+  /// will be called.
+  ///
+  /// Does nothing if this is a popup window.
   void unfullscreen({int? width, int? height}) {
+    if (isPopup) return;
+
     _setFullscreenAttribute(false);
     if (width != null || height != null) {
-      submitNewSize(width: width, height: height);
+      requestSize(width: width, height: height);
     }
   }
 
-  /// Tells this window to focus.
+  /// Tells this window to activate.
   ///
-  /// It will *not* consider itself focused until the compositor has confirmed
-  /// the focus change. Track the [isFocused] property to know when it is
-  /// focused.
-  void focus() {
+  /// If the window successfully activates, the [onActivate] handler will be
+  /// called.
+  ///
+  /// Does nothing if this is a popup window.
+  void activate() {
     if (isPopup) return;
 
-    _setFocusedAttribute(true);
+    _setActiveAttribute(true);
   }
 
-  /// Tells this window to unfocus.
+  /// Tells this window to deactivate.
   ///
-  /// It will *not* consider itself unfocused
-  /// until the compositor has confirmed the focus change. Track the
-  /// [isFocused] property to know when it is unfocused.
-  void unfocus() {
+  /// If the window successfully deactivates, the [onDeactivate] handler will be
+  /// called.
+  ///
+  /// Does nothing if this is a popup window.
+  void deactivate() {
     if (isPopup) return;
 
-    _setFocusedAttribute(false);
+    _setActiveAttribute(false);
   }
 
-  /// Submits a new size for this window.
+  /// Notifies this window that it is being resized.
   ///
-  /// The window itself may choose to either
-  /// accept this size or choose a different size, so track the [contentWidth]
-  /// and [contentHeight] properties to know the actual size.
-  void submitNewSize({int? width, int? height}) {
+  /// The resize functionality is handled by the compositor, but the application
+  /// may want to draw itself differently while resizing.
+  void notifyResizing(bool isResizing) {
     if (isPopup) return;
 
-    var windowPtr = _windowPtr;
-    if (windowPtr != null) {
-      var width0 = width ?? contentWidth;
-      var height0 = height ?? contentHeight;
-
-      _wblib.wlr_xdg_toplevel_set_size(
-          windowPtr.ref.wlr_xdg_toplevel, width0, height0);
-    }
+    _setResizingAttribute(isResizing);
   }
 
-  /// Submits pointer movement updates to this window. The coordinates in
-  /// [update] are relative to the window's content area.
+  /// Requests that this window be closed.
+  ///
+  /// The application may ignore this request for various reasons, including
+  /// unsaved data.
+  ///
+  /// If the window does close, the [onTextureUnsetting] and [onDestroying]
+  /// handlers will be called.
+  void requestClose() {
+    isPopup
+        ? _wblib.wlr_xdg_popup_destroy(_wlrPopupPtr)
+        : _wblib.wlr_xdg_toplevel_send_close(_wlrToplevelPtr);
+  }
+
+  /// Requests a new size for this window.
+  ///
+  /// If either [width] or [height] are zero, the window's application will
+  /// decide its size. If either [width] or [height] are null, the window's
+  /// current size will be used.
+  ///
+  /// The application itself may choose to either accept this size or choose a
+  /// different size.
+  ///
+  /// If the window successfully resizes, the [onResize] handler will be called.
+  ///
+  /// Does nothing if this is a popup window.
+  void requestSize({int? width, int? height}) {
+    if (isPopup) return;
+
+    _setSize(width: width, height: height);
+  }
+
+  /// Submits pointer movement updates to this window.
   void submitPointerMoveUpdate(PointerUpdate<PointerMoveEvent> update) {
-    var windowPtr = _windowPtr;
-    if (windowPtr == null) return;
-
     var cursorX = update.windowCursorX.toInt();
     var cursorY = update.windowCursorY.toInt();
 
     _ensurePointerFocus(update.pointer, cursorX, cursorY);
 
     _wblib.waybright_window_submit_pointer_move_event(
-      windowPtr,
+      _windowPtr,
       update.event.elapsedTimeMilliseconds,
       cursorX,
       cursorY,
@@ -347,14 +605,11 @@ class Window {
 
   /// Submits pointer button updates to this window.
   void submitPointerButtonUpdate(PointerUpdate<PointerButtonEvent> update) {
-    var windowPtr = _windowPtr;
-    if (windowPtr == null) return;
-
     _ensurePointerFocus(
         update.pointer, update.windowCursorX, update.windowCursorY);
 
     _wblib.waybright_window_submit_pointer_button_event(
-      windowPtr,
+      _windowPtr,
       update.event.elapsedTimeMilliseconds,
       update.event.code,
       update.event.isPressed ? 1 : 0,
@@ -363,9 +618,6 @@ class Window {
 
   /// Submits pointer axis updates to this window.
   void submitPointerAxisUpdate(PointerUpdate<PointerAxisEvent> update) {
-    var windowPtr = _windowPtr;
-    if (windowPtr == null) return;
-
     _ensurePointerFocus(
         update.pointer, update.windowCursorX, update.windowCursorY);
 
@@ -396,7 +648,7 @@ class Window {
     }
 
     _wblib.waybright_window_submit_pointer_axis_event(
-      windowPtr,
+      _windowPtr,
       update.event.elapsedTimeMilliseconds,
       orientation,
       update.event.delta,
@@ -407,13 +659,10 @@ class Window {
 
   /// Submits keyboard key updates to this window.
   void submitKeyboardKeyUpdate(KeyboardUpdate<KeyboardKeyEvent> update) {
-    var windowPtr = _windowPtr;
-    if (windowPtr == null) return;
-
     _ensureKeyboardFocus(update.keyboard);
 
     _wblib.waybright_window_submit_keyboard_key_event(
-      windowPtr,
+      _windowPtr,
       update.event.elapsedTimeMilliseconds,
       update.event.code,
       update.event.isPressed ? 1 : 0,
@@ -423,14 +672,13 @@ class Window {
   /// Submits keyboard modifiers updates to this window.
   void submitKeyboardModifiersUpdate(
       KeyboardUpdate<KeyboardModifiersEvent> update) {
-    var windowPtr = _windowPtr;
     var keyboardPtr = update.keyboard._keyboardPtr;
-    if (windowPtr == null || keyboardPtr == null) return;
+    if (keyboardPtr == null) throw Error();
 
     _ensureKeyboardFocus(update.keyboard);
 
     _wblib.waybright_window_submit_keyboard_modifiers_event(
-      windowPtr,
+      _windowPtr,
       keyboardPtr,
     );
   }

@@ -8047,25 +8047,31 @@ abstract class enum_wb_event_type {
   static const int event_type_monitor_remove = 1;
   static const int event_type_monitor_frame = 2;
   static const int event_type_window_new = 3;
-  static const int event_type_window_remove = 4;
-  static const int event_type_window_show = 5;
-  static const int event_type_window_hide = 6;
-  static const int event_type_window_move = 7;
-  static const int event_type_window_maximize = 8;
-  static const int event_type_window_fullscreen = 9;
-  static const int event_type_window_resize = 10;
-  static const int event_type_window_new_popup = 11;
-  static const int event_type_input_new = 12;
-  static const int event_type_pointer_remove = 13;
-  static const int event_type_pointer_move = 14;
-  static const int event_type_pointer_teleport = 15;
-  static const int event_type_pointer_button = 16;
-  static const int event_type_pointer_axis = 17;
-  static const int event_type_keyboard_remove = 18;
-  static const int event_type_keyboard_key = 19;
-  static const int event_type_keyboard_modifiers = 20;
-  static const int event_type_cursor_image = 21;
-  static const int event_type_image_destroy = 22;
+  static const int event_type_window_destroy = 4;
+  static const int event_type_window_map = 5;
+  static const int event_type_window_unmap = 6;
+  static const int event_type_window_new_popup = 7;
+  static const int event_type_window_commit = 8;
+  static const int event_type_window_request_move = 9;
+  static const int event_type_window_request_resize = 10;
+  static const int event_type_window_request_maximize = 11;
+  static const int event_type_window_request_minimize = 12;
+  static const int event_type_window_request_fullscreen = 13;
+  static const int event_type_window_request_show_window_menu = 14;
+  static const int event_type_window_set_title = 15;
+  static const int event_type_window_set_app_id = 16;
+  static const int event_type_window_set_parent = 17;
+  static const int event_type_input_new = 18;
+  static const int event_type_pointer_remove = 19;
+  static const int event_type_pointer_move = 20;
+  static const int event_type_pointer_teleport = 21;
+  static const int event_type_pointer_button = 22;
+  static const int event_type_pointer_axis = 23;
+  static const int event_type_keyboard_remove = 24;
+  static const int event_type_keyboard_key = 25;
+  static const int event_type_keyboard_modifiers = 26;
+  static const int event_type_cursor_image = 27;
+  static const int event_type_image_destroy = 28;
 }
 
 class struct_waybright_renderer extends ffi.Struct {
@@ -8162,7 +8168,7 @@ class struct_waybright extends ffi.Struct {
 class UnnamedStruct32 extends ffi.Struct {
   external struct_wl_listener monitor_new;
 
-  external struct_wl_listener window_new;
+  external struct_wl_listener new_xdg_surface;
 
   external struct_wl_listener input_new;
 
@@ -8199,21 +8205,33 @@ class struct_waybright_window extends ffi.Struct {
 }
 
 class UnnamedStruct34 extends ffi.Struct {
-  external struct_wl_listener remove;
+  external struct_wl_listener destroy;
 
-  external struct_wl_listener show1;
+  external struct_wl_listener map;
 
-  external struct_wl_listener hide1;
-
-  external struct_wl_listener move;
-
-  external struct_wl_listener maximize;
-
-  external struct_wl_listener fullscreen;
-
-  external struct_wl_listener resize;
+  external struct_wl_listener unmap;
 
   external struct_wl_listener new_popup;
+
+  external struct_wl_listener commit;
+
+  external struct_wl_listener request_move;
+
+  external struct_wl_listener request_maximize;
+
+  external struct_wl_listener request_minimize;
+
+  external struct_wl_listener request_fullscreen;
+
+  external struct_wl_listener request_show_window_menu;
+
+  external struct_wl_listener request_resize;
+
+  external struct_wl_listener set_title;
+
+  external struct_wl_listener set_app_id;
+
+  external struct_wl_listener set_parent;
 }
 
 class struct_waybright_input extends ffi.Struct {

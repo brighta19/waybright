@@ -72,80 +72,40 @@ void handle_monitor_new_event(struct wl_listener *listener, void *data) {
         wb->handle_event(event_type_monitor_new, wb_monitor);
 }
 
-void handle_window_show_event(struct wl_listener *listener, void *data) {
-    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.show);
+// Called when the surface has a displayable buffer
+void handle_xdg_surface_map_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.map);
 
     struct waybright_window_event wb_window_event = { wb_window, NULL };
 
     if (wb_window->handle_event)
-        wb_window->handle_event(event_type_window_show, &wb_window_event);
+        wb_window->handle_event(event_type_window_map, &wb_window_event);
 }
 
-void handle_window_hide_event(struct wl_listener *listener, void *data) {
-    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.hide);
+// Called when the surface no longer has a displayable buffer
+void handle_xdg_surface_unmap_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.unmap);
 
     struct waybright_window_event wb_window_event = { wb_window, NULL };
 
     if (wb_window->handle_event)
-        wb_window->handle_event(event_type_window_hide, &wb_window_event);
+        wb_window->handle_event(event_type_window_unmap, &wb_window_event);
 }
 
-void handle_window_remove_event(struct wl_listener *listener, void *data) {
-    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.remove);
+// Called when the surface is about to be destroyed
+void handle_xdg_surface_destroy_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.destroy);
 
     struct waybright_window_event wb_window_event = { wb_window, NULL };
 
     if (wb_window->handle_event)
-        wb_window->handle_event(event_type_window_remove, &wb_window_event);
+        wb_window->handle_event(event_type_window_destroy, &wb_window_event);
 
     waybright_window_destroy(wb_window);
 }
 
-void handle_window_move_event(struct wl_listener *listener, void *data) {
-    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.move);
-    struct wlr_xdg_toplevel_move_event* event = data;
-
-    // Accept move requests only if it is a response to pointer button events
-    if (event->serial != wb_window->wb->last_pointer_button_serial) return;
-
-    struct waybright_window_event wb_window_event = { wb_window, event };
-
-    if (wb_window->handle_event)
-        wb_window->handle_event(event_type_window_move, &wb_window_event);
-}
-
-void handle_window_resize_event(struct wl_listener *listener, void *data) {
-    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.resize);
-	struct wlr_xdg_toplevel_resize_event *event = data;
-
-    // Accept move requests only if it is a response to pointer button events
-    if (event->serial != wb_window->wb->last_pointer_button_serial) return;
-
-    struct waybright_window_event wb_window_event = { wb_window, event };
-
-    if (wb_window->handle_event)
-        wb_window->handle_event(event_type_window_resize, &wb_window_event);
-}
-
-void handle_window_maximize_event(struct wl_listener *listener, void *data) {
-    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.maximize);
-
-    struct waybright_window_event wb_window_event = { wb_window, NULL };
-
-    if (wb_window->handle_event)
-        wb_window->handle_event(event_type_window_maximize, &wb_window_event);
-}
-
-void handle_window_fullscreen_event(struct wl_listener *listener, void *data) {
-    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.fullscreen);
-
-    struct waybright_window_event wb_window_event = { wb_window, NULL };
-
-    if (wb_window->handle_event)
-        wb_window->handle_event(event_type_window_fullscreen, &wb_window_event);
-}
-
-void handle_window_new_popup_event(struct wl_listener *listener, void *data) {
+// Called when the top-level surface creates a new popup
+void handle_xdg_toplevel_new_popup_event(struct wl_listener *listener, void *data) {
     struct waybright_window* wb_parent_window = wl_container_of(listener, wb_parent_window, listeners.new_popup);
     struct waybright* wb = wb_parent_window->wb;
     struct wlr_xdg_popup* wlr_xdg_popup = data;
@@ -157,13 +117,13 @@ void handle_window_new_popup_event(struct wl_listener *listener, void *data) {
     wb_window->wlr_xdg_toplevel = wb_parent_window->wlr_xdg_toplevel;
     wb_window->wlr_xdg_popup = wlr_xdg_popup;
 
-    wb_window->listeners.show.notify = handle_window_show_event;
-    wl_signal_add(&wlr_xdg_surface->events.map, &wb_window->listeners.show);
-    wb_window->listeners.hide.notify = handle_window_hide_event;
-    wl_signal_add(&wlr_xdg_surface->events.unmap, &wb_window->listeners.hide);
-    wb_window->listeners.remove.notify = handle_window_remove_event;
-    wl_signal_add(&wlr_xdg_surface->events.destroy, &wb_window->listeners.remove);
-    wb_window->listeners.new_popup.notify = handle_window_new_popup_event;
+    wb_window->listeners.map.notify = handle_xdg_surface_map_event;
+    wl_signal_add(&wlr_xdg_surface->events.map, &wb_window->listeners.map);
+    wb_window->listeners.unmap.notify = handle_xdg_surface_unmap_event;
+    wl_signal_add(&wlr_xdg_surface->events.unmap, &wb_window->listeners.unmap);
+    wb_window->listeners.destroy.notify = handle_xdg_surface_destroy_event;
+    wl_signal_add(&wlr_xdg_surface->events.destroy, &wb_window->listeners.destroy);
+    wb_window->listeners.new_popup.notify = handle_xdg_toplevel_new_popup_event;
     wl_signal_add(&wlr_xdg_surface->events.new_popup, &wb_window->listeners.new_popup);
 
     struct waybright_window_event wb_window_event = { wb_parent_window, wb_window };
@@ -172,10 +132,120 @@ void handle_window_new_popup_event(struct wl_listener *listener, void *data) {
         wb_parent_window->handle_event(event_type_window_new_popup, &wb_window_event);
 }
 
-void handle_window_new_event(struct wl_listener *listener, void *data) {
-    struct waybright* wb = wl_container_of(listener, wb, listeners.window_new);
+void handle_wlr_surface_commit_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.commit);
+
+    struct waybright_window_event wb_window_event = { wb_window, NULL };
+
+    if (wb_window->handle_event)
+        wb_window->handle_event(event_type_window_commit, &wb_window_event);
+}
+
+// Called when the top-level surface wants to be moved
+void handle_xdg_toplevel_request_move_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.request_move);
+    struct wlr_xdg_toplevel_move_event* event = data;
+
+    // Accept move requests only if it is a response to pointer button events
+    if (event->serial != wb_window->wb->last_pointer_button_serial) return;
+
+    struct waybright_window_event wb_window_event = { wb_window, event };
+
+    if (wb_window->handle_event)
+        wb_window->handle_event(event_type_window_request_move, &wb_window_event);
+}
+
+// Called when the top-level surface wants to be resized
+void handle_xdg_toplevel_request_resize_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.request_resize);
+	struct wlr_xdg_toplevel_resize_event *event = data;
+
+    // Accept move requests only if it is a response to pointer button events
+    if (event->serial != wb_window->wb->last_pointer_button_serial) return;
+
+    struct waybright_window_event wb_window_event = { wb_window, event };
+
+    if (wb_window->handle_event)
+        wb_window->handle_event(event_type_window_request_resize, &wb_window_event);
+}
+
+// Called when the top-level surface wants to be (un)maximized
+void handle_xdg_toplevel_request_maximize_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.request_maximize);
+
+    struct waybright_window_event wb_window_event = { wb_window, NULL };
+
+    if (wb_window->handle_event)
+        wb_window->handle_event(event_type_window_request_maximize, &wb_window_event);
+}
+
+// Called when the top-level surface wants to be minimized
+void handle_xdg_toplevel_request_minimize_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.request_minimize);
+
+    struct waybright_window_event wb_window_event = { wb_window, NULL };
+
+    if (wb_window->handle_event)
+        wb_window->handle_event(event_type_window_request_minimize, &wb_window_event);
+}
+
+// Called when the top-level surface wants to be (un)fullscreened
+void handle_xdg_toplevel_request_fullscreen_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.request_fullscreen);
+
+    struct waybright_window_event wb_window_event = { wb_window, NULL };
+
+    if (wb_window->handle_event)
+        wb_window->handle_event(event_type_window_request_fullscreen, &wb_window_event);
+}
+
+// Called when the top-level surface wants a context menu to be shown
+void handle_xdg_toplevel_request_show_window_menu_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.request_show_window_menu);
+    struct wlr_xdg_toplevel_show_window_menu_event* event = data;
+
+    struct waybright_window_event wb_window_event = { wb_window, &event };
+
+    if (wb_window->handle_event)
+        wb_window->handle_event(event_type_window_request_show_window_menu, &wb_window_event);
+}
+
+// Called when the top-level surface sets its title
+void handle_xdg_toplevel_set_title_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.set_title);
+
+    struct waybright_window_event wb_window_event = { wb_window, NULL };
+
+    if (wb_window->handle_event)
+        wb_window->handle_event(event_type_window_set_title, &wb_window_event);
+}
+
+// Called when the top-level surface sets its app id
+void handle_xdg_toplevel_set_app_id_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.set_app_id);
+
+    struct waybright_window_event wb_window_event = { wb_window, NULL };
+
+    if (wb_window->handle_event)
+        wb_window->handle_event(event_type_window_set_app_id, &wb_window_event);
+}
+
+// Called when the top-level surface sets its parent
+void handle_xdg_toplevel_set_parent_event(struct wl_listener *listener, void *data) {
+    struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.set_parent);
+
+    struct waybright_window_event wb_window_event = { wb_window, NULL };
+
+    if (wb_window->handle_event)
+        wb_window->handle_event(event_type_window_set_parent, &wb_window_event);
+}
+
+// Called when a new xdg surface is created
+void handle_new_xdg_surface_event(struct wl_listener *listener, void *data) {
+    struct waybright* wb = wl_container_of(listener, wb, listeners.new_xdg_surface);
     struct wlr_xdg_surface *wlr_xdg_surface = data;
 
+    // We'll take care of popups in a separate handler
     if (wlr_xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
         return;
 
@@ -185,25 +255,36 @@ void handle_window_new_event(struct wl_listener *listener, void *data) {
     wb_window->wlr_xdg_surface = wlr_xdg_surface;
     wb_window->wlr_xdg_toplevel = wlr_xdg_toplevel;
 
-    wb_window->listeners.show.notify = handle_window_show_event;
-    wl_signal_add(&wlr_xdg_surface->events.map, &wb_window->listeners.show);
-    wb_window->listeners.hide.notify = handle_window_hide_event;
-    wl_signal_add(&wlr_xdg_surface->events.unmap, &wb_window->listeners.hide);
-    wb_window->listeners.remove.notify = handle_window_remove_event;
-    wl_signal_add(&wlr_xdg_surface->events.destroy, &wb_window->listeners.remove);
-
-    wb_window->listeners.move.notify = handle_window_move_event;
-    wl_signal_add(&wlr_xdg_toplevel->events.request_move, &wb_window->listeners.move);
-    wb_window->listeners.maximize.notify = handle_window_maximize_event;
-    wl_signal_add(&wlr_xdg_toplevel->events.request_maximize, &wb_window->listeners.maximize);
-    wb_window->listeners.fullscreen.notify = handle_window_fullscreen_event;
-    wl_signal_add(&wlr_xdg_toplevel->events.request_fullscreen, &wb_window->listeners.fullscreen);
-    wb_window->listeners.resize.notify = handle_window_resize_event;
-    wl_signal_add(&wlr_xdg_toplevel->events.request_resize, &wb_window->listeners.resize);
-    wb_window->listeners.new_popup.notify = handle_window_new_popup_event;
+    wb_window->listeners.map.notify = handle_xdg_surface_map_event;
+    wl_signal_add(&wlr_xdg_surface->events.map, &wb_window->listeners.map);
+    wb_window->listeners.unmap.notify = handle_xdg_surface_unmap_event;
+    wl_signal_add(&wlr_xdg_surface->events.unmap, &wb_window->listeners.unmap);
+    wb_window->listeners.destroy.notify = handle_xdg_surface_destroy_event;
+    wl_signal_add(&wlr_xdg_surface->events.destroy, &wb_window->listeners.destroy);
+    wb_window->listeners.new_popup.notify = handle_xdg_toplevel_new_popup_event;
     wl_signal_add(&wlr_xdg_surface->events.new_popup, &wb_window->listeners.new_popup);
 
-    // More events coming soon to a town near you!
+    wb_window->listeners.commit.notify = handle_wlr_surface_commit_event;
+    wl_signal_add(&wlr_xdg_surface->surface->events.commit, &wb_window->listeners.commit);
+
+    wb_window->listeners.request_move.notify = handle_xdg_toplevel_request_move_event;
+    wl_signal_add(&wlr_xdg_toplevel->events.request_move, &wb_window->listeners.request_move);
+    wb_window->listeners.request_resize.notify = handle_xdg_toplevel_request_resize_event;
+    wl_signal_add(&wlr_xdg_toplevel->events.request_resize, &wb_window->listeners.request_resize);
+    wb_window->listeners.request_maximize.notify = handle_xdg_toplevel_request_maximize_event;
+    wl_signal_add(&wlr_xdg_toplevel->events.request_maximize, &wb_window->listeners.request_maximize);
+    wb_window->listeners.request_minimize.notify = handle_xdg_toplevel_request_minimize_event;
+    wl_signal_add(&wlr_xdg_toplevel->events.request_minimize, &wb_window->listeners.request_minimize);
+    wb_window->listeners.request_fullscreen.notify = handle_xdg_toplevel_request_fullscreen_event;
+    wl_signal_add(&wlr_xdg_toplevel->events.request_fullscreen, &wb_window->listeners.request_fullscreen);
+    wb_window->listeners.request_show_window_menu.notify = handle_xdg_toplevel_request_show_window_menu_event;
+    wl_signal_add(&wlr_xdg_toplevel->events.request_show_window_menu, &wb_window->listeners.request_show_window_menu);
+    wb_window->listeners.set_title.notify = handle_xdg_toplevel_set_title_event;
+    wl_signal_add(&wlr_xdg_toplevel->events.set_title, &wb_window->listeners.set_title);
+    wb_window->listeners.set_app_id.notify = handle_xdg_toplevel_set_app_id_event;
+    wl_signal_add(&wlr_xdg_toplevel->events.set_app_id, &wb_window->listeners.set_app_id);
+    wb_window->listeners.set_parent.notify = handle_xdg_toplevel_set_parent_event;
+    wl_signal_add(&wlr_xdg_toplevel->events.set_parent, &wb_window->listeners.set_parent);
 
     if (wb->handle_event)
         wb->handle_event(event_type_window_new, wb_window);
