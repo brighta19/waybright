@@ -19,13 +19,14 @@ struct waybright_image* waybright_image_create_from_surface(struct wlr_surface* 
         wb_image->wlr_texture = wlr_texture;
         wb_image->width = wlr_texture->width;
         wb_image->height = wlr_texture->height;
-        wb_image->is_ready = true;
+        wb_image->is_loaded = true;
+        // Cannot call handle_event(image_load) since it hasn't been set in dart yet
     }
     else {
-        wb_image->listeners.ready.notify = handle_image_ready_event;
-        wl_signal_add(&wlr_surface->events.commit, &wb_image->listeners.ready);
+        wb_image->listeners.load.notify = handle_image_load_event;
+        wl_signal_add(&wlr_surface->events.commit, &wb_image->listeners.load);
 
-        wb_image->is_ready = false;
+        wb_image->is_loaded = false;
     }
 
     return wb_image;
@@ -37,7 +38,7 @@ struct waybright_image* waybright_image_create_from_texture(struct wlr_texture* 
     wb_image->wlr_texture = wlr_texture;
     wb_image->width = wlr_texture->width;
     wb_image->height = wlr_texture->height;
-    wb_image->is_ready = true;
+    wb_image->is_loaded = true;
 
     return wb_image;
 }

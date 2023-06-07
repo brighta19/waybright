@@ -70,10 +70,10 @@ void waybright_renderer_draw_window(struct waybright_renderer* wb_renderer, stru
 }
 
 void waybright_renderer_draw_image(struct waybright_renderer* wb_renderer, struct waybright_image* wb_image, int x, int y, int width, int height, float alpha) {
-    // TODO: fix this function
-    // When trying to read the texture's width and height, the program crashes
+    // BUG: When trying to read the texture's width and height, the program crashes
     // (segmentation fault). It happens when I create a transient window from
     // the `weston-stacking` program. Something to do with the cursor image.
+    // TODO: fix this function
 
     struct wlr_output* wlr_output = wb_renderer->wlr_output;
     struct wlr_renderer* wlr_renderer = wlr_output->renderer;
@@ -129,7 +129,7 @@ struct waybright_image* waybright_renderer_capture_window_frame(struct waybright
     wb_image->wlr_texture = wlr_texture;
     wb_image->width = wlr_texture->width;
     wb_image->height = wlr_texture->height;
-    wb_image->is_ready = true;
+    wb_image->is_loaded = true;
 
     return wb_image;
 }

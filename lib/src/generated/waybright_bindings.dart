@@ -4830,25 +4830,29 @@ class WaybrightLibrary {
   late final _waybright_close_socket = _waybright_close_socketPtr
       .asFunction<void Function(ffi.Pointer<struct_waybright>)>();
 
-  ffi.Pointer<struct_waybright_image> waybright_load_png_image(
+  ffi.Pointer<struct_waybright_image> waybright_load_image(
     ffi.Pointer<struct_waybright> wb,
     ffi.Pointer<ffi.Char> path,
+    ffi.Pointer<ffi.Int> error,
   ) {
-    return _waybright_load_png_image(
+    return _waybright_load_image(
       wb,
       path,
+      error,
     );
   }
 
-  late final _waybright_load_png_imagePtr = _lookup<
+  late final _waybright_load_imagePtr = _lookup<
       ffi.NativeFunction<
           ffi.Pointer<struct_waybright_image> Function(
               ffi.Pointer<struct_waybright>,
-              ffi.Pointer<ffi.Char>)>>('waybright_load_png_image');
-  late final _waybright_load_png_image =
-      _waybright_load_png_imagePtr.asFunction<
-          ffi.Pointer<struct_waybright_image> Function(
-              ffi.Pointer<struct_waybright>, ffi.Pointer<ffi.Char>)>();
+              ffi.Pointer<ffi.Char>,
+              ffi.Pointer<ffi.Int>)>>('waybright_load_image');
+  late final _waybright_load_image = _waybright_load_imagePtr.asFunction<
+      ffi.Pointer<struct_waybright_image> Function(
+          ffi.Pointer<struct_waybright>,
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Int>)>();
 
   void waybright_renderer_destroy(
     ffi.Pointer<struct_waybright_renderer> wb_renderer,
@@ -8042,6 +8046,12 @@ abstract class enum_wlr_edges {
   static const int WLR_EDGE_RIGHT = 8;
 }
 
+abstract class enum_wb_image_error_type {
+  static const int image_error_type_none = 0;
+  static const int image_error_type_image_not_found = 1;
+  static const int image_error_type_image_load_failed = 2;
+}
+
 abstract class enum_wb_event_type {
   static const int event_type_monitor_new = 0;
   static const int event_type_monitor_remove = 1;
@@ -8072,6 +8082,7 @@ abstract class enum_wb_event_type {
   static const int event_type_keyboard_modifiers = 26;
   static const int event_type_cursor_image = 27;
   static const int event_type_image_destroy = 28;
+  static const int event_type_image_load = 29;
 }
 
 class struct_waybright_renderer extends ffi.Struct {
@@ -8086,13 +8097,19 @@ class struct_waybright_renderer extends ffi.Struct {
   external ffi.Array<ffi.Float> color_background;
 }
 
+class struct_waybright_image_event extends ffi.Struct {
+  external ffi.Pointer<struct_waybright_image> wb_image;
+
+  external ffi.Pointer<ffi.Void> event;
+}
+
 class struct_waybright_image extends ffi.Struct {
   external ffi.Pointer<struct_wlr_surface> wlr_surface;
 
   external ffi.Pointer<struct_wlr_texture> wlr_texture;
 
   @ffi.Bool()
-  external bool is_ready;
+  external bool is_loaded;
 
   external ffi.Pointer<ffi.Char> path;
 
@@ -8104,12 +8121,6 @@ class struct_waybright_image extends ffi.Struct {
   @ffi.Int()
   external int height;
 
-  @ffi.Int()
-  external int offset_x;
-
-  @ffi.Int()
-  external int offset_y;
-
   external ffi.Pointer<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Int type, ffi.Pointer<ffi.Void> data)>>
@@ -8117,7 +8128,7 @@ class struct_waybright_image extends ffi.Struct {
 }
 
 class UnnamedStruct31 extends ffi.Struct {
-  external struct_wl_listener ready;
+  external struct_wl_listener load;
 
   external struct_wl_listener destroy;
 }

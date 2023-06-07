@@ -16,6 +16,12 @@
 #include <wlr/util/edges.h>
 #include <xkbcommon/xkbcommon.h>
 
+enum wb_image_error_type {
+    image_error_type_none,
+    image_error_type_image_not_found,
+    image_error_type_image_load_failed,
+};
+
 enum wb_event_type {
     event_type_monitor_new,
     event_type_monitor_remove,
@@ -52,6 +58,7 @@ enum wb_event_type {
     event_type_cursor_image,
 
     event_type_image_destroy,
+    event_type_image_load,
 };
 
 struct waybright {
@@ -84,22 +91,25 @@ struct waybright_renderer {
     float color_background[4];
 };
 
+struct waybright_image_event {
+    struct waybright_image* wb_image;
+    void* event;
+};
+
 struct waybright_image {
     struct wlr_surface* wlr_surface;
     struct wlr_texture* wlr_texture;
 
-    bool is_ready;
+    bool is_loaded;
     const char* path;
 
     struct {
-        struct wl_listener ready;
+        struct wl_listener load;
         struct wl_listener destroy;
     } listeners;
 
     int width;
     int height;
-    int offset_x;
-    int offset_y;
 
     void(*handle_event)(int type, void* data);
 };
@@ -212,7 +222,7 @@ int waybright_init(struct waybright*);
 int waybright_open_socket(struct waybright* wb, const char* socket_name);
 void waybright_check_events(struct waybright* wb);
 void waybright_close_socket(struct waybright* wb);
-struct waybright_image* waybright_load_png_image(struct waybright* wb, const char* path);
+struct waybright_image* waybright_load_image(struct waybright* wb, const char* path, int* error);
 
 void waybright_renderer_destroy(struct waybright_renderer* wb_renderer);
 void waybright_renderer_set_background_color(struct waybright_renderer* wb_renderer, int color);

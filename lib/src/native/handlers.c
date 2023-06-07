@@ -465,8 +465,8 @@ void handle_input_new_event(struct wl_listener *listener, void *data) {
         wb->handle_event(event_type_input_new, wb_input);
 }
 
-void handle_image_ready_event(struct wl_listener *listener, void *data) {
-    struct waybright_image* wb_image = wl_container_of(listener, wb_image, listeners.ready);
+void handle_image_load_event(struct wl_listener *listener, void *data) {
+    struct waybright_image* wb_image = wl_container_of(listener, wb_image, listeners.load);
     struct wlr_texture* wlr_texture = wlr_surface_get_texture(wb_image->wlr_surface);
 
     if (!wlr_texture)
@@ -475,7 +475,10 @@ void handle_image_ready_event(struct wl_listener *listener, void *data) {
     wb_image->wlr_texture = wlr_texture;
     wb_image->width = wlr_texture->width;
     wb_image->height = wlr_texture->height;
-    wb_image->is_ready = true;
+    wb_image->is_loaded = true;
+
+    if (wb_image->handle_event)
+        wb_image->handle_event(event_type_image_load, wb_image);
 }
 
 void handle_image_destroy_event(struct wl_listener *listener, void *data) {
@@ -492,16 +495,19 @@ void handle_cursor_image_event(struct wl_listener *listener, void *data) {
     struct wlr_seat_pointer_request_set_cursor_event* event = data;
     struct wlr_surface* wlr_surface = event->surface;
 
+    struct waybright_image_event wb_image_event = {
+        NULL,
+        event
+    };
+
     if (!wlr_surface) {
         if (wb->handle_event)
-            wb->handle_event(event_type_cursor_image, NULL);
+            wb->handle_event(event_type_cursor_image, &wb_image_event);
         return;
     }
 
-    struct waybright_image* wb_image = waybright_image_create_from_surface(wlr_surface);
-    wb_image->offset_x = -event->hotspot_x;
-    wb_image->offset_y = -event->hotspot_y;
+    wb_image_event.wb_image = waybright_image_create_from_surface(wlr_surface);
 
     if (wb->handle_event)
-        wb->handle_event(event_type_cursor_image, wb_image);
+        wb->handle_event(event_type_cursor_image, &wb_image_event);
 }

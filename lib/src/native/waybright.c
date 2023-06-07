@@ -1,5 +1,6 @@
+#define STB_IMAGE_IMPLEMENTATION
+
 #include <stdlib.h>
-#include <cairo/cairo.h>
 #include <drm_fourcc.h>
 #include <wlr/render/wlr_texture.h>
 #include <wlr/types/wlr_data_control_v1.h>
@@ -10,6 +11,7 @@
 #include <wlr/types/wlr_single_pixel_buffer_v1.h>
 #include <wlr/types/wlr_subcompositor.h>
 #include <wlr/types/wlr_viewporter.h>
+#include "stb_image.h"
 #include "waybright.h"
 #include "handlers.h"
 
@@ -144,37 +146,43 @@ void waybright_close_socket(struct waybright* wb) {
     wl_display_terminate(wb->wl_display);
 }
 
-struct waybright_image* waybright_load_png_image(struct waybright* wb, const char* path) {
-    cairo_surface_t* cairo_surface = cairo_image_surface_create_from_png(path);
+struct waybright_image* waybright_load_image(struct waybright* wb, const char* path, int* error) {
+    *error = image_error_type_none;
 
-    unsigned char* data = cairo_image_surface_get_data(cairo_surface);
-
-    if (!data) {
-        cairo_surface_destroy(cairo_surface);
+    FILE *fp = fopen(path, "r");
+    if (!fp) {
+        *error = image_error_type_image_not_found;
         return NULL;
     }
 
-    int width = cairo_image_surface_get_width(cairo_surface);
-    int height = cairo_image_surface_get_height(cairo_surface);
-    int stride = cairo_image_surface_get_stride(cairo_surface);
+    int width, height;
+    unsigned char* data = stbi_load_from_file(fp, &width, &height, NULL, 4);
+    fclose(fp);
+    if (!data) {
+        *error = image_error_type_image_load_failed;
+        return NULL;
+    }
+
+    int stride = width * 4;
 
     struct wlr_texture* wlr_texture = wlr_texture_from_pixels(
         wb->wlr_renderer,
-        DRM_FORMAT_ARGB8888,
+        DRM_FORMAT_ABGR8888,
         stride,
         width,
         height,
         data
     );
 
-    cairo_surface_destroy(cairo_surface);
-    free(data);
+    stbi_image_free(data);
 
-    if (!wlr_texture)
+    if (!wlr_texture) {
+        *error = image_error_type_image_load_failed;
         return NULL;
+    }
 
     struct waybright_image* wb_image = waybright_image_create_from_texture(wlr_texture);
-    wb_image->path = path;
+    wb_image->path = strdup(path);
 
     return wb_image;
 }

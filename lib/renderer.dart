@@ -77,15 +77,14 @@ class Renderer {
   void drawImage(Image image, num x, num y,
       {int? width, int? height, double? alpha}) {
     var rendererPtr = _rendererPtr;
-    var imagePtr = image._imagePtr;
-    if (rendererPtr != null && imagePtr != null) {
+    if (rendererPtr != null) {
       _wblib.waybright_renderer_draw_image(
         rendererPtr,
-        imagePtr,
+        image._imagePtr,
         x.toInt(),
         y.toInt(),
-        width ?? imagePtr.ref.width,
-        height ?? imagePtr.ref.height,
+        width ?? image._imagePtr.ref.width,
+        height ?? image._imagePtr.ref.height,
         alpha ?? 1.0,
       );
     }

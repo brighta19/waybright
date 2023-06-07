@@ -34,6 +34,8 @@ var popupWindows = <MyWindow, Queue<MyWindow>>{};
 var tempWindows = <MyWindow>[];
 var cursorX = 10.0;
 var cursorY = 10.0;
+var cursorImageHotspotX = 0;
+var cursorImageHotspotY = 0;
 
 var cursorXAtGrab = 0.0;
 var cursorYAtGrab = 0.0;
@@ -120,8 +122,12 @@ void onNewMonitor(NewMonitorEvent event) {
     if (cursorImage == null && getHoveredWindow() == null) {
       renderer.fillStyle = 0xffffffdd;
       renderer.fillRect(cursorX, cursorY, 5, 5);
-    } else if (cursorImage != null && cursorImage!.isReady) {
-      renderer.drawImage(cursorImage!, cursorX, cursorY);
+    } else if (cursorImage != null && cursorImage!.isLoaded) {
+      renderer.drawImage(
+        cursorImage!,
+        cursorX - cursorImageHotspotX,
+        cursorY - cursorImageHotspotY,
+      );
     }
   };
 
@@ -347,6 +353,8 @@ void onNewInput(NewInputEvent event) {
 
 void onCursorImage(CursorImageEvent event) {
   cursorImage = event.image;
+  cursorImageHotspotX = event.hotspotX;
+  cursorImageHotspotY = event.hotspotY;
 }
 
 final compositor = Waybright();

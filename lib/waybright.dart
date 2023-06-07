@@ -19,6 +19,7 @@ part 'events/keyboard/keyboard_event.dart';
 part 'events/keyboard/keyboard_key.dart';
 part 'events/keyboard/keyboard_modifiers.dart';
 part 'events/keyboard/keyboard_update.dart';
+part 'events/image_events.dart';
 part 'events/window_events.dart';
 part 'events/monitor/monitor_frame.dart';
 part 'devices/pointer.dart';
@@ -104,14 +105,18 @@ class Waybright {
           keyboard: keyboard,
         ));
       } else if (type == enum_wb_event_type.event_type_cursor_image) {
-        var imagePtr = data as Pointer<struct_waybright_image>;
+        var eventPtr = data as Pointer<struct_waybright_image_event>;
+        var wlrEventPtr = eventPtr.ref.event
+            as Pointer<struct_wlr_seat_pointer_request_set_cursor_event>;
+        var image = eventPtr.ref.wb_image == nullptr
+            ? null
+            : Image._fromPointer(eventPtr.ref.wb_image);
 
-        if (imagePtr == nullptr) {
-          waybright.onCursorImage?.call(CursorImageEvent(null));
-        } else {
-          var image = Image._fromPointer(imagePtr);
-          waybright.onCursorImage?.call(CursorImageEvent(image));
-        }
+        waybright.onCursorImage?.call(CursorImageEvent(
+          image,
+          wlrEventPtr.ref.hotspot_x,
+          wlrEventPtr.ref.hotspot_y,
+        ));
       }
     }
   }
@@ -129,11 +134,25 @@ class Waybright {
     _wbPtr.ref.handle_event = Pointer.fromFunction(_onEvent);
   }
 
-  Future<Image> _loadPngImage(String path) async {
+  Future<Image> _loadImage(String path) async {
     var pathPtr = path.toNativeUtf8() as Pointer<Char>;
-    var imagePtr = _wblib.waybright_load_png_image(_wbPtr, pathPtr);
+    var errorTypePtr = calloc<Int>();
+
+    var imagePtr = _wblib.waybright_load_image(_wbPtr, pathPtr, errorTypePtr);
+    int errorType = errorTypePtr.value;
+
+    calloc.free(pathPtr);
+    calloc.free(errorTypePtr);
+
     if (imagePtr == nullptr) {
-      throw Exception("Loading png image failed unexpectedly.");
+      switch (errorType) {
+        case enum_wb_image_error_type.image_error_type_image_not_found:
+          throw Exception("Image not found.");
+        case enum_wb_image_error_type.image_error_type_image_load_failed:
+          throw Exception("Loading image failed.");
+        default:
+          throw Exception("An unknown error occurred.");
+      }
     }
 
     return Image._fromPointer(imagePtr);
@@ -174,6 +193,7 @@ class Waybright {
   void Function(NewMonitorEvent event)? onNewMonitor;
   void Function(WindowCreateEvent event)? onWindowCreate;
   void Function(NewInputEvent event)? onNewInput;
+  // TODO: move handler to window?
   void Function(CursorImageEvent event)? onCursorImage;
 
   get isRunning => _isRunning;
@@ -185,7 +205,7 @@ class Waybright {
     _initialize();
   }
 
-  Future<Image> loadPngImage(String path) async => _loadPngImage(path);
+  Future<Image> loadImage(String path) async => _loadImage(path);
   String openSocket([String? socketName]) => _openSocket(socketName);
   void closeSocket() => _closeSocket();
 }

@@ -412,6 +412,7 @@ class Window {
   num get offsetY => _wlrSurfacePtr.ref.current.geometry.y;
 
   /// The horizontal position of this popup window relative to its parent.
+  ///
   /// This will always be `0` if not a popup window.
   num get popupX => isPopup ? _wlrPopupPtr.ref.current.geometry.x : 0;
 
@@ -608,6 +609,9 @@ class Window {
     _ensurePointerFocus(
         update.pointer, update.windowCursorX, update.windowCursorY);
 
+    // BUG: Crashes from a null pointer dereference if the window is closed
+    // TODO: either remove the pointer device focus from the window or ensure
+    // that the window pointer is not null before submitting the event
     _wblib.waybright_window_submit_pointer_button_event(
       _windowPtr,
       update.event.elapsedTimeMilliseconds,
