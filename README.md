@@ -1,56 +1,66 @@
 # waybright
 
-A dart library for building wayland compositors using wlroots, along with a
-sample compositor located in `/bin`.
+*Waybright* is a work-in-progress dart library utilizing wlroots for building
+wayland compositors.\
+Only for Linux (and probably WSL).
 
-**WARNING: I have no idea what I'm doing. Use this library if you dare.**
-
----
-
-I got interested in the concept of making my own window manager. Wayland is apparently the new fresh shoes compared to the old X11.
-
-This is my first venture in wayland. and x11. and (kinda) custom desktop environments. and building (public) libraries. etc.
-
-But I'm bored of reading and trying to understand.
-Now, me just code. Don't expect perfectness.
-
-**YOLO**.
+**Use this library if you dare. 🙃**
 
 ---
 
-How did i come up with `waybright`? I took wayland, I took my name (Bright) and I *performed intense fusion*.
-
-And I like it. 🙂
-
----
-
-## Requirements
-- wayland (I'm using *v1.21.93*)
-- wayland-protocols (I'm using *v1.27*)
-- wlroots (I'm using *v0.16.2*)
-- whatever those three libraries require
+## Dependencies
+- wayland (v1.21.93)
+- wayland-protocols (v1.27)
+- wlroots (v0.16.2)
 - make
-- dart
 
-## Building
-```sh
-make
+## Using waybright
+
+### `pubspec.yaml`
+
+There may be breaking changes, so it's recommended to reference a specific
+commit SHA when adding this dependency to your project's `pubspec.yaml`.
+
+Example:
+```yaml
+# ...
+dependencies:
+  waybright:
+    git:
+      url: https://github.com/brighta19/waybright.git
+      ref: <commit SHA>
+# ...
 ```
 
-## Running
-```sh
-./build/waybright
+### `waybright.so`
+
+The current working directory of a running dart program must also contain
+`waybright.so`, a custom shared library. Whatever directory you run a dart
+project must also have `waybright.so` This may or may not be the root directory
+of the dart project. [See the example.](#running-the-example) \
+To create it,
+simply run in the root directory:
+
+```console
+> make
+```
+
+Then move or copy `build/waybright.so` into your own project.
+
+## Running the example
+
+Building `waybright.so` also produces a copy in `/example`, so simply run the
+`main.dart` program:
+
+```console
+> cd example
+> dart run main.dart
 ```
 
 ## Documentation
-Generate using this command:
+
+Generate the (very little) documentation using this command:
+
 ```sh
 dart doc
-```
-
-## Development
-Helpful commands:
-```sh
-make build-deps # to compile src/wayland.c and build the dart bindings
-dart run # to compile and execute temporarily in one command
 ```
