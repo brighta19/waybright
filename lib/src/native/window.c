@@ -4,6 +4,21 @@
 void waybright_window_destroy(struct waybright_window* wb_window) {
     if (!wb_window) return;
 
+    wl_list_remove(&wb_window->listeners.destroy.link);
+    wl_list_remove(&wb_window->listeners.map.link);
+    wl_list_remove(&wb_window->listeners.unmap.link);
+    wl_list_remove(&wb_window->listeners.new_popup.link);
+    wl_list_remove(&wb_window->listeners.commit.link);
+    wl_list_remove(&wb_window->listeners.request_move.link);
+    wl_list_remove(&wb_window->listeners.request_maximize.link);
+    wl_list_remove(&wb_window->listeners.request_minimize.link);
+    wl_list_remove(&wb_window->listeners.request_fullscreen.link);
+    wl_list_remove(&wb_window->listeners.request_show_window_menu.link);
+    wl_list_remove(&wb_window->listeners.request_resize.link);
+    wl_list_remove(&wb_window->listeners.set_title.link);
+    wl_list_remove(&wb_window->listeners.set_app_id.link);
+    wl_list_remove(&wb_window->listeners.set_parent.link);
+
     free(wb_window);
 }
 

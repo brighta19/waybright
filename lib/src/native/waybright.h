@@ -120,7 +120,7 @@ struct waybright_monitor {
     struct wlr_output* wlr_output;
 
     struct {
-        struct wl_listener remove;
+        struct wl_listener destroy;
         struct wl_listener frame;
     } listeners;
 
@@ -180,7 +180,7 @@ struct waybright_pointer {
     double y;
 
     struct {
-        struct wl_listener remove;
+        struct wl_listener destroy;
         struct wl_listener move;
         struct wl_listener teleport;
         struct wl_listener button;
@@ -201,7 +201,7 @@ struct waybright_keyboard {
     struct wlr_keyboard* wlr_keyboard;
 
     struct {
-        struct wl_listener remove;
+        struct wl_listener destroy;
         struct wl_listener key;
         struct wl_listener modifiers;
     } listeners;

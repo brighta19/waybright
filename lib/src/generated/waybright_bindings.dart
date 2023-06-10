@@ -8187,7 +8187,7 @@ class UnnamedStruct32 extends ffi.Struct {
 }
 
 class UnnamedStruct33 extends ffi.Struct {
-  external struct_wl_listener remove;
+  external struct_wl_listener destroy;
 
   external struct_wl_listener frame;
 }
@@ -8277,7 +8277,7 @@ class struct_waybright_pointer extends ffi.Struct {
 }
 
 class UnnamedStruct35 extends ffi.Struct {
-  external struct_wl_listener remove;
+  external struct_wl_listener destroy;
 
   external struct_wl_listener move;
 
@@ -8304,7 +8304,7 @@ class struct_waybright_keyboard extends ffi.Struct {
 }
 
 class UnnamedStruct36 extends ffi.Struct {
-  external struct_wl_listener remove;
+  external struct_wl_listener destroy;
 
   external struct_wl_listener key;
 

@@ -6,6 +6,10 @@ void waybright_keyboard_destroy(struct waybright_keyboard* wb_keyboard) {
     if (wb_keyboard->wb_input)
         free(wb_keyboard->wb_input);
 
+    wl_list_remove(&wb_keyboard->listeners.destroy.link);
+    wl_list_remove(&wb_keyboard->listeners.key.link);
+    wl_list_remove(&wb_keyboard->listeners.modifiers.link);
+
     free(wb_keyboard);
 }
 

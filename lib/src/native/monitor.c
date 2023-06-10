@@ -5,6 +5,9 @@ void waybright_monitor_destroy(struct waybright_monitor* wb_monitor) {
 
     waybright_renderer_destroy(wb_monitor->wb_renderer);
 
+    wl_list_remove(&wb_monitor->listeners.destroy.link);
+    wl_list_remove(&wb_monitor->listeners.frame.link);
+
     free(wb_monitor);
 }
 

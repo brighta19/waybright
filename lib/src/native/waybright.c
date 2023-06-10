@@ -47,6 +47,10 @@ void waybright_destroy(struct waybright* wb) {
     wl_display_destroy_clients(wb->wl_display);
     wl_display_destroy(wb->wl_display);
 
+    wl_list_remove(&wb->listeners.cursor_image.link);
+    wl_list_remove(&wb->listeners.input_new.link);
+    wl_list_remove(&wb->listeners.monitor_new.link);
+    wl_list_remove(&wb->listeners.new_xdg_surface.link);
     free(wb);
 }
 

@@ -4,6 +4,9 @@
 void waybright_image_destroy(struct waybright_image* wb_image) {
     if (!wb_image) return;
 
+    wl_list_remove(&wb_image->listeners.destroy.link);
+    wl_list_remove(&wb_image->listeners.load.link);
+
     free(wb_image);
 }
 
@@ -23,11 +26,11 @@ struct waybright_image* waybright_image_create_from_surface(struct wlr_surface* 
         // Cannot call handle_event(image_load) since it hasn't been set in dart yet
     }
     else {
-        wb_image->listeners.load.notify = handle_image_load_event;
-        wl_signal_add(&wlr_surface->events.commit, &wb_image->listeners.load);
-
         wb_image->is_loaded = false;
     }
+
+    wb_image->listeners.load.notify = handle_image_load_event;
+    wl_signal_add(&wlr_surface->events.commit, &wb_image->listeners.load);
 
     return wb_image;
 }

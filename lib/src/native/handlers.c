@@ -2,8 +2,7 @@
 #include "handlers.h"
 
 void handle_monitor_remove_event(struct wl_listener *listener, void *data) {
-    struct waybright_monitor* wb_monitor = wl_container_of(listener, wb_monitor, listeners.remove);
-    // struct wlr_output *wlr_output = data;
+    struct waybright_monitor* wb_monitor = wl_container_of(listener, wb_monitor, listeners.destroy);
 
     if (wb_monitor->handle_event)
         wb_monitor->handle_event(event_type_monitor_remove, wb_monitor);
@@ -63,8 +62,8 @@ void handle_monitor_new_event(struct wl_listener *listener, void *data) {
     wb_monitor->wb_renderer = wb_renderer;
     wb_monitor->wlr_output = wlr_output;
 
-    wb_monitor->listeners.remove.notify = handle_monitor_remove_event;
-    wl_signal_add(&wlr_output->events.destroy, &wb_monitor->listeners.remove);
+    wb_monitor->listeners.destroy.notify = handle_monitor_remove_event;
+    wl_signal_add(&wlr_output->events.destroy, &wb_monitor->listeners.destroy);
     wb_monitor->listeners.frame.notify = handle_monitor_frame_event;
     wl_signal_add(&wlr_output->events.frame, &wb_monitor->listeners.frame);
 
@@ -343,7 +342,7 @@ void handle_pointer_button_event(struct wl_listener *listener, void *data) {
 }
 
 void handle_pointer_remove_event(struct wl_listener* listener, void *data) {
-    struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.remove);
+    struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.destroy);
 
     if (wb_pointer->handle_event)
         wb_pointer->handle_event(event_type_pointer_remove, wb_pointer);
@@ -354,8 +353,8 @@ void handle_pointer_remove_event(struct wl_listener* listener, void *data) {
 void handle_pointer_new_event(struct waybright* wb, struct waybright_pointer* wb_pointer) {
     struct wlr_input_device* wlr_input_device = wb_pointer->wb_input->wlr_input_device;
 
-    wb_pointer->listeners.remove.notify = handle_pointer_remove_event;
-    wl_signal_add(&wlr_input_device->events.destroy, &wb_pointer->listeners.remove);
+    wb_pointer->listeners.destroy.notify = handle_pointer_remove_event;
+    wl_signal_add(&wlr_input_device->events.destroy, &wb_pointer->listeners.destroy);
 
     struct wlr_pointer* wlr_pointer = wb_pointer->wlr_pointer;
 
@@ -370,7 +369,7 @@ void handle_pointer_new_event(struct waybright* wb, struct waybright_pointer* wb
 }
 
 void handle_keyboard_remove_event(struct wl_listener* listener, void *data) {
-    struct waybright_keyboard* wb_keyboard = wl_container_of(listener, wb_keyboard, listeners.remove);
+    struct waybright_keyboard* wb_keyboard = wl_container_of(listener, wb_keyboard, listeners.destroy);
 
     if (wb_keyboard->handle_event)
         wb_keyboard->handle_event(event_type_keyboard_remove, wb_keyboard);
@@ -417,8 +416,8 @@ void handle_keyboard_new_event(struct waybright* wb, struct waybright_keyboard* 
 	xkb_context_unref(context);
 	wlr_keyboard_set_repeat_info(wlr_keyboard, 25, 600);
 
-    wb_keyboard->listeners.remove.notify = handle_keyboard_remove_event;
-    wl_signal_add(&wlr_input_device->events.destroy, &wb_keyboard->listeners.remove);
+    wb_keyboard->listeners.destroy.notify = handle_keyboard_remove_event;
+    wl_signal_add(&wlr_input_device->events.destroy, &wb_keyboard->listeners.destroy);
     wb_keyboard->listeners.key.notify = handle_keyboard_key_event;
     wl_signal_add(&wlr_keyboard->events.key, &wb_keyboard->listeners.key);
     wb_keyboard->listeners.modifiers.notify = handle_keyboard_modifiers_event;
@@ -467,6 +466,10 @@ void handle_input_new_event(struct wl_listener *listener, void *data) {
 
 void handle_image_load_event(struct wl_listener *listener, void *data) {
     struct waybright_image* wb_image = wl_container_of(listener, wb_image, listeners.load);
+
+    if (wb_image->is_loaded)
+        return;
+
     struct wlr_texture* wlr_texture = wlr_surface_get_texture(wb_image->wlr_surface);
 
     if (!wlr_texture)

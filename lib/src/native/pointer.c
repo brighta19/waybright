@@ -6,6 +6,12 @@ void waybright_pointer_destroy(struct waybright_pointer* wb_pointer) {
     if (wb_pointer->wb_input)
         free(wb_pointer->wb_input);
 
+    wl_list_remove(&wb_pointer->listeners.destroy.link);
+    wl_list_remove(&wb_pointer->listeners.axis.link);
+    wl_list_remove(&wb_pointer->listeners.button.link);
+    wl_list_remove(&wb_pointer->listeners.move.link);
+    wl_list_remove(&wb_pointer->listeners.teleport.link);
+
     free(wb_pointer);
 }
 
