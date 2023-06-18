@@ -79,7 +79,7 @@ MyWindow? getHoveredWindow() {
   return getHoveredWindowFromList(windows);
 }
 
-void onNewMonitor(NewMonitorEvent event) {
+void onNewMonitor(MonitorAddEvent event) {
   var monitor = event.monitor;
   if (currentMonitor != null) return;
   currentMonitor = monitor;
@@ -96,7 +96,7 @@ void onNewMonitor(NewMonitorEvent event) {
   var renderer = monitor.renderer;
   renderer.backgroundColor = backgroundColor;
 
-  monitor.onRemove = (event) {
+  monitor.onRemoving = (event) {
     if (monitor == currentMonitor) {
       currentMonitor = null;
     }
@@ -360,7 +360,7 @@ void onCursorImage(CursorImageEvent event) {
 final compositor = Waybright();
 
 void main(List<String> args) {
-  compositor.onNewMonitor = onNewMonitor;
+  compositor.onMonitorAdd = onNewMonitor;
   compositor.onWindowCreate = onWindowCreate;
   compositor.onNewInput = onNewInput;
   compositor.onCursorImage = onCursorImage;

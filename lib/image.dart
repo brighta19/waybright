@@ -20,32 +20,31 @@ class Image {
         image.onLoad?.call(ImageLoadEvent(image));
         break;
       default:
-        throw Error();
+        throw ArgumentError("Internal error: unknown event type $type");
     }
   }
+
+  final Pointer<struct_waybright_image> _imagePtr;
 
   Image._fromPointer(this._imagePtr) {
     _imageInstances[_imagePtr] = this;
     _imagePtr.ref.handle_event = Pointer.fromFunction(_onEvent);
   }
 
-  final Pointer<struct_waybright_image> _imagePtr;
-
   /// A handler that is called when the image is being destroyed.
-  void Function(ImageDestroyingEvent)? onDestroying;
+  void Function(ImageDestroyingEvent event)? onDestroying;
 
   /// A handler that is called when the image is loaded.
   ///
   /// The handler will not be called if the image is already loaded. Use
   /// [isLoaded] to check if the image is loaded.
-  void Function(ImageLoadEvent)? onLoad;
+  void Function(ImageLoadEvent event)? onLoad;
 
   /// Whether this image is loaded.
   bool get isLoaded => _imagePtr.ref.is_loaded;
 
   /// The path to this image.
-  String get path =>
-      _imagePtr.ref.path == nullptr ? "" : _toString(_imagePtr.ref.path);
+  String get path => _toDartString(_imagePtr.ref.path) ?? "";
 
   /// The horizontal size of this image.
   int get width => _imagePtr.ref.width;

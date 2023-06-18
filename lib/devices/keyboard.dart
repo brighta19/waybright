@@ -56,6 +56,8 @@ class KeyboardDevice extends InputDevice {
     _keyboardPtr?.ref.handle_event = Pointer.fromFunction(_onEvent);
   }
 
+  // TODO: maybe get focused window?
+
   bool isFocusedOnAWindow() {
     var keyboardPtr = _keyboardPtr;
     return keyboardPtr == null

@@ -108,8 +108,7 @@ struct waybright_image* waybright_renderer_capture_window_frame(struct waybright
 
     struct wlr_buffer* wlr_buffer = wlr_surface->buffer->source;
     if (!wlr_buffer) {
-        printf("wlr_buffer is NULL\n");
-        fflush(stdout);
+        fprintf(stderr, "waybright_renderer_capture_window_frame: wlr_buffer is NULL\n");
         return NULL;
     }
 
@@ -120,8 +119,7 @@ struct waybright_image* waybright_renderer_capture_window_frame(struct waybright
     wlr_buffer_unlock(wlr_buffer);
 
     if (!wlr_texture) {
-        printf("wlr_texture is NULL\n");
-        fflush(stdout);
+        fprintf(stderr, "waybright_renderer_capture_window_frame: wlr_texture is NULL\n");
         return NULL;
     }
 

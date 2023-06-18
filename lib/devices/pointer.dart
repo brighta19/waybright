@@ -52,10 +52,12 @@ PointerAxisOrientation _getPointerAxisOrientationFromWlrAxisEvent(
 
 _PointerTeleportDetails? _getMonitorFromWlrTeleportEvent(
     Pointer<struct_wlr_pointer_motion_absolute_event> event) {
+  var monitors = Monitor._monitorInstances.values;
+
 // Imagine a layout where new monitors are added to the right.
   var outputWidthSum = 0;
   var maxOutputHeight = 0;
-  for (var monitor in Monitor._monitorInstances) {
+  for (var monitor in monitors.toList()) {
     outputWidthSum += monitor.mode.width;
     if (monitor.mode.height > maxOutputHeight) {
       maxOutputHeight = monitor.mode.height;
@@ -66,7 +68,7 @@ _PointerTeleportDetails? _getMonitorFromWlrTeleportEvent(
   var y = event.ref.y * maxOutputHeight;
 
   var layoutMonitorX = 0;
-  for (var monitor in Monitor._monitorInstances) {
+  for (var monitor in monitors.toList()) {
     if (x >= layoutMonitorX && x < layoutMonitorX + monitor.mode.width) {
       return _PointerTeleportDetails(monitor, x - layoutMonitorX, y);
     }

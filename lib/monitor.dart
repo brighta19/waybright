@@ -1,143 +1,162 @@
 part of "./waybright.dart";
 
-class RemoveMonitorEvent {}
+Iterable<Pointer<struct_wlr_output_mode>> _getModeIterator(
+    Pointer<struct_waybright_monitor> monitorPtr) sync* {
+  var head = monitorPtr.ref.wlr_output.ref.modes.next;
+  var link = head;
+  Pointer<struct_wlr_output_mode> outputModePtr;
+  while (link.ref.next != head) {
+    outputModePtr = _wblib.waybright_get_wlr_output_mode_from_wl_list(link);
+    yield outputModePtr;
+    link = link.ref.next;
+  }
+}
 
 /// A physical or virtual monitor.
 class Monitor {
-  static final _monitorInstances = <Monitor>[];
+  static final _monitorInstances =
+      <Pointer<struct_waybright_monitor>, Monitor>{};
 
   static void _onEvent(int type, Pointer<Void> data) {
-    var monitors = _monitorInstances.toList();
-    for (var monitor in monitors) {
-      var monitorPtr = data as Pointer<struct_waybright_monitor>;
-      if (monitor._monitorPtr != monitorPtr) continue;
+    var monitorPtr = data as Pointer<struct_waybright_monitor>;
+    var monitor = _monitorInstances[monitorPtr];
+    if (monitor == null) return;
 
-      switch (type) {
-        case enum_wb_event_type.event_type_monitor_remove:
-          monitor.onRemove?.call(RemoveMonitorEvent());
-          _monitorInstances.remove(monitor);
-          break;
-        case enum_wb_event_type.event_type_monitor_frame:
-          monitor.onFrame?.call(MonitorFrameEvent(monitor));
-          break;
-      }
+    switch (type) {
+      case enum_wb_event_type.event_type_monitor_remove:
+        monitor.onRemoving?.call(MonitorRemovingEvent(monitor));
+        _monitorInstances.remove(monitor);
+        break;
+      case enum_wb_event_type.event_type_monitor_frame:
+        monitor.onFrame?.call(MonitorFrameEvent(monitor));
+        break;
+      default:
+        throw ArgumentError("Internal error: unknown event type $type");
     }
   }
 
-  Pointer<struct_waybright_monitor>? _monitorPtr;
+  final Pointer<struct_waybright_monitor> _monitorPtr;
   bool _isEnabled = false;
-  List<Mode> _modes = [];
+  final _modes = <Mode>[];
   bool _hasIteratedThroughModes = false;
   Mode? _preferredMode;
   Mode _mode = Mode(0, 0, 0);
 
+  Monitor._fromPointer(
+    this._monitorPtr,
+  ) : renderer = Renderer._fromPointer(_monitorPtr.ref.wb_renderer) {
+    _monitorInstances[_monitorPtr] = this;
+    _monitorPtr.ref.handle_event = Pointer.fromFunction(_onEvent);
+  }
+
   void _enable() {
-    var monitorPtr = _monitorPtr;
-    if (monitorPtr != null) {
-      _wblib.waybright_monitor_enable(monitorPtr);
-    }
+    _wblib.waybright_monitor_enable(_monitorPtr);
     _isEnabled = true;
   }
 
   void _disable() {
-    var monitorPtr = _monitorPtr;
-    if (monitorPtr != null) {
-      _wblib.waybright_monitor_disable(monitorPtr);
-    }
+    _wblib.waybright_monitor_disable(_monitorPtr);
     _isEnabled = false;
   }
 
-  /// This monitor's modes (resolution + refresh rate).
+  /// A handler that is called when this monitor is being removed.
+  void Function(MonitorRemovingEvent event)? onRemoving;
+
+  /// A handler that is called when this monitor is ready for a new frame.
+  void Function(MonitorFrameEvent event)? onFrame;
+
+  /// This monitor's renderer.
+  final Renderer renderer;
+
+  /// This monitor's name.
+  String get name => _toDartString(_monitorPtr.ref.wlr_output.ref.name) ?? "";
+  set name(String value) =>
+      _wblib.wlr_output_set_name(_monitorPtr.ref.wlr_output, _toCString(value));
+
+  /// This monitor's description.
+  String? get description =>
+      _toDartString(_monitorPtr.ref.wlr_output.ref.description);
+  set description(String? value) => _wblib.wlr_output_set_description(
+      _monitorPtr.ref.wlr_output, _toCString(value));
+
+  /// This monitor's make.
+  String? get make => _toDartString(_monitorPtr.ref.wlr_output.ref.make);
+
+  /// This monitor's model.
+  String? get model => _toDartString(_monitorPtr.ref.wlr_output.ref.model);
+
+  /// This monitor's serial number.
+  String? get serialNumber =>
+      _toDartString(_monitorPtr.ref.wlr_output.ref.serial);
+
+  /// This monitor's physical width in millimeters.
+  int get physicalWidth => _monitorPtr.ref.wlr_output.ref.phys_width;
+
+  /// This monitor's physical height in millimeters.
+  int get physicalHeight => _monitorPtr.ref.wlr_output.ref.phys_height;
+
+  /// Whether this monitor is on and rendering or not.
+  bool get isEnabled => _isEnabled;
+
+  // TODO: Custom modes?
+
+  /// Whether this monitor has a custom mode set or not.
+  bool get hasCustomModeSet => mode._outputModePtr == null;
+
+  /// This monitor's available modes.
   List<Mode> get modes {
     if (_hasIteratedThroughModes) return _modes;
 
-    var monitorPtr = _monitorPtr;
-    if (monitorPtr != null) {
-      var head = monitorPtr.ref.wlr_output.ref.modes.next;
-      var link = head;
-      Pointer<struct_wlr_output_mode> outputModePtr;
-      while (link.ref.next != head) {
-        outputModePtr = _wblib.waybright_get_wlr_output_mode_from_wl_list(link);
-        var mode = Mode._fromPointer(outputModePtr);
+    var iterator = _getModeIterator(_monitorPtr);
+    for (var outputModePtr in iterator) {
+      var mode = Mode._fromPointer(outputModePtr);
 
-        // While I find modes, find the preferred mode
-        if (outputModePtr.ref.preferred) {
-          _preferredMode = mode;
-        }
-
-        _modes.add(mode);
-
-        link = link.ref.next;
+      // While I find modes, find the preferred mode
+      if (outputModePtr.ref.preferred) {
+        _preferredMode = mode;
       }
 
-      if (_preferredMode == null && _modes.isNotEmpty) {
-        _preferredMode = _modes[0];
-      }
-
-      _hasIteratedThroughModes = true;
-      return _modes;
+      _modes.add(mode);
     }
 
-    return [];
-  }
+    if (_preferredMode == null && _modes.isNotEmpty) {
+      _preferredMode = _modes.first;
+    }
 
-  set modes(List<Mode> modes) {
     _hasIteratedThroughModes = true;
-    _modes = modes;
+    return _modes;
   }
 
   /// This monitor's preferred mode.
   Mode? get preferredMode {
-    if (_hasIteratedThroughModes) return _preferredMode;
     modes;
     return _preferredMode;
   }
 
-  /// This monitor's resolution and refresh rate.
+  /// This monitor's current resolution and refresh rate.
   Mode get mode => _mode;
   set mode(Mode mode) {
-    var monitorPtr = _monitorPtr;
     var outputModePtr = mode._outputModePtr;
-    if (_monitorPtr != null && mode._outputModePtr != null) {
-      _wblib.wlr_output_set_mode(monitorPtr!.ref.wlr_output, outputModePtr!);
+
+    if (outputModePtr == null) {
+      _wblib.wlr_output_set_custom_mode(_monitorPtr.ref.wlr_output, mode.width,
+          mode.height, mode.refreshRate);
+    } else {
+      _wblib.wlr_output_set_mode(_monitorPtr.ref.wlr_output, outputModePtr);
     }
 
     _mode = mode;
   }
 
-  /// This monitor's name.
-  String name = "unknown-monitor";
-
-  /// This monitor's renderer.
-  final Renderer renderer;
-
-  void Function(RemoveMonitorEvent)? onRemove;
-  void Function(MonitorFrameEvent)? onFrame;
-
-  Monitor(this.renderer) {
-    _monitorInstances.add(this);
-  }
-
-  Monitor._fromPointer(
-    Pointer<struct_waybright_monitor> this._monitorPtr,
-    this.renderer,
-  ) {
-    _monitorInstances.add(this);
-    _monitorPtr?.ref.handle_event = Pointer.fromFunction(_onEvent);
-  }
-
-  /// Whether this monitor is allowed to render or not.
-  get isEnabled => _isEnabled;
-
-  /// Enables this monitor to start rendering.
+  /// Enables this monitor for rendering.
   void enable() {
-    if (_isEnabled) return;
+    if (isEnabled) return;
     _enable();
   }
 
-  /// Disables this monitor.
+  /// Disables this monitor from rendering.
   void disable() {
-    if (!_isEnabled) return;
+    if (!isEnabled) return;
     _disable();
   }
 }

@@ -21,7 +21,7 @@ part 'events/keyboard/keyboard_modifiers.dart';
 part 'events/keyboard/keyboard_update.dart';
 part 'events/image_events.dart';
 part 'events/window_events.dart';
-part 'events/monitor/monitor_frame.dart';
+part 'events/monitor_events.dart';
 part 'devices/pointer.dart';
 part 'devices/keyboard.dart';
 part 'input_device.dart';
@@ -34,15 +34,14 @@ part 'window.dart';
 final WaybrightLibrary _wblib =
     WaybrightLibrary(DynamicLibrary.open("./waybright.so"));
 
-String _toString(Pointer<Char> stringPtr) {
-  if (stringPtr == nullptr) return "";
+String? _toDartString(Pointer<Char> stringPtr) {
+  if (stringPtr == nullptr) return null;
   return (stringPtr as Pointer<Utf8>).toDartString();
 }
 
-class NewMonitorEvent {
-  final Monitor monitor;
-
-  NewMonitorEvent(this.monitor);
+Pointer<Char> _toCString(String? string) {
+  if (string == null) return nullptr;
+  return string.toNativeUtf8() as Pointer<Char>;
 }
 
 class NewInputEvent {
@@ -61,17 +60,15 @@ class Waybright {
       if (type == enum_wb_event_type.event_type_monitor_new) {
         var monitorPtr = data as Pointer<struct_waybright_monitor>;
 
-        var renderer = Renderer._fromPointer(monitorPtr.ref.wb_renderer);
-        var monitor = Monitor._fromPointer(monitorPtr, renderer)
-          ..name = _toString(monitorPtr.ref.wlr_output.ref.name);
-
-        waybright.onNewMonitor?.call(NewMonitorEvent(monitor));
+        waybright.onMonitorAdd?.call(
+          MonitorAddEvent(Monitor._fromPointer(monitorPtr)),
+        );
       } else if (type == enum_wb_event_type.event_type_window_new) {
         var windowPtr = data as Pointer<struct_waybright_window>;
 
-        var window = Window._fromPointer(windowPtr);
-
-        waybright.onWindowCreate?.call(WindowCreateEvent(window));
+        waybright.onWindowCreate?.call(
+          WindowCreateEvent(Window._fromPointer(windowPtr)),
+        );
       } else if (type == enum_wb_event_type.event_type_input_new) {
         var inputPtr = data as Pointer<struct_waybright_input>;
         var wlrInputDevice = inputPtr.ref.wlr_input_device.ref;
@@ -83,12 +80,12 @@ class Waybright {
           var pointerPtr = inputPtr.ref.pointer;
 
           pointer = PointerDevice._fromPointer(pointerPtr)
-            ..name = _toString(wlrInputDevice.name);
+            ..name = _toDartString(wlrInputDevice.name) ?? "";
         } else if (inputPtr.ref.keyboard != nullptr) {
           var keyboardPtr = inputPtr.ref.keyboard;
 
           keyboard = KeyboardDevice._fromPointer(keyboardPtr)
-            ..name = _toString(wlrInputDevice.name);
+            ..name = _toDartString(wlrInputDevice.name) ?? "";
         }
 
         int capabilities = enum_wl_seat_capability.WL_SEAT_CAPABILITY_POINTER;
@@ -135,13 +132,12 @@ class Waybright {
   }
 
   Future<Image> _loadImage(String path) async {
-    var pathPtr = path.toNativeUtf8() as Pointer<Char>;
     var errorTypePtr = calloc<Int>();
 
-    var imagePtr = _wblib.waybright_load_image(_wbPtr, pathPtr, errorTypePtr);
+    var imagePtr =
+        _wblib.waybright_load_image(_wbPtr, _toCString(path), errorTypePtr);
     int errorType = errorTypePtr.value;
 
-    calloc.free(pathPtr);
     calloc.free(errorTypePtr);
 
     if (imagePtr == nullptr) {
@@ -170,15 +166,13 @@ class Waybright {
   }
 
   String _openSocket([String? socketName]) {
-    var namePtr = socketName == null
-        ? nullptr
-        : socketName.toNativeUtf8() as Pointer<Char>;
+    var namePtr = _toCString(socketName);
 
     if (_wblib.waybright_open_socket(_wbPtr, namePtr) != 0) {
       throw Exception("Opening wayland socket failed unexpectedly.");
     }
 
-    this.socketName = _toString(_wbPtr.ref.socket_name);
+    this.socketName = _toDartString(_wbPtr.ref.socket_name);
     _runEventLoop();
     return this.socketName!;
   }
@@ -190,7 +184,7 @@ class Waybright {
 
   String? socketName;
 
-  void Function(NewMonitorEvent event)? onNewMonitor;
+  void Function(MonitorAddEvent event)? onMonitorAdd;
   void Function(WindowCreateEvent event)? onWindowCreate;
   void Function(NewInputEvent event)? onNewInput;
   // TODO: move handler to window?

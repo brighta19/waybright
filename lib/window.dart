@@ -7,6 +7,7 @@ part of "./waybright.dart";
 // TODO: use xdg positioner for popup windows
 // TODO: add user events to window events
 // TODO: maybe create texture class
+// TODO: xwayland support
 
 enum WindowEdge {
   none,
@@ -57,7 +58,7 @@ class Window {
   static void _onEvent(int type, Pointer<Void> data) {
     var eventPtr = data as Pointer<struct_waybright_window_event>;
     var window = _windowInstances[eventPtr.ref.wb_window];
-    if (window == null) throw Error();
+    if (window == null) throw StateError("Internal error: unknown window");
 
     switch (type) {
       case enum_wb_event_type.event_type_window_destroy:
@@ -115,7 +116,7 @@ class Window {
         break;
       case enum_wb_event_type.event_type_window_request_maximize:
         var hadRequestedMaximzed =
-            window._wlrToplevelPtr.ref.requested.maximized;
+            window._wlrXdgToplevelPtr.ref.requested.maximized;
         if (hadRequestedMaximzed) {
           window.onMaximizeRequest?.call(WindowMaximizeRequestEvent(window));
         } else {
@@ -128,7 +129,7 @@ class Window {
         break;
       case enum_wb_event_type.event_type_window_request_fullscreen:
         var hadRequestedFullscreen =
-            window._wlrToplevelPtr.ref.requested.fullscreen;
+            window._wlrXdgToplevelPtr.ref.requested.fullscreen;
         if (hadRequestedFullscreen) {
           window.onFullscreenRequest
               ?.call(WindowFullscreenRequestEvent(window));
@@ -155,16 +156,16 @@ class Window {
         window.onParentChange?.call(WindowParentChangeEvent(window));
         break;
       default:
-        throw Error();
+        throw ArgumentError("Internal error: unknown event type $type");
     }
   }
 
   final Pointer<struct_waybright_window> _windowPtr;
-  Pointer<struct_wlr_xdg_surface> get _wlrSurfacePtr =>
+  Pointer<struct_wlr_xdg_surface> get _wlrXdgSurfacePtr =>
       _windowPtr.ref.wlr_xdg_surface;
-  Pointer<struct_wlr_xdg_toplevel> get _wlrToplevelPtr =>
+  Pointer<struct_wlr_xdg_toplevel> get _wlrXdgToplevelPtr =>
       _windowPtr.ref.wlr_xdg_toplevel;
-  Pointer<struct_wlr_xdg_popup> get _wlrPopupPtr =>
+  Pointer<struct_wlr_xdg_popup> get _wlrXdgPopupPtr =>
       _windowPtr.ref.wlr_xdg_popup;
 
   var _previousWidth = 0;
@@ -195,37 +196,37 @@ class Window {
   }
 
   void _setMaximizeAttribute(bool value) {
-    _wblib.wlr_xdg_toplevel_set_maximized(_wlrToplevelPtr, value);
+    _wblib.wlr_xdg_toplevel_set_maximized(_wlrXdgToplevelPtr, value);
   }
 
   void _setFullscreenAttribute(bool value) {
-    _wblib.wlr_xdg_toplevel_set_fullscreen(_wlrToplevelPtr, value);
+    _wblib.wlr_xdg_toplevel_set_fullscreen(_wlrXdgToplevelPtr, value);
   }
 
   void _setActiveAttribute(bool value) {
-    _wblib.wlr_xdg_toplevel_set_activated(_wlrToplevelPtr, value);
+    _wblib.wlr_xdg_toplevel_set_activated(_wlrXdgToplevelPtr, value);
   }
 
   void _setResizingAttribute(bool value) {
-    _wblib.wlr_xdg_toplevel_set_resizing(_wlrToplevelPtr, value);
+    _wblib.wlr_xdg_toplevel_set_resizing(_wlrXdgToplevelPtr, value);
   }
 
   void _setSize({int? width, int? height}) {
     width ??= this.width;
     height ??= this.height;
 
-    _wblib.wlr_xdg_toplevel_set_size(_wlrToplevelPtr, width, height);
+    _wblib.wlr_xdg_toplevel_set_size(_wlrXdgToplevelPtr, width, height);
   }
 
-  /// A handler that is called when the window is being destroyed.
+  /// A handler that is called when this window is being destroyed.
   void Function(WindowDestroyingEvent event)? onDestroying;
 
-  /// A handler that is called when the window's texture is set.
+  /// A handler that is called when this window's texture is set.
   ///
   /// This means that this window is ready to be rendered using its texture.
   void Function(WindowTextureSetEvent event)? onTextureSet;
 
-  /// A handler that is called when the window's texture is being unset.
+  /// A handler that is called when this window's texture is being unset.
   ///
   /// This means that this window won't have a texture to be rendered.
   void Function(WindowTextureUnsettingEvent event)? onTextureUnsetting;
@@ -236,137 +237,137 @@ class Window {
   /// windows.
   void Function(WindowPopupCreateEvent event)? onPopupCreate;
 
-  /// A handler that is called when the window has been activated.
+  /// A handler that is called when this window has been activated.
   ///
-  /// The window had drawn itself in its active state.
+  /// The window may have drawn itself in an active state.
   void Function(WindowActivateEvent event)? onActivate;
 
-  /// A handler that is called when the window has been deactivated.
+  /// A handler that is called when this window has been deactivated.
   ///
-  /// The window had drawn itself in its inactive state.
+  /// The window may have drawn itself in an inactive state.
   void Function(WindowDeactivateEvent event)? onDeactivate;
 
-  /// A handler that is called when the window requests to be moved.
+  /// A handler that is called when this window requests to be moved.
   ///
   /// The move functionality is handled by the compositor, not the window.
   void Function(WindowMoveRequestEvent event)? onMoveRequest;
 
-  /// A handler that is called when the window requests to be resized.
+  /// A handler that is called when this window requests to be resized.
   ///
   /// The resize functionality is handled by the compositor. As the compositor
-  /// resizes, it can submit new sizes to the window, which can then resize and
+  /// resizes, it can submit new sizes to this window, which can then resize and
   /// draw itself accordingly.
   ///
-  /// The compositor should probably wait for the window to be resized before
+  /// The compositor should probably wait for this window to be resized before
   /// repositioning it.
   void Function(WindowResizeRequestEvent event)? onResizeRequest;
 
-  /// A handler that is called when the window has been resized.
+  /// A handler that is called when this window has been resized.
   ///
-  /// The window has drawn itself in its new size. The compositor can reposition
-  ///  the window here if it so desires.
+  /// The window has drawn itself in its new size. The compositor can now
+  /// reposition this window if it so desires.
   void Function(WindowResizeEvent event)? onResize;
 
-  /// A handler that is called when the window requests to be maximized.
+  /// A handler that is called when this window requests to be maximized.
   ///
   /// The maximize functionality is handled by the compositor. The compositor
-  /// can submit new sizes to the window, which can then resize and draw itself
+  /// can submit new sizes to this window, which can then resize and draw itself
   /// accordingly.
   ///
-  /// If the compositor wants to reposition the window, it is recommended to
+  /// If the compositor wants to reposition this window, it is recommended to
   /// wait for the window to be maximized before repositioning it using the
   /// [onMaximize] handler.
   void Function(WindowMaximizeRequestEvent event)? onMaximizeRequest;
 
-  /// A handler that is called when the window has been maximized.
+  /// A handler that is called when this window has been maximized.
   ///
-  /// The window had reszied and drawn itself in its maximized state. The
-  /// compositor can reposition the window here if it so desires.
+  /// The window had resized and drawn itself in its maximized state. The
+  /// compositor can now reposition this window if it so desires.
   ///
   /// The [onResize] handler is called after this handler.
   void Function(WindowMaximizeEvent event)? onMaximize;
 
-  /// A handler that is called when the window requests to be unmaximized.
+  /// A handler that is called when this window requests to be unmaximized.
   ///
   /// The unmaximize functionality is handled by the compositor. The compositor
-  /// can submit new sizes to the window, which can then resize and draw itself
+  /// can submit new sizes to this window, which can then resize and draw itself
   /// accordingly.
   ///
-  /// If the compositor wants to reposition the window, it is recommended to
+  /// If the compositor wants to reposition this window, it is recommended to
   /// wait for the window to be unmaximized before repositioning it using the
   /// [onUnmaximize] handler.
   void Function(WindowUnmaximizeRequestEvent event)? onUnmaximizeRequest;
 
-  /// A handler that is called when the window has been unmaximized.
+  /// A handler that is called when this window has been unmaximized.
   ///
-  /// The window had reszied and drawn itself in its unmaximized state. The
-  /// compositor can reposition the window here if it so desires.
+  /// The window had resized and drawn itself in its unmaximized state. The
+  /// compositor can now reposition this window if it so desires.
   ///
   /// The [onResize] handler is called after this handler.
   void Function(WindowUnmaximizeEvent event)? onUnmaximize;
 
-  /// A handler that is called when the window requests to be minimized.
+  /// A handler that is called when this window requests to be minimized.
   ///
   /// The minimize functionality is handled by the compositor, not the window.
   /// The window wouldn't know whether it is actually minimized or not.
   void Function(WindowMinimizeRequestEvent event)? onMinimizeRequest;
 
-  /// A handler that is called when the window requests to be fullscreen.
+  /// A handler that is called when this window requests to be fullscreen.
   ///
   /// The fullscreen functionality is handled by the compositor. The compositor
-  /// can submit new sizes to the window, which can then resize and draw itself
+  /// can submit new sizes to this window, which can then resize and draw itself
   /// accordingly.
   ///
-  /// If the compositor wants to reposition the window, it is recommended to
+  /// If the compositor wants to reposition this window, it is recommended to
   /// wait for the window to be fullscreen before repositioning it using the
   /// [onFullscreen] handler.
   void Function(WindowFullscreenRequestEvent event)? onFullscreenRequest;
 
-  /// A handler that is called when the window has been fullscreened.
+  /// A handler that is called when this window has been fullscreened.
   ///
-  /// The window had reszied and drawn itself in its fullscreened state. The
-  /// compositor can reposition the window here if it so desires.
+  /// The window had resized and drawn itself in its fullscreened state. The
+  /// compositor can now reposition this window if it so desires.
   ///
   /// The [onResize] handler is called after this handler.
   void Function(WindowFullscreenEvent event)? onFullscreen;
 
-  /// A handler that is called when the window requests to be unfullscreen.
+  /// A handler that is called when this window requests to be unfullscreen.
   ///
   /// The unfullscreen functionality is handled by the compositor. The
-  /// compositor can submit new sizes to the window, which can then resize and
+  /// compositor can submit new sizes to this window, which can then resize and
   /// draw itself accordingly.
   ///
-  /// If the compositor wants to reposition the window, it is recommended to
+  /// If the compositor wants to reposition this window, it is recommended to
   /// wait for the window to be unfullscreen before repositioning it using the
   /// [onUnfullscreen] handler.
   void Function(WindowUnfullscreenRequestEvent event)? onUnfullscreenRequest;
 
-  /// A handler that is called when the window has been unfullscreened.
+  /// A handler that is called when this window has been unfullscreened.
   ///
-  /// The window had reszied and drawn itself in its unfullscreened state. The
-  /// compositor can reposition the window here if it so desires.
+  /// The window had resized and drawn itself in its unfullscreened state. The
+  /// compositor can now reposition this window if it so desires.
   ///
   /// The [onResize] handler is called after this handler.
   void Function(WindowUnfullscreenEvent event)? onUnfullscreen;
 
-  /// A handler that is called when the window requests to show a window menu.
+  /// A handler that is called when this window requests to show a window menu.
   ///
   /// This is if the compositor wants to show a context menu for this window.
   /// A window's own context menu would be a popup window; therefore, it would
   /// not request a window menu.
   void Function(WindowMenuRequestEvent event)? onWindowMenuRequest;
 
-  /// A handler that is called when the window's title changes.
+  /// A handler that is called when this window's title changes.
   ///
   /// It has already taken effect by the time this handler is called.
   void Function(WindowTitleChangeEvent event)? onTitleChange;
 
-  /// A handler that is called when the window's application id changes.
+  /// A handler that is called when this window's application id changes.
   ///
   /// It has already taken effect by the time this handler is called.
   void Function(WindowAppIdChangeEvent event)? onAppIdChange;
 
-  /// A handler that is called when the window's parent changes.
+  /// A handler that is called when this window's parent changes.
   ///
   /// It has already taken effect by the time this handler is called.
   void Function(WindowParentChangeEvent event)? onParentChange;
@@ -384,57 +385,62 @@ class Window {
 
   /// The id of the application that owns this window.
   ///
+  /// This may be set later using the [onAppIdChange] handler.
+  ///
   /// Popups do not have an application id set and will return an empty string.
-  String get applicationId =>
-      isPopup ? "" : _toString(_wlrToplevelPtr.ref.app_id);
+  String? get applicationId =>
+      isPopup ? null : _toDartString(_wlrXdgToplevelPtr.ref.app_id);
 
   /// The title of this window.
   ///
+  /// This may be set later using the [onTitleChange] handler.
+  ///
   /// Popups do not have a title set and will return an empty string.
-  String get title => isPopup ? "" : _toString(_wlrToplevelPtr.ref.title);
+  String? get title =>
+      isPopup ? null : _toDartString(_wlrXdgToplevelPtr.ref.title);
 
   /// The horizontal size of this window's content.
-  int get width => _wlrSurfacePtr.ref.current.geometry.width;
+  int get width => _wlrXdgSurfacePtr.ref.current.geometry.width;
 
   /// The vertical size of this window's content.
-  int get height => _wlrSurfacePtr.ref.current.geometry.height;
+  int get height => _wlrXdgSurfacePtr.ref.current.geometry.height;
 
   /// The horizontal size of this window's texture.
-  int get textureWidth => _wlrSurfacePtr.ref.surface.ref.current.width;
+  int get textureWidth => _wlrXdgSurfacePtr.ref.surface.ref.current.width;
 
   /// The vertical size of this window's texture.
-  int get textureHeight => _wlrSurfacePtr.ref.surface.ref.current.height;
+  int get textureHeight => _wlrXdgSurfacePtr.ref.surface.ref.current.height;
 
   /// The horizontal offset of this window's content.
-  num get offsetX => _wlrSurfacePtr.ref.current.geometry.x;
+  num get offsetX => _wlrXdgSurfacePtr.ref.current.geometry.x;
 
   /// The vertical offset of this window's content.
-  num get offsetY => _wlrSurfacePtr.ref.current.geometry.y;
+  num get offsetY => _wlrXdgSurfacePtr.ref.current.geometry.y;
 
   /// The horizontal position of this popup window relative to its parent.
   ///
   /// This will always be `0` if not a popup window.
-  num get popupX => isPopup ? _wlrPopupPtr.ref.current.geometry.x : 0;
+  num get popupX => isPopup ? _wlrXdgPopupPtr.ref.current.geometry.x : 0;
 
   /// The vertical position of this popup window relative to its parent.
   ///
   /// This will always be `0` if not a popup window.
-  num get popupY => isPopup ? _wlrPopupPtr.ref.current.geometry.y : 0;
+  num get popupY => isPopup ? _wlrXdgPopupPtr.ref.current.geometry.y : 0;
 
   /// Whether this window has a texture.
-  bool get hasTexture => _wlrSurfacePtr.ref.mapped;
+  bool get hasTexture => _wlrXdgSurfacePtr.ref.mapped;
 
   /// Whether this window is considered maximized.
   ///
   /// This will always be `false` if this is a popup window.
   bool get isMaximized =>
-      isPopup ? false : _wlrToplevelPtr.ref.current.maximized;
+      isPopup ? false : _wlrXdgToplevelPtr.ref.current.maximized;
 
   /// Whether this window is considered fullscreen.
   ///
   /// This will always be `false` if this is a popup window.
   bool get isFullscreen =>
-      isPopup ? false : _wlrToplevelPtr.ref.current.fullscreen;
+      isPopup ? false : _wlrXdgToplevelPtr.ref.current.fullscreen;
 
   /// Whether this window is considered active.
   ///
@@ -442,25 +448,27 @@ class Window {
   /// if input devices are focused on it.
   ///
   /// This will always be false if  this is a popup window.
-  bool get isActive => isPopup ? false : _wlrToplevelPtr.ref.current.activated;
+  bool get isActive =>
+      isPopup ? false : _wlrXdgToplevelPtr.ref.current.activated;
 
   /// Whether this window is considered resizing.
   ///
-  /// If true, the window believes that it is being resized by the user and may
-  /// draw itself accordingly.
+  /// If true, this window will believe that it is being resized by the user and
+  /// may draw itself accordingly.
   ///
   /// This will always be `false` if this is a popup window.
-  bool get isResizing => isPopup ? false : _wlrToplevelPtr.ref.current.resizing;
+  bool get isResizing =>
+      isPopup ? false : _wlrXdgToplevelPtr.ref.current.resizing;
 
   /// Tells this window to maximize.
   ///
-  /// If [width] or [height] are provided, the window will also submit the new
+  /// If [width] or [height] are provided, this window will also request the new
   /// size.
   ///
-  /// If the window successfully maximizes, the [onMaximize] handler will be
+  /// If this window successfully maximizes, the [onMaximize] handler will be
   /// called.
   ///
-  /// Does nothing if this is a popup window.
+  /// This method does nothing if this is a popup window.
   void maximize({int? width, int? height}) {
     if (isPopup) return;
 
@@ -472,13 +480,13 @@ class Window {
 
   /// Tells this window to unmaximize.
   ///
-  /// If [width] or [height] are provided, the window will also submit the new
+  /// If [width] or [height] are provided, this window will also request the new
   /// size.
   ///
-  /// If the window successfully unmaximizes, the [onUnmaximize] handler will be
-  /// called.
+  /// If this window successfully unmaximizes, the [onUnmaximize] handler will
+  /// be called.
   ///
-  /// Does nothing if this is a popup window.
+  /// This method does nothing if this is a popup window.
   void unmaximize({int? width, int? height}) {
     if (isPopup) return;
 
@@ -490,13 +498,13 @@ class Window {
 
   /// Tells this window to fullscreen.
   ///
-  /// If [width] or [height] are provided, the window will also submit the new
+  /// If [width] or [height] are provided, this window will also request the new
   /// size.
   ///
-  /// If the window successfully fullscreens, the [onFullscreen] handler will be
-  /// called.
+  /// If this window successfully fullscreens, the [onFullscreen] handler will
+  /// be called.
   ///
-  /// Does nothing if this is a popup window.
+  /// This method does nothing if this is a popup window.
   void fullscreen({int? width, int? height}) {
     if (isPopup) return;
 
@@ -508,13 +516,13 @@ class Window {
 
   /// Tells this window to unfullscreen.
   ///
-  /// If [width] or [height] are provided, the window will also submit the new
+  /// If [width] or [height] are provided, this window will also request the new
   /// size.
   ///
-  /// If the window successfully unfullscreens, the [onUnfullscreen] handler
+  /// If this window successfully unfullscreens, the [onUnfullscreen] handler
   /// will be called.
   ///
-  /// Does nothing if this is a popup window.
+  /// This method does nothing if this is a popup window.
   void unfullscreen({int? width, int? height}) {
     if (isPopup) return;
 
@@ -526,10 +534,10 @@ class Window {
 
   /// Tells this window to activate.
   ///
-  /// If the window successfully activates, the [onActivate] handler will be
+  /// If this window successfully activates, the [onActivate] handler will be
   /// called.
   ///
-  /// Does nothing if this is a popup window.
+  /// This method does nothing if this is a popup window.
   void activate() {
     if (isPopup) return;
 
@@ -538,10 +546,10 @@ class Window {
 
   /// Tells this window to deactivate.
   ///
-  /// If the window successfully deactivates, the [onDeactivate] handler will be
-  /// called.
+  /// If this window successfully deactivates, the [onDeactivate] handler will
+  /// be called.
   ///
-  /// Does nothing if this is a popup window.
+  /// This method does nothing if this is a popup window.
   void deactivate() {
     if (isPopup) return;
 
@@ -563,26 +571,27 @@ class Window {
   /// The application may ignore this request for various reasons, including
   /// unsaved data.
   ///
-  /// If the window does close, the [onTextureUnsetting] and [onDestroying]
+  /// If this window does close, the [onTextureUnsetting] and [onDestroying]
   /// handlers will be called.
   void requestClose() {
     isPopup
-        ? _wblib.wlr_xdg_popup_destroy(_wlrPopupPtr)
-        : _wblib.wlr_xdg_toplevel_send_close(_wlrToplevelPtr);
+        ? _wblib.wlr_xdg_popup_destroy(_wlrXdgPopupPtr)
+        : _wblib.wlr_xdg_toplevel_send_close(_wlrXdgToplevelPtr);
   }
 
   /// Requests a new size for this window.
   ///
   /// If either [width] or [height] are zero, the window's application will
-  /// decide its size. If either [width] or [height] are null, the window's
-  /// current size will be used.
+  /// decide its size. If either [width] or [height] are null, the current
+  /// window dimensions will be used.
   ///
   /// The application itself may choose to either accept this size or choose a
   /// different size.
   ///
-  /// If the window successfully resizes, the [onResize] handler will be called.
+  /// If this window successfully resizes, the [onResize] handler will be
+  /// called.
   ///
-  /// Does nothing if this is a popup window.
+  /// This method does nothing if this is a popup window.
   void requestSize({int? width, int? height}) {
     if (isPopup) return;
 
@@ -677,7 +686,9 @@ class Window {
   void submitKeyboardModifiersUpdate(
       KeyboardUpdate<KeyboardModifiersEvent> update) {
     var keyboardPtr = update.keyboard._keyboardPtr;
-    if (keyboardPtr == null) throw Error();
+    if (keyboardPtr == null) {
+      throw StateError("Internal error: keyboardPtr is null");
+    }
 
     _ensureKeyboardFocus(update.keyboard);
 
