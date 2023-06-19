@@ -168,6 +168,9 @@ class Window {
   Pointer<struct_wlr_xdg_popup> get _wlrXdgPopupPtr =>
       _windowPtr.ref.wlr_xdg_popup;
 
+  bool get _hasBuffer =>
+      _wlrXdgSurfacePtr.ref.surface.ref.buffer.ref.source != nullptr;
+
   var _previousWidth = 0;
   var _previousHeight = 0;
   var _wasActive = false;

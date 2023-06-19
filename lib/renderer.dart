@@ -92,7 +92,7 @@ class Renderer {
 
   Image? captureWindowFrame(Window window) {
     var rendererPtr = _rendererPtr;
-    if (rendererPtr != null && window.hasTexture) {
+    if (rendererPtr != null && window._hasBuffer) {
       var imagePtr = _wblib.waybright_renderer_capture_window_frame(
           rendererPtr, window._windowPtr);
       return imagePtr == nullptr ? null : Image._fromPointer(imagePtr);
