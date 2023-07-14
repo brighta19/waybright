@@ -157,7 +157,7 @@ void handle_xdg_toplevel_request_move_event(struct wl_listener *listener, void *
 // Called when the top-level surface wants to be resized
 void handle_xdg_toplevel_request_resize_event(struct wl_listener *listener, void *data) {
     struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.request_resize);
-	struct wlr_xdg_toplevel_resize_event *event = data;
+    struct wlr_xdg_toplevel_resize_event *event = data;
 
     // Accept move requests only if it is a response to pointer button events
     if (event->serial != wb_window->wb->last_pointer_button_serial) return;
@@ -379,7 +379,7 @@ void handle_keyboard_remove_event(struct wl_listener* listener, void *data) {
 
 void handle_keyboard_key_event(struct wl_listener* listener, void *data) {
     struct waybright_keyboard* wb_keyboard = wl_container_of(listener, wb_keyboard, listeners.key);
-	struct wlr_keyboard_key_event* event = data;
+    struct wlr_keyboard_key_event* event = data;
 
     struct waybright_keyboard_event wb_keyboard_event = {
         wb_keyboard,
@@ -392,7 +392,7 @@ void handle_keyboard_key_event(struct wl_listener* listener, void *data) {
 
 void handle_keyboard_modifiers_event(struct wl_listener* listener, void *data) {
     struct waybright_keyboard* wb_keyboard = wl_container_of(listener, wb_keyboard, listeners.modifiers);
-	struct wlr_keyboard_modifiers_event* event = data;
+    struct wlr_keyboard_modifiers_event* event = data;
 
     struct waybright_keyboard_event wb_keyboard_event = {
         wb_keyboard,
@@ -407,14 +407,14 @@ void handle_keyboard_new_event(struct waybright* wb, struct waybright_keyboard* 
     struct wlr_input_device* wlr_input_device = wb_keyboard->wb_input->wlr_input_device;
     struct wlr_keyboard* wlr_keyboard = wb_keyboard->wlr_keyboard;
 
-	struct xkb_context *context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
-	struct xkb_keymap *keymap = xkb_keymap_new_from_names(context, NULL,
-		XKB_KEYMAP_COMPILE_NO_FLAGS);
+    struct xkb_context *context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+    struct xkb_keymap *keymap = xkb_keymap_new_from_names(context, NULL,
+        XKB_KEYMAP_COMPILE_NO_FLAGS);
 
-	wlr_keyboard_set_keymap(wlr_keyboard, keymap);
-	xkb_keymap_unref(keymap);
-	xkb_context_unref(context);
-	wlr_keyboard_set_repeat_info(wlr_keyboard, 25, 600);
+    wlr_keyboard_set_keymap(wlr_keyboard, keymap);
+    xkb_keymap_unref(keymap);
+    xkb_context_unref(context);
+    wlr_keyboard_set_repeat_info(wlr_keyboard, 25, 600);
 
     wb_keyboard->listeners.destroy.notify = handle_keyboard_remove_event;
     wl_signal_add(&wlr_input_device->events.destroy, &wb_keyboard->listeners.destroy);
@@ -423,7 +423,7 @@ void handle_keyboard_new_event(struct waybright* wb, struct waybright_keyboard* 
     wb_keyboard->listeners.modifiers.notify = handle_keyboard_modifiers_event;
     wl_signal_add(&wlr_keyboard->events.modifiers, &wb_keyboard->listeners.modifiers);
 
-	wlr_seat_set_keyboard(wb->wlr_seat, wlr_keyboard);
+    wlr_seat_set_keyboard(wb->wlr_seat, wlr_keyboard);
 }
 
 void handle_input_new_event(struct wl_listener *listener, void *data) {

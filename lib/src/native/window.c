@@ -38,7 +38,7 @@ void waybright_window_submit_pointer_button_event(struct waybright_window* wb_wi
 void waybright_window_submit_pointer_axis_event(struct waybright_window* wb_window, int time, int orientation, double delta, int delta_discrete, int source) {
     struct wlr_seat* wlr_seat = wb_window->wb->wlr_seat;
 
-	wlr_seat_pointer_notify_axis(wlr_seat, time, orientation, delta, delta_discrete, source);
+    wlr_seat_pointer_notify_axis(wlr_seat, time, orientation, delta, delta_discrete, source);
 }
 
 void waybright_window_submit_keyboard_key_event(struct waybright_window* wb_window, int time, int keyCode, int pressed) {

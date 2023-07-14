@@ -70,6 +70,8 @@ struct waybright {
     struct wlr_xdg_shell* wlr_xdg_shell;
     struct wlr_seat* wlr_seat;
 
+    struct wl_event_loop* wl_event_loop;
+
     uint32_t last_pointer_button_serial;
     const char* socket_name;
 

@@ -102,32 +102,29 @@ class EasingFunctions {
 }
 
 class Animation {
-  Duration duration;
-  Duration? delay;
-  Function(double t) easing;
-  Function(double t) onUpdate;
-  Function? onDone;
+  final Duration duration;
+  final Duration? delay;
+  final double Function(double t) easing;
+  final void Function(double v) onUpdate;
+  final void Function()? onDone;
 
   final DateTime _startTime;
-  Duration get timeDifference => DateTime.now().difference(_startTime);
-  double get _t =>
-      (timeDifference.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0);
+  Duration get _timeDifference => DateTime.now().difference(_startTime);
+  double get _t => (_timeDifference.inMilliseconds / duration.inMilliseconds)
+      .clamp(0.0, 1.0);
   bool get isDone => _t == 1.0;
 
   Animation({
     required this.duration,
     this.delay,
-    Function(double t)? easing,
+    double Function(double t)? easing,
     required this.onUpdate,
     this.onDone,
-  })  : easing = easing ?? ((t) => t),
+  })  : easing = easing ?? EasingFunctions.linear,
         _startTime = DateTime.now().add(delay ?? Duration.zero);
 
   update() {
     onUpdate(easing(_t));
-
-    if (_t == 1.0) {
-      onDone?.call();
-    }
+    if (isDone) onDone?.call();
   }
 }

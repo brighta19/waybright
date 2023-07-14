@@ -1,8 +1,10 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include <time.h>
-#include "waybright.h"
 #include <wlr/render/gles2.h>
+#include <wlr/types/wlr_matrix.h>
+#include <wlr/util/box.h>
+#include "waybright.h"
 
 void waybright_renderer_destroy(struct waybright_renderer* wb_renderer) {
     if (!wb_renderer) return;
@@ -51,18 +53,20 @@ void waybright_renderer_draw_window(struct waybright_renderer* wb_renderer, stru
     if (!wlr_texture)
         return;
 
-    // transformation matrix = {0, 0, x, 0, 0, y, 0, 0, 1}
-    // scale matrix = {scale, 0, 0, 0, scale, 0, 0, 0, 1}
-    // rotation matrix = {cos(angle), -sin(angle), 0, sin(angle), cos(angle), 0, 0, 0, 1}
-
-    // transformation and scale matrix
-    float matrix[9] = {
-        (float)width / wlr_texture->width, 0.0, (float)x,
-        0.0, (float)height / wlr_texture->height, (float)y,
-        0.0, 0.0, 1.0
+    struct wlr_box wlr_box = {
+        .x = x,
+        .y = y,
+        .width = width,
+        .height = height
     };
 
-    wlr_render_texture(wlr_renderer, wlr_texture, matrix, 0, 0, alpha);
+    float matrix[9];
+    wlr_matrix_project_box(matrix, &wlr_box, wlr_surface->current.transform, 0.0, wlr_output->transform_matrix);
+
+    struct wlr_fbox wlr_fbox;
+    wlr_surface_get_buffer_source_box(wlr_surface, &wlr_fbox);
+
+    wlr_render_subtexture_with_matrix(wlr_renderer, wlr_texture, &wlr_fbox, matrix, alpha);
 
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
@@ -82,16 +86,15 @@ void waybright_renderer_draw_image(struct waybright_renderer* wb_renderer, struc
     if (!wlr_texture)
         return;
 
-    // transformation matrix = {0, 0, x, 0, 0, y, 0, 0, 1}
-    // scale matrix = {scale, 0, 0, 0, scale, 0, 0, 0, 1}
-    // rotation matrix = {cos(angle), -sin(angle), 0, sin(angle), cos(angle), 0, 0, 0, 1}
-
-    // transformation and scale matrix
-    float matrix[9] = {
-        (float)width / wlr_texture->width, 0.0, (float)x,
-        0.0, (float)height / wlr_texture->height, (float)y,
-        0.0, 0.0, 1.0
+    struct wlr_box wlr_box = {
+        .x = x,
+        .y = y,
+        .width = width,
+        .height = height
     };
+
+    float matrix[9];
+    wlr_matrix_project_box(matrix, &wlr_box, WL_OUTPUT_TRANSFORM_NORMAL, 0.0, wlr_output->transform_matrix);
 
     // A fix for the assertion failure on wlr_texture_is_gles2(wlr_texture).
     // The pointer to the texture's implementation is different from the
@@ -99,7 +102,7 @@ void waybright_renderer_draw_image(struct waybright_renderer* wb_renderer, struc
     if (wlr_renderer_is_gles2(wlr_renderer) && !wlr_texture_is_gles2(wlr_texture))
         return;
 
-    wlr_render_texture(wlr_renderer, wlr_texture, matrix, 0, 0, alpha);
+    wlr_render_texture_with_matrix(wlr_renderer, wlr_texture, matrix, alpha);
 }
 
 struct waybright_image* waybright_renderer_capture_window_frame(struct waybright_renderer* wb_renderer, struct waybright_window* wb_window) {

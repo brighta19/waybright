@@ -157,12 +157,12 @@ class Waybright {
   void _checkEvents() {
     if (!_isRunning) return;
     _wblib.waybright_check_events(_wbPtr);
-    Future(() => _checkEvents());
+    Future(_checkEvents);
   }
 
   void _runEventLoop() {
     _isRunning = true;
-    Future(() => _checkEvents());
+    _checkEvents();
   }
 
   String _openSocket([String? socketName]) {
