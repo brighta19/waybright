@@ -104,7 +104,7 @@ void handle_xdg_surface_destroy_event(struct wl_listener *listener, void *data) 
 }
 
 // Called when the top-level surface creates a new popup
-void handle_xdg_toplevel_new_popup_event(struct wl_listener *listener, void *data) {
+void handle_xdg_surface_new_popup_event(struct wl_listener *listener, void *data) {
     struct waybright_window* wb_parent_window = wl_container_of(listener, wb_parent_window, listeners.new_popup);
     struct waybright* wb = wb_parent_window->wb;
     struct wlr_xdg_popup* wlr_xdg_popup = data;
@@ -122,7 +122,7 @@ void handle_xdg_toplevel_new_popup_event(struct wl_listener *listener, void *dat
     wl_signal_add(&wlr_xdg_surface->events.unmap, &wb_window->listeners.unmap);
     wb_window->listeners.destroy.notify = handle_xdg_surface_destroy_event;
     wl_signal_add(&wlr_xdg_surface->events.destroy, &wb_window->listeners.destroy);
-    wb_window->listeners.new_popup.notify = handle_xdg_toplevel_new_popup_event;
+    wb_window->listeners.new_popup.notify = handle_xdg_surface_new_popup_event;
     wl_signal_add(&wlr_xdg_surface->events.new_popup, &wb_window->listeners.new_popup);
 
     struct waybright_window_event wb_window_event = { wb_parent_window, wb_window };
@@ -260,9 +260,8 @@ void handle_new_xdg_surface_event(struct wl_listener *listener, void *data) {
     wl_signal_add(&wlr_xdg_surface->events.unmap, &wb_window->listeners.unmap);
     wb_window->listeners.destroy.notify = handle_xdg_surface_destroy_event;
     wl_signal_add(&wlr_xdg_surface->events.destroy, &wb_window->listeners.destroy);
-    wb_window->listeners.new_popup.notify = handle_xdg_toplevel_new_popup_event;
+    wb_window->listeners.new_popup.notify = handle_xdg_surface_new_popup_event;
     wl_signal_add(&wlr_xdg_surface->events.new_popup, &wb_window->listeners.new_popup);
-
     wb_window->listeners.commit.notify = handle_wlr_surface_commit_event;
     wl_signal_add(&wlr_xdg_surface->surface->events.commit, &wb_window->listeners.commit);
 
