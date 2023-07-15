@@ -1,13 +1,13 @@
 part of "./waybright.dart";
 
-// TODO: maybe split normal (toplevel) windows and popups into separate
-// classes
+// TODO: maybe split normal (toplevel) windows and popups into separate classes
 // TODO: add set bounds method
 // TODO: add set tiled method
 // TODO: use xdg positioner for popup windows
 // TODO: add user events to window events
 // TODO: maybe create texture class
 // TODO: xwayland support
+// TODO: split logic into functions (e.g. Window._onEvent)
 
 enum WindowEdge {
   none,
@@ -45,6 +45,13 @@ WindowEdge _getEdgeFromWlrResizeEvent(
   }
 }
 
+void _completeAndClearCompleters(List<Completer> completers) {
+  for (var completer in completers) {
+    completer.complete();
+  }
+  completers.clear();
+}
+
 /// An application's window.
 ///
 /// In wayland, this most closely corresponds to a `xdg_surface` from the
@@ -80,18 +87,33 @@ class Window {
       case enum_wb_event_type.event_type_window_commit:
         if (window._wasActive && !window.isActive) {
           window.onDeactivate?.call(WindowDeactivateEvent(window));
+          _completeAndClearCompleters(window._deactivateCompleters);
         } else if (!window._wasActive && window.isActive) {
           window.onActivate?.call(WindowActivateEvent(window));
+          _completeAndClearCompleters(window._activateCompleters);
+        } else {
+          _completeAndClearCompleters(window._deactivateCompleters);
+          _completeAndClearCompleters(window._activateCompleters);
         }
         if (window._wasMaximized && !window.isMaximized) {
           window.onUnmaximize?.call(WindowUnmaximizeEvent(window));
+          _completeAndClearCompleters(window._unmaximizeCompleters);
         } else if (!window._wasMaximized && window.isMaximized) {
           window.onMaximize?.call(WindowMaximizeEvent(window));
+          _completeAndClearCompleters(window._maximizeCompleters);
+        } else {
+          _completeAndClearCompleters(window._unmaximizeCompleters);
+          _completeAndClearCompleters(window._maximizeCompleters);
         }
         if (window._wasFullscreen && !window.isFullscreen) {
           window.onUnfullscreen?.call(WindowUnfullscreenEvent(window));
+          _completeAndClearCompleters(window._unfullscreenCompleters);
         } else if (!window._wasFullscreen && window.isFullscreen) {
           window.onFullscreen?.call(WindowFullscreenEvent(window));
+          _completeAndClearCompleters(window._fullscreenCompleters);
+        } else {
+          _completeAndClearCompleters(window._unfullscreenCompleters);
+          _completeAndClearCompleters(window._fullscreenCompleters);
         }
         if (window._previousWidth != window.textureWidth ||
             window._previousHeight != window.textureHeight) {
@@ -176,6 +198,13 @@ class Window {
   var _wasActive = false;
   var _wasMaximized = false;
   var _wasFullscreen = false;
+
+  final _activateCompleters = <Completer<void>>[];
+  final _deactivateCompleters = <Completer<void>>[];
+  final _maximizeCompleters = <Completer<void>>[];
+  final _unmaximizeCompleters = <Completer<void>>[];
+  final _fullscreenCompleters = <Completer<void>>[];
+  final _unfullscreenCompleters = <Completer<void>>[];
 
   Window._fromPointer(
     this._windowPtr,
@@ -469,16 +498,20 @@ class Window {
   /// size.
   ///
   /// If this window successfully maximizes, the [onMaximize] handler will be
-  /// called.
+  /// called and the returned [Future] will complete.
   ///
   /// This method does nothing if this is a popup window.
-  void maximize({int? width, int? height}) {
-    if (isPopup) return;
+  Future<void> maximize({int? width, int? height}) {
+    if (isPopup || isMaximized) return Future.value();
 
     _setMaximizeAttribute(true);
     if (width != null || height != null) {
       requestSize(width: width, height: height);
     }
+
+    var maximizeCompleter = Completer<void>();
+    _maximizeCompleters.add(maximizeCompleter);
+    return maximizeCompleter.future;
   }
 
   /// Tells this window to unmaximize.
@@ -487,16 +520,20 @@ class Window {
   /// size.
   ///
   /// If this window successfully unmaximizes, the [onUnmaximize] handler will
-  /// be called.
+  /// be called and the returned [Future] will complete.
   ///
   /// This method does nothing if this is a popup window.
-  void unmaximize({int? width, int? height}) {
-    if (isPopup) return;
+  Future<void> unmaximize({int? width, int? height}) {
+    if (isPopup || !isMaximized) return Future.value();
 
     _setMaximizeAttribute(false);
     if (width != null || height != null) {
       requestSize(width: width, height: height);
     }
+
+    var unmaximizeCompleter = Completer<void>();
+    _unmaximizeCompleters.add(unmaximizeCompleter);
+    return unmaximizeCompleter.future;
   }
 
   /// Tells this window to fullscreen.
@@ -505,16 +542,20 @@ class Window {
   /// size.
   ///
   /// If this window successfully fullscreens, the [onFullscreen] handler will
-  /// be called.
+  /// be called and the returned [Future] will complete.
   ///
   /// This method does nothing if this is a popup window.
-  void fullscreen({int? width, int? height}) {
-    if (isPopup) return;
+  Future<void> fullscreen({int? width, int? height}) {
+    if (isPopup || isFullscreen) return Future.value();
 
     _setFullscreenAttribute(true);
     if (width != null || height != null) {
       requestSize(width: width, height: height);
     }
+
+    var fullscreenCompleter = Completer<void>();
+    _fullscreenCompleters.add(fullscreenCompleter);
+    return fullscreenCompleter.future;
   }
 
   /// Tells this window to unfullscreen.
@@ -523,40 +564,52 @@ class Window {
   /// size.
   ///
   /// If this window successfully unfullscreens, the [onUnfullscreen] handler
-  /// will be called.
+  /// will be called and the returned [Future] will complete.
   ///
   /// This method does nothing if this is a popup window.
-  void unfullscreen({int? width, int? height}) {
-    if (isPopup) return;
+  Future<void> unfullscreen({int? width, int? height}) {
+    if (isPopup || !isFullscreen) return Future.value();
 
     _setFullscreenAttribute(false);
     if (width != null || height != null) {
       requestSize(width: width, height: height);
     }
+
+    var unfullscreenCompleter = Completer<void>();
+    _unfullscreenCompleters.add(unfullscreenCompleter);
+    return unfullscreenCompleter.future;
   }
 
   /// Tells this window to activate.
   ///
   /// If this window successfully activates, the [onActivate] handler will be
-  /// called.
+  /// called and the returned [Future] will complete.
   ///
   /// This method does nothing if this is a popup window.
-  void activate() {
-    if (isPopup) return;
+  Future<void> activate() {
+    if (isPopup) return Future.value();
 
     _setActiveAttribute(true);
+
+    var activateCompleter = Completer<void>();
+    _activateCompleters.add(activateCompleter);
+    return activateCompleter.future;
   }
 
   /// Tells this window to deactivate.
   ///
   /// If this window successfully deactivates, the [onDeactivate] handler will
-  /// be called.
+  /// be called and the returned [Future] will complete.
   ///
   /// This method does nothing if this is a popup window.
-  void deactivate() {
-    if (isPopup) return;
+  Future<void> deactivate() {
+    if (isPopup) return Future.value();
 
     _setActiveAttribute(false);
+
+    var deactivateCompleter = Completer<void>();
+    _deactivateCompleters.add(deactivateCompleter);
+    return deactivateCompleter.future;
   }
 
   /// Notifies this window that it is being resized.

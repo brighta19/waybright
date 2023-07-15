@@ -2,6 +2,7 @@
 library;
 
 import 'dart:ffi';
+import 'dart:async';
 import 'package:ffi/ffi.dart';
 import 'src/generated/waybright_bindings.dart';
 
