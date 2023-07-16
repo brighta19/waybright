@@ -36,8 +36,11 @@ class Monitor {
   }
 
   final Pointer<struct_waybright_monitor> _monitorPtr;
-  bool _isEnabled = false;
   final _modes = <Mode>[];
+  final List<Rect> _damagedBufferRegions = [];
+  final List<Rect> _damagedFrameRegions = [];
+
+  bool _isEnabled = false;
   bool _hasIteratedThroughModes = false;
   Mode? _preferredMode;
   Mode _mode = Mode(0, 0, 0);
@@ -45,6 +48,7 @@ class Monitor {
   Monitor._fromPointer(
     this._monitorPtr,
   ) : renderer = Renderer._fromPointer(_monitorPtr.ref.wb_renderer) {
+    renderer._monitor = this;
     _monitorInstances[_monitorPtr] = this;
     _monitorPtr.ref.handle_event = Pointer.fromFunction(_onEvent);
   }
@@ -57,6 +61,12 @@ class Monitor {
   void _disable() {
     _wblib.waybright_monitor_disable(_monitorPtr);
     _isEnabled = false;
+  }
+
+  void _updateDamagedRegions() {
+    _damagedBufferRegions.clear();
+    _damagedBufferRegions.addAll(_damagedFrameRegions);
+    _damagedFrameRegions.clear();
   }
 
   /// A handler that is called when this monitor is being removed.
@@ -148,6 +158,16 @@ class Monitor {
     _mode = mode;
   }
 
+  /// This monitor's damaged regions.
+  ///
+  /// This includes both frame and buffer regions. The damaged frame regions
+  /// are added manually, while the damaged buffer regions are updated
+  /// automatically.
+  List<Rect> get damagedRegions => _damagedFrameRegions + _damagedBufferRegions;
+
+  bool get isDamaged =>
+      _damagedFrameRegions.isNotEmpty || _damagedBufferRegions.isNotEmpty;
+
   /// Enables this monitor for rendering.
   void enable() {
     if (isEnabled) return;
@@ -159,4 +179,19 @@ class Monitor {
     if (!isEnabled) return;
     _disable();
   }
+
+  /// Schedule a frame event for this monitor.
+  void scheduleFrame() {
+    _wblib.wlr_output_schedule_frame(_monitorPtr.ref.wlr_output);
+  }
+
+  /// Damage a region of this monitor.
+  void damageRegion(Rect area) => _damagedFrameRegions.add(area);
+
+  /// Damage multiple regions of this monitor.
+  void damageRegions(List<Rect> areas) => _damagedFrameRegions.addAll(areas);
+
+  /// Damage this monitor's whole region.
+  void damageWholeRegion() =>
+      _damagedFrameRegions.add(Rect(0, 0, mode.width, mode.height));
 }

@@ -12,36 +12,25 @@ void waybright_renderer_destroy(struct waybright_renderer* wb_renderer) {
     free(wb_renderer);
 }
 
-void waybright_renderer_set_background_color(struct waybright_renderer* wb_renderer, int color) {
-    set_color_to_array(color, wb_renderer->color_background);
-}
-
-int waybright_renderer_get_background_color(struct waybright_renderer* wb_renderer) {
-    return get_color_from_array(wb_renderer->color_background);
-}
-
-int waybright_renderer_get_fill_style(struct waybright_renderer* wb_renderer) {
-    return get_color_from_array(wb_renderer->color_fill);
-}
-
-void waybright_renderer_set_fill_style(struct waybright_renderer* wb_renderer, int color) {
-    set_color_to_array(color, wb_renderer->color_fill);
-}
-
-void waybright_renderer_clear_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height) {
+void waybright_renderer_clear(struct waybright_renderer* wb_renderer, int color) {
     struct wlr_output* wlr_output = wb_renderer->wlr_output;
     struct wlr_renderer* wlr_renderer = wlr_output->renderer;
 
-    struct wlr_box wlr_box = { .x = x, .y = y, .width = width, .height = height };
-    wlr_render_rect(wlr_renderer, &wlr_box, (float[4]){0.0, 0.0, 0.0, 0.0}, wlr_output->transform_matrix);
+    float color_array[4];
+    set_color_to_array(color, color_array);
+
+    wlr_renderer_clear(wlr_renderer, color_array);
 }
 
-void waybright_renderer_fill_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height) {
+void waybright_renderer_fill_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height, int color) {
     struct wlr_output* wlr_output = wb_renderer->wlr_output;
     struct wlr_renderer* wlr_renderer = wlr_output->renderer;
 
+    float color_array[4];
+    set_color_to_array(color, color_array);
+
     struct wlr_box wlr_box = { .x = x, .y = y, .width = width, .height = height };
-    wlr_render_rect(wlr_renderer, &wlr_box, wb_renderer->color_fill, wlr_output->transform_matrix);
+    wlr_render_rect(wlr_renderer, &wlr_box, color_array, wlr_output->transform_matrix);
 }
 
 void waybright_renderer_draw_window(struct waybright_renderer* wb_renderer, struct waybright_window* wb_window, int x, int y, int width, int height, float alpha) {
@@ -133,4 +122,51 @@ struct waybright_image* waybright_renderer_capture_window_frame(struct waybright
     wb_image->is_loaded = true;
 
     return wb_image;
+}
+
+void waybright_renderer_begin(struct waybright_renderer* wb_renderer) {
+    struct wlr_output* wlr_output = wb_renderer->wlr_output;
+    struct wlr_renderer* wlr_renderer = wlr_output->renderer;
+
+    if (wlr_output->back_buffer == NULL) {
+        if (!wlr_output_attach_render(wlr_output, NULL)) {
+            return;
+        }
+    }
+
+
+    int width, height;
+
+    // "Computes the transformed and scaled output resolution."
+    wlr_output_effective_resolution(wlr_output, &width, &height);
+
+    wlr_renderer_begin(wlr_renderer, width, height);
+}
+
+void waybright_renderer_end(struct waybright_renderer* wb_renderer) {
+    struct wlr_output* wlr_output = wb_renderer->wlr_output;
+    struct wlr_renderer* wlr_renderer = wlr_output->renderer;
+
+    wlr_renderer_end(wlr_renderer);
+}
+
+void waybright_renderer_render(struct waybright_renderer* wb_renderer) {
+    struct wlr_output* wlr_output = wb_renderer->wlr_output;
+
+    if (!wlr_output_commit(wlr_output))
+        wlr_output_schedule_frame(wlr_output);
+
+    // wlr_output_commit(wlr_output);
+}
+
+void waybright_renderer_scissor(struct waybright_renderer* wb_renderer, int x, int y, int width, int height) {
+    struct wlr_output* wlr_output = wb_renderer->wlr_output;
+    struct wlr_renderer* wlr_renderer = wlr_output->renderer;
+
+    wlr_renderer_scissor(wlr_renderer, &(struct wlr_box) {
+        .x = x,
+        .y = y,
+        .width = width,
+        .height = height
+    });
 }

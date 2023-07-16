@@ -88,9 +88,6 @@ struct waybright {
 struct waybright_renderer {
     struct wlr_output* wlr_output;
     struct wlr_renderer* wlr_renderer;
-
-    float color_fill[4];
-    float color_background[4];
 };
 
 struct waybright_image_event {
@@ -227,12 +224,12 @@ void waybright_close_socket(struct waybright* wb);
 struct waybright_image* waybright_load_image(struct waybright* wb, const char* path, int* error);
 
 void waybright_renderer_destroy(struct waybright_renderer* wb_renderer);
-void waybright_renderer_set_background_color(struct waybright_renderer* wb_renderer, int color);
-int waybright_renderer_get_background_color(struct waybright_renderer* wb_renderer);
-int waybright_renderer_get_fill_style(struct waybright_renderer* wb_renderer);
-void waybright_renderer_set_fill_style(struct waybright_renderer* wb_renderer, int color);
-void waybright_renderer_clear_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height);
-void waybright_renderer_fill_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height);
+void waybright_renderer_begin(struct waybright_renderer* wb_renderer);
+void waybright_renderer_end(struct waybright_renderer* wb_renderer);
+void waybright_renderer_render(struct waybright_renderer* wb_renderer);
+void waybright_renderer_scissor(struct waybright_renderer* wb_renderer, int x, int y, int width, int height);
+void waybright_renderer_clear(struct waybright_renderer* wb_renderer, int color);
+void waybright_renderer_fill_rect(struct waybright_renderer* wb_renderer, int x, int y, int width, int height, int color);
 void waybright_renderer_draw_window(struct waybright_renderer* wb_renderer, struct waybright_window* wb_window, int x, int y, int width, int height, float alpha);
 void waybright_renderer_draw_image(struct waybright_renderer* wb_renderer, struct waybright_image* wb_image, int x, int y, int width, int height, float alpha);
 struct waybright_image* waybright_renderer_capture_window_frame(struct waybright_renderer* wb_renderer, struct waybright_window* wb_window);

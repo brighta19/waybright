@@ -31,6 +31,7 @@ part 'mode.dart';
 part 'monitor.dart';
 part 'renderer.dart';
 part 'window.dart';
+part 'rect.dart';
 
 final WaybrightLibrary _wblib =
     WaybrightLibrary(DynamicLibrary.open("./waybright.so"));

@@ -8210,82 +8210,59 @@ class WaybrightLibrary {
   late final _waybright_renderer_destroy = _waybright_renderer_destroyPtr
       .asFunction<void Function(ffi.Pointer<struct_waybright_renderer>)>();
 
-  void waybright_renderer_set_background_color(
-    ffi.Pointer<struct_waybright_renderer> wb_renderer,
-    int color,
-  ) {
-    return _waybright_renderer_set_background_color(
-      wb_renderer,
-      color,
-    );
-  }
-
-  late final _waybright_renderer_set_background_colorPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_waybright_renderer>,
-              ffi.Int)>>('waybright_renderer_set_background_color');
-  late final _waybright_renderer_set_background_color =
-      _waybright_renderer_set_background_colorPtr.asFunction<
-          void Function(ffi.Pointer<struct_waybright_renderer>, int)>();
-
-  int waybright_renderer_get_background_color(
+  void waybright_renderer_begin(
     ffi.Pointer<struct_waybright_renderer> wb_renderer,
   ) {
-    return _waybright_renderer_get_background_color(
+    return _waybright_renderer_begin(
       wb_renderer,
     );
   }
 
-  late final _waybright_renderer_get_background_colorPtr = _lookup<
+  late final _waybright_renderer_beginPtr = _lookup<
           ffi.NativeFunction<
-              ffi.Int Function(ffi.Pointer<struct_waybright_renderer>)>>(
-      'waybright_renderer_get_background_color');
-  late final _waybright_renderer_get_background_color =
-      _waybright_renderer_get_background_colorPtr
-          .asFunction<int Function(ffi.Pointer<struct_waybright_renderer>)>();
+              ffi.Void Function(ffi.Pointer<struct_waybright_renderer>)>>(
+      'waybright_renderer_begin');
+  late final _waybright_renderer_begin = _waybright_renderer_beginPtr
+      .asFunction<void Function(ffi.Pointer<struct_waybright_renderer>)>();
 
-  int waybright_renderer_get_fill_style(
+  void waybright_renderer_end(
     ffi.Pointer<struct_waybright_renderer> wb_renderer,
   ) {
-    return _waybright_renderer_get_fill_style(
+    return _waybright_renderer_end(
       wb_renderer,
     );
   }
 
-  late final _waybright_renderer_get_fill_stylePtr = _lookup<
+  late final _waybright_renderer_endPtr = _lookup<
           ffi.NativeFunction<
-              ffi.Int Function(ffi.Pointer<struct_waybright_renderer>)>>(
-      'waybright_renderer_get_fill_style');
-  late final _waybright_renderer_get_fill_style =
-      _waybright_renderer_get_fill_stylePtr
-          .asFunction<int Function(ffi.Pointer<struct_waybright_renderer>)>();
+              ffi.Void Function(ffi.Pointer<struct_waybright_renderer>)>>(
+      'waybright_renderer_end');
+  late final _waybright_renderer_end = _waybright_renderer_endPtr
+      .asFunction<void Function(ffi.Pointer<struct_waybright_renderer>)>();
 
-  void waybright_renderer_set_fill_style(
+  void waybright_renderer_render(
     ffi.Pointer<struct_waybright_renderer> wb_renderer,
-    int color,
   ) {
-    return _waybright_renderer_set_fill_style(
+    return _waybright_renderer_render(
       wb_renderer,
-      color,
     );
   }
 
-  late final _waybright_renderer_set_fill_stylePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_waybright_renderer>,
-              ffi.Int)>>('waybright_renderer_set_fill_style');
-  late final _waybright_renderer_set_fill_style =
-      _waybright_renderer_set_fill_stylePtr.asFunction<
-          void Function(ffi.Pointer<struct_waybright_renderer>, int)>();
+  late final _waybright_renderer_renderPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_waybright_renderer>)>>(
+      'waybright_renderer_render');
+  late final _waybright_renderer_render = _waybright_renderer_renderPtr
+      .asFunction<void Function(ffi.Pointer<struct_waybright_renderer>)>();
 
-  void waybright_renderer_clear_rect(
+  void waybright_renderer_scissor(
     ffi.Pointer<struct_waybright_renderer> wb_renderer,
     int x,
     int y,
     int width,
     int height,
   ) {
-    return _waybright_renderer_clear_rect(
+    return _waybright_renderer_scissor(
       wb_renderer,
       x,
       y,
@@ -8294,14 +8271,31 @@ class WaybrightLibrary {
     );
   }
 
-  late final _waybright_renderer_clear_rectPtr = _lookup<
+  late final _waybright_renderer_scissorPtr = _lookup<
       ffi.NativeFunction<
           ffi.Void Function(ffi.Pointer<struct_waybright_renderer>, ffi.Int,
-              ffi.Int, ffi.Int, ffi.Int)>>('waybright_renderer_clear_rect');
-  late final _waybright_renderer_clear_rect =
-      _waybright_renderer_clear_rectPtr.asFunction<
+              ffi.Int, ffi.Int, ffi.Int)>>('waybright_renderer_scissor');
+  late final _waybright_renderer_scissor =
+      _waybright_renderer_scissorPtr.asFunction<
           void Function(
               ffi.Pointer<struct_waybright_renderer>, int, int, int, int)>();
+
+  void waybright_renderer_clear(
+    ffi.Pointer<struct_waybright_renderer> wb_renderer,
+    int color,
+  ) {
+    return _waybright_renderer_clear(
+      wb_renderer,
+      color,
+    );
+  }
+
+  late final _waybright_renderer_clearPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<struct_waybright_renderer>,
+              ffi.Int)>>('waybright_renderer_clear');
+  late final _waybright_renderer_clear = _waybright_renderer_clearPtr
+      .asFunction<void Function(ffi.Pointer<struct_waybright_renderer>, int)>();
 
   void waybright_renderer_fill_rect(
     ffi.Pointer<struct_waybright_renderer> wb_renderer,
@@ -8309,6 +8303,7 @@ class WaybrightLibrary {
     int y,
     int width,
     int height,
+    int color,
   ) {
     return _waybright_renderer_fill_rect(
       wb_renderer,
@@ -8316,17 +8311,23 @@ class WaybrightLibrary {
       y,
       width,
       height,
+      color,
     );
   }
 
   late final _waybright_renderer_fill_rectPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_waybright_renderer>, ffi.Int,
-              ffi.Int, ffi.Int, ffi.Int)>>('waybright_renderer_fill_rect');
+          ffi.Void Function(
+              ffi.Pointer<struct_waybright_renderer>,
+              ffi.Int,
+              ffi.Int,
+              ffi.Int,
+              ffi.Int,
+              ffi.Int)>>('waybright_renderer_fill_rect');
   late final _waybright_renderer_fill_rect =
       _waybright_renderer_fill_rectPtr.asFunction<
-          void Function(
-              ffi.Pointer<struct_waybright_renderer>, int, int, int, int)>();
+          void Function(ffi.Pointer<struct_waybright_renderer>, int, int, int,
+              int, int)>();
 
   void waybright_renderer_draw_window(
     ffi.Pointer<struct_waybright_renderer> wb_renderer,
@@ -11772,12 +11773,6 @@ class struct_waybright_renderer extends ffi.Struct {
   external ffi.Pointer<struct_wlr_output> wlr_output;
 
   external ffi.Pointer<struct_wlr_renderer> wlr_renderer;
-
-  @ffi.Array.multi([4])
-  external ffi.Array<ffi.Float> color_fill;
-
-  @ffi.Array.multi([4])
-  external ffi.Array<ffi.Float> color_background;
 }
 
 class struct_waybright_image_event extends ffi.Struct {

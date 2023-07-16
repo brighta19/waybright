@@ -45,6 +45,33 @@ WindowEdge _getEdgeFromWlrResizeEvent(
   }
 }
 
+List<Rect> _getDamagedRegions(Window window) {
+  var damagedRegions = <Rect>[];
+
+  var damageRegionPtr = calloc<struct_pixman_region32>();
+  var numBoxesPtr = calloc<Int>();
+
+  _wblib.pixman_region32_init(damageRegionPtr);
+  _wblib.wlr_surface_get_effective_damage(
+      window._wlrXdgSurfacePtr.ref.surface, damageRegionPtr);
+
+  var boxesPtr =
+      _wblib.pixman_region32_rectangles(damageRegionPtr, numBoxesPtr);
+  var numBoxes = numBoxesPtr.value;
+
+  for (var i = 0; i < numBoxes; i++) {
+    var boxPtr = boxesPtr.elementAt(i);
+    var box = boxPtr.ref;
+    damagedRegions.add(Rect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1));
+  }
+
+  _wblib.pixman_region32_fini(damageRegionPtr);
+  calloc.free(damageRegionPtr);
+  calloc.free(numBoxesPtr);
+
+  return damagedRegions;
+}
+
 void _completeAndClearCompleters(List<Completer> completers) {
   for (var completer in completers) {
     completer.complete();
@@ -120,6 +147,14 @@ class Window {
           window.onResize?.call(WindowResizeEvent(
               window, window._previousWidth, window._previousHeight));
         }
+
+        // This is a workaround to allow completers to complete their futures
+        // before the WindowTextureDamagedRegionsEvent handler is called.
+        Future(() {
+          var damagedRegions = _getDamagedRegions(window);
+          window.onTextureDamagedRegions
+              ?.call(WindowTextureDamagedRegionsEvent(window, damagedRegions));
+        });
 
         window._previousWidth = window.textureWidth;
         window._previousHeight = window.textureHeight;
@@ -403,6 +438,19 @@ class Window {
   ///
   /// It has already taken effect by the time this handler is called.
   void Function(WindowParentChangeEvent event)? onParentChange;
+
+  /// A handler that is called when this window submits damaged regions.
+  ///
+  /// Damaged regions are areas of a texture that have been changed since the
+  /// last frame. They can be used to optimize rendering by only rendering the
+  /// damaged regions, rather than the entire texture.
+  ///
+  /// If opting to use damaged regions, the compositor should repaint the
+  /// damaged regions of this window when rendering the next frame.
+  /// The damaged regions may have to be transformed to the compositor's
+  /// coordinate space.
+  void Function(WindowTextureDamagedRegionsEvent event)?
+      onTextureDamagedRegions;
 
   /// Whether this window is a popup window.
   ///

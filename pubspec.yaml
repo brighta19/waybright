@@ -29,10 +29,12 @@ ffigen:
     include:
       - '^waybright_.*'
       - '^wlr_.*'
+      - '^pixman_.*'
   structs:
     include:
       - '^waybright_.*'
       - '^wlr_.*'
+      - '^pixman_*'
     rename:
       '(.*)': 'struct_$1'
   unions:

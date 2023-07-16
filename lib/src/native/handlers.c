@@ -13,37 +13,9 @@ void handle_monitor_remove_event(struct wl_listener *listener, void *data) {
 /// Occurs according to the monitor's refresh rate (set by the mode).
 void handle_monitor_frame_event(struct wl_listener *listener, void *data) {
     struct waybright_monitor* wb_monitor = wl_container_of(listener, wb_monitor, listeners.frame);
-    struct wlr_output *wlr_output = data;
-    struct wlr_renderer* wlr_renderer = wb_monitor->wb->wlr_renderer;
-
-
-    // I indicate that I want to render.
-    if (!wlr_output_attach_render(wlr_output, NULL)) {
-        return;
-    }
-
-    int width, height; // The will-be size of the new frame
-
-    // "Computes the transformed and scaled output resolution."
-    wlr_output_effective_resolution(wlr_output, &width, &height);
-
-    // Time to start drawing! (what's the purpose of the width and height params? they don't seem to affect anything.)
-    wlr_renderer_begin(wlr_renderer, width, height);
-
-    // Fills the entire buffer with a single color.
-    wlr_renderer_clear(wlr_renderer, wb_monitor->wb_renderer->color_background);
-
 
     if (wb_monitor->handle_event)
         wb_monitor->handle_event(event_type_monitor_frame, wb_monitor);
-
-
-    // I'm done drawing!
-    wlr_renderer_end(wlr_renderer);
-
-    // Submit my frame to the output.
-    if (!wlr_output_commit(wlr_output))
-        wlr_output_schedule_frame(wlr_output);
 }
 
 void handle_monitor_new_event(struct wl_listener *listener, void *data) {
@@ -55,7 +27,6 @@ void handle_monitor_new_event(struct wl_listener *listener, void *data) {
     struct waybright_renderer* wb_renderer = calloc(sizeof(struct waybright_renderer), 1);
     wb_renderer->wlr_output = wlr_output;
     wb_renderer->wlr_renderer = wb->wlr_renderer;
-    set_color_to_array(0x000000, wb_renderer->color_fill);
 
     struct waybright_monitor* wb_monitor = calloc(sizeof(struct waybright_monitor), 1);
     wb_monitor->wb = wb;

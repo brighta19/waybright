@@ -84,6 +84,13 @@ void onNewMonitor(MonitorAddEvent event) {
   if (currentMonitor != null) return;
   currentMonitor = monitor;
 
+  initializeCurrentMonitor();
+}
+
+void initializeCurrentMonitor() {
+  var monitor = currentMonitor;
+  if (monitor == null) return;
+
   var preferredMode = monitor.preferredMode;
   if (preferredMode == null) {
     compositor.closeSocket();
@@ -94,15 +101,17 @@ void onNewMonitor(MonitorAddEvent event) {
   monitor.enable();
 
   var renderer = monitor.renderer;
-  renderer.backgroundColor = backgroundColor;
+  renderer.clearColor = backgroundColor;
 
   monitor.onRemoving = (event) {
-    if (monitor == currentMonitor) {
-      currentMonitor = null;
-    }
+    currentMonitor = null;
   };
 
   monitor.onFrame = (event) {
+    renderer.begin();
+
+    renderer.clear();
+
     var list = windows.toList().reversed;
     for (var window in list) {
       if (window.w.hasTexture) {
@@ -120,7 +129,7 @@ void onNewMonitor(MonitorAddEvent event) {
     }
 
     if (cursorImage == null && getHoveredWindow() == null) {
-      renderer.fillStyle = 0xffffffdd;
+      renderer.fillColor = 0xffffffdd;
       renderer.fillRect(cursorX, cursorY, 5, 5);
     } else if (cursorImage != null && cursorImage!.isLoaded) {
       renderer.drawImage(
@@ -129,6 +138,10 @@ void onNewMonitor(MonitorAddEvent event) {
         cursorY - cursorImageHotspotY,
       );
     }
+
+    renderer.end();
+
+    renderer.render();
   };
 
   cursorX = monitor.mode.width / 2;

@@ -57,7 +57,10 @@ class WindowResizeRequestEvent extends WindowEvent {
 
 /// A window resize event.
 class WindowResizeEvent extends WindowEvent {
+  /// The old width.
   final int oldWidth;
+
+  /// The old height.
   final int oldHeight;
 
   WindowResizeEvent(super.window, this.oldWidth, this.oldHeight);
@@ -110,7 +113,10 @@ class WindowUnfullscreenEvent extends WindowEvent {
 
 /// A window menu request event.
 class WindowMenuRequestEvent extends WindowEvent {
+  /// The requested x coordinate.
   final num x;
+
+  /// The requested y coordinate.
   final num y;
 
   WindowMenuRequestEvent(super.window, this.x, this.y);
@@ -129,4 +135,12 @@ class WindowAppIdChangeEvent extends WindowEvent {
 /// A window parent change event.
 class WindowParentChangeEvent extends WindowEvent {
   WindowParentChangeEvent(super.window);
+}
+
+/// A window damaged regions event.
+class WindowTextureDamagedRegionsEvent extends WindowEvent {
+  /// The damaged regions.
+  final List<Rect> damagedRegions;
+
+  WindowTextureDamagedRegionsEvent(super.window, this.damagedRegions);
 }

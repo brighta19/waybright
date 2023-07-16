@@ -4,46 +4,22 @@ part of "./waybright.dart";
 class Renderer {
   final Pointer<struct_waybright_renderer>? _rendererPtr;
 
+  /// This renderer's monitor.
+  Monitor? _monitor;
+
   Renderer._fromPointer(Pointer<struct_waybright_renderer> this._rendererPtr);
 
-  /// The background color of this monitor.
-  int get backgroundColor {
-    var rendererPtr = _rendererPtr;
-    if (rendererPtr != null) {
-      return _wblib.waybright_renderer_get_background_color(rendererPtr);
-    }
-    return 0;
-  }
-
-  set backgroundColor(int color) {
-    var rendererPtr = _rendererPtr;
-    if (rendererPtr != null) {
-      _wblib.waybright_renderer_set_background_color(rendererPtr, color);
-    }
-  }
+  /// The clear color of this monitor.
+  int clearColor = 0x00000000;
 
   /// The color used to fill in shapes.
-  int get fillStyle {
-    var rendererPtr = _rendererPtr;
-    if (rendererPtr != null) {
-      return _wblib.waybright_renderer_get_fill_style(rendererPtr);
-    }
-    return 0;
-  }
+  int fillColor = 0xFFFFFFFF;
 
-  set fillStyle(int color) {
+  /// Clears all pixels on the monitor with the current [clearColor].
+  void clear() {
     var rendererPtr = _rendererPtr;
     if (rendererPtr != null) {
-      _wblib.waybright_renderer_set_fill_style(rendererPtr, color);
-    }
-  }
-
-  /// Sets all pixels to transparent black.
-  void clearRect(num x, num y, int width, int height) {
-    var rendererPtr = _rendererPtr;
-    if (rendererPtr != null) {
-      _wblib.waybright_renderer_clear_rect(
-          rendererPtr, x.toInt(), y.toInt(), width, height);
+      _wblib.waybright_renderer_clear(rendererPtr, clearColor);
     }
   }
 
@@ -52,7 +28,7 @@ class Renderer {
     var rendererPtr = _rendererPtr;
     if (rendererPtr != null) {
       _wblib.waybright_renderer_fill_rect(
-          rendererPtr, x.toInt(), y.toInt(), width, height);
+          rendererPtr, x.toInt(), y.toInt(), width, height, fillColor);
     }
   }
 
@@ -98,5 +74,38 @@ class Renderer {
       return imagePtr == nullptr ? null : Image._fromPointer(imagePtr);
     }
     return null;
+  }
+
+  void begin() {
+    var rendererPtr = _rendererPtr;
+    var monitor = _monitor;
+    if (rendererPtr != null && monitor != null) {
+      _wblib.waybright_renderer_begin(rendererPtr);
+
+      if (monitor.isDamaged) {
+        monitor._updateDamagedRegions();
+      }
+    }
+  }
+
+  void end() {
+    var rendererPtr = _rendererPtr;
+    if (rendererPtr != null) {
+      _wblib.waybright_renderer_end(rendererPtr);
+    }
+  }
+
+  void render() {
+    var rendererPtr = _rendererPtr;
+    if (rendererPtr != null) {
+      _wblib.waybright_renderer_render(rendererPtr);
+    }
+  }
+
+  void scissor(int x, int y, int width, int height) {
+    var rendererPtr = _rendererPtr;
+    if (rendererPtr != null) {
+      _wblib.waybright_renderer_scissor(rendererPtr, x, y, width, height);
+    }
   }
 }
