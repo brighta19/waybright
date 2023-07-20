@@ -7,7 +7,6 @@ part of "./waybright.dart";
 // TODO: add user events to window events
 // TODO: maybe create texture class
 // TODO: xwayland support
-// TODO: split logic into functions (e.g. Window._onEvent)
 
 enum WindowEdge {
   none,
@@ -79,6 +78,174 @@ void _completeAndClearCompleters(List<Completer> completers) {
   completers.clear();
 }
 
+Window? _getParentOfPopup(Window window) {
+  var parentPtr = window._windowPtr.ref.wlr_xdg_toplevel.ref.parent;
+  return Window._windowInstances[parentPtr];
+}
+
+void _wbWindowDestroyEvent(
+    Pointer<struct_waybright_window_event> eventPtr, Window window) {
+  window.onDestroying?.call(WindowDestroyingEvent(window));
+}
+
+void _wbWindowMapEvent(
+    Pointer<struct_waybright_window_event> eventPtr, Window window) {
+  window.onTextureSet?.call(WindowTextureSetEvent(window));
+}
+
+void _wbWindowUnmapEvent(
+    Pointer<struct_waybright_window_event> eventPtr, Window window) {
+  window.onTextureUnsetting?.call(WindowTextureUnsettingEvent(window));
+}
+
+void _wbWindowNewPopupEvent(
+    Pointer<struct_waybright_window_event> eventPtr, Window window) {
+  var popupWindowPtr = eventPtr.ref.event as Pointer<struct_waybright_window>;
+  var popup = Window._fromPointer(popupWindowPtr);
+  window.onPopupCreate?.call(WindowPopupCreateEvent(popup));
+}
+
+void _wbWindowCommitEvent(
+    Pointer<struct_waybright_window_event> eventPtr, Window window) {
+  if (window._wasActive && !window.isActive) {
+    window.onDeactivate?.call(WindowDeactivateEvent(window));
+    _completeAndClearCompleters(window._deactivateCompleters);
+  } else if (!window._wasActive && window.isActive) {
+    window.onActivate?.call(WindowActivateEvent(window));
+    _completeAndClearCompleters(window._activateCompleters);
+  } else {
+    _completeAndClearCompleters(window._deactivateCompleters);
+    _completeAndClearCompleters(window._activateCompleters);
+  }
+
+  if (window._wasMaximized && !window.isMaximized) {
+    window.onUnmaximize?.call(WindowUnmaximizeEvent(window));
+    _completeAndClearCompleters(window._unmaximizeCompleters);
+  } else if (!window._wasMaximized && window.isMaximized) {
+    window.onMaximize?.call(WindowMaximizeEvent(window));
+    _completeAndClearCompleters(window._maximizeCompleters);
+  } else {
+    _completeAndClearCompleters(window._unmaximizeCompleters);
+    _completeAndClearCompleters(window._maximizeCompleters);
+  }
+
+  if (window._wasFullscreen && !window.isFullscreen) {
+    window.onUnfullscreen?.call(WindowUnfullscreenEvent(window));
+    _completeAndClearCompleters(window._unfullscreenCompleters);
+  } else if (!window._wasFullscreen && window.isFullscreen) {
+    window.onFullscreen?.call(WindowFullscreenEvent(window));
+    _completeAndClearCompleters(window._fullscreenCompleters);
+  } else {
+    _completeAndClearCompleters(window._unfullscreenCompleters);
+    _completeAndClearCompleters(window._fullscreenCompleters);
+  }
+
+  if (window._resizeCompleters.isNotEmpty) {
+    window.onResize?.call(WindowResizeEvent(
+        window, window._previousWidth, window._previousHeight));
+    _completeAndClearCompleters(window._resizeCompleters);
+  }
+
+  // This is a workaround to allow completers to complete their futures
+  // before the WindowTextureDamagedRegionsEvent handler is called.
+  Future(() {
+    var damagedRegions = _getDamagedRegions(window);
+    window.onTextureDamagedRegions
+        ?.call(WindowTextureDamagedRegionsEvent(window, damagedRegions));
+  });
+
+  window._previousWidth = window.textureWidth;
+  window._previousHeight = window.textureHeight;
+  window._wasActive = window.isActive;
+  window._wasMaximized = window.isMaximized;
+  window._wasFullscreen = window.isFullscreen;
+}
+
+void _wbWindowRequestMoveEvent(
+    Pointer<struct_waybright_window_event> eventPtr, Window window) {
+  window.onMoveRequest?.call(WindowMoveRequestEvent(window));
+}
+
+void _wbWindowRequestResizeEvent(
+    Pointer<struct_waybright_window_event> eventPtr, Window window) {
+  var wlrEventPtr =
+      eventPtr.ref.event as Pointer<struct_wlr_xdg_toplevel_resize_event>;
+  WindowEdge edge = _getEdgeFromWlrResizeEvent(wlrEventPtr);
+  window.onResizeRequest?.call(WindowResizeRequestEvent(window, edge));
+}
+
+void _wbWindowRequestMaximizeEvent(
+    Pointer<struct_waybright_window_event> eventPtr, Window window) {
+  var hadRequestedMaximzed = window._wlrXdgToplevelPtr.ref.requested.maximized;
+  if (hadRequestedMaximzed) {
+    window.onMaximizeRequest?.call(WindowMaximizeRequestEvent(window));
+  } else {
+    window.onUnmaximizeRequest?.call(WindowUnmaximizeRequestEvent(window));
+  }
+}
+
+void _wbWindowRequestMinimizeEvent(
+    Pointer<struct_waybright_window_event> eventPtr, Window window) {
+  window.onMinimizeRequest?.call(WindowMinimizeRequestEvent(window));
+}
+
+void _wbWindowRequestFullscreenEvent(
+    Pointer<struct_waybright_window_event> eventPtr, Window window) {
+  var hadRequestedFullscreen =
+      window._wlrXdgToplevelPtr.ref.requested.fullscreen;
+  if (hadRequestedFullscreen) {
+    window.onFullscreenRequest?.call(WindowFullscreenRequestEvent(window));
+  } else {
+    window.onUnfullscreenRequest?.call(WindowUnfullscreenRequestEvent(window));
+  }
+}
+
+void _wbWindowRequestShowWindowMenuEvent(
+    Pointer<struct_waybright_window_event> eventPtr, Window window) {
+  var wlrEventPtr = eventPtr.ref.event
+      as Pointer<struct_wlr_xdg_toplevel_show_window_menu_event>;
+  window.onWindowMenuRequest?.call(
+      WindowMenuRequestEvent(window, wlrEventPtr.ref.x, wlrEventPtr.ref.y));
+}
+
+void _wbWindowSetTitleEvent(
+    Pointer<struct_waybright_window_event> eventPtr, Window window) {
+  window.onTitleChange?.call(WindowTitleChangeEvent(window));
+}
+
+void _wbWindowSetAppIdEvent(
+    Pointer<struct_waybright_window_event> eventPtr, Window window) {
+  window.onAppIdChange?.call(WindowAppIdChangeEvent(window));
+}
+
+void _wbWindowSetParentEvent(
+    Pointer<struct_waybright_window_event> eventPtr, Window window) {
+  window.parent = _getParentOfPopup(window);
+  window.onParentChange?.call(WindowParentChangeEvent(window));
+}
+
+final _wbEventCallbacks = {
+  enum_wb_event_type.event_type_window_destroy: _wbWindowDestroyEvent,
+  enum_wb_event_type.event_type_window_map: _wbWindowMapEvent,
+  enum_wb_event_type.event_type_window_unmap: _wbWindowUnmapEvent,
+  enum_wb_event_type.event_type_window_new_popup: _wbWindowNewPopupEvent,
+  enum_wb_event_type.event_type_window_commit: _wbWindowCommitEvent,
+  enum_wb_event_type.event_type_window_request_move: _wbWindowRequestMoveEvent,
+  enum_wb_event_type.event_type_window_request_resize:
+      _wbWindowRequestResizeEvent,
+  enum_wb_event_type.event_type_window_request_maximize:
+      _wbWindowRequestMaximizeEvent,
+  enum_wb_event_type.event_type_window_request_minimize:
+      _wbWindowRequestMinimizeEvent,
+  enum_wb_event_type.event_type_window_request_fullscreen:
+      _wbWindowRequestFullscreenEvent,
+  enum_wb_event_type.event_type_window_request_show_window_menu:
+      _wbWindowRequestShowWindowMenuEvent,
+  enum_wb_event_type.event_type_window_set_title: _wbWindowSetTitleEvent,
+  enum_wb_event_type.event_type_window_set_app_id: _wbWindowSetAppIdEvent,
+  enum_wb_event_type.event_type_window_set_parent: _wbWindowSetParentEvent,
+};
+
 /// An application's window.
 ///
 /// In wayland, this most closely corresponds to a `xdg_surface` from the
@@ -91,130 +258,21 @@ class Window {
 
   static void _onEvent(int type, Pointer<Void> data) {
     var eventPtr = data as Pointer<struct_waybright_window_event>;
+
     var window = _windowInstances[eventPtr.ref.wb_window];
-    if (window == null) throw StateError("Internal error: unknown window");
+    if (window == null) {
+      throw StateError("Internal error: unknown window");
+    }
 
-    switch (type) {
-      case enum_wb_event_type.event_type_window_destroy:
-        window.onDestroying?.call(WindowDestroyingEvent(window));
-        _windowInstances.remove(window._windowPtr);
-        break;
-      case enum_wb_event_type.event_type_window_map:
-        window.onTextureSet?.call(WindowTextureSetEvent(window));
-        break;
-      case enum_wb_event_type.event_type_window_unmap:
-        window.onTextureUnsetting?.call(WindowTextureUnsettingEvent(window));
-        break;
-      case enum_wb_event_type.event_type_window_new_popup:
-        var popupWindowPtr =
-            eventPtr.ref.event as Pointer<struct_waybright_window>;
-        var popup = Window._fromPointer(popupWindowPtr);
-        window.onPopupCreate?.call(WindowPopupCreateEvent(popup));
-        break;
-      case enum_wb_event_type.event_type_window_commit:
-        if (window._wasActive && !window.isActive) {
-          window.onDeactivate?.call(WindowDeactivateEvent(window));
-          _completeAndClearCompleters(window._deactivateCompleters);
-        } else if (!window._wasActive && window.isActive) {
-          window.onActivate?.call(WindowActivateEvent(window));
-          _completeAndClearCompleters(window._activateCompleters);
-        } else {
-          _completeAndClearCompleters(window._deactivateCompleters);
-          _completeAndClearCompleters(window._activateCompleters);
-        }
-        if (window._wasMaximized && !window.isMaximized) {
-          window.onUnmaximize?.call(WindowUnmaximizeEvent(window));
-          _completeAndClearCompleters(window._unmaximizeCompleters);
-        } else if (!window._wasMaximized && window.isMaximized) {
-          window.onMaximize?.call(WindowMaximizeEvent(window));
-          _completeAndClearCompleters(window._maximizeCompleters);
-        } else {
-          _completeAndClearCompleters(window._unmaximizeCompleters);
-          _completeAndClearCompleters(window._maximizeCompleters);
-        }
-        if (window._wasFullscreen && !window.isFullscreen) {
-          window.onUnfullscreen?.call(WindowUnfullscreenEvent(window));
-          _completeAndClearCompleters(window._unfullscreenCompleters);
-        } else if (!window._wasFullscreen && window.isFullscreen) {
-          window.onFullscreen?.call(WindowFullscreenEvent(window));
-          _completeAndClearCompleters(window._fullscreenCompleters);
-        } else {
-          _completeAndClearCompleters(window._unfullscreenCompleters);
-          _completeAndClearCompleters(window._fullscreenCompleters);
-        }
+    var callback = _wbEventCallbacks[type];
+    if (callback == null) {
+      throw ArgumentError("Internal error: unknown event type $type");
+    }
 
-        if (window._resizeCompleters.isNotEmpty) {
-          window.onResize?.call(WindowResizeEvent(
-              window, window._previousWidth, window._previousHeight));
-          _completeAndClearCompleters(window._resizeCompleters);
-        }
+    callback(eventPtr, window);
 
-        // This is a workaround to allow completers to complete their futures
-        // before the WindowTextureDamagedRegionsEvent handler is called.
-        Future(() {
-          var damagedRegions = _getDamagedRegions(window);
-          window.onTextureDamagedRegions
-              ?.call(WindowTextureDamagedRegionsEvent(window, damagedRegions));
-        });
-
-        window._previousWidth = window.textureWidth;
-        window._previousHeight = window.textureHeight;
-        window._wasActive = window.isActive;
-        window._wasMaximized = window.isMaximized;
-        window._wasFullscreen = window.isFullscreen;
-        break;
-      case enum_wb_event_type.event_type_window_request_move:
-        window.onMoveRequest?.call(WindowMoveRequestEvent(window));
-        break;
-      case enum_wb_event_type.event_type_window_request_resize:
-        var wlrEventPtr =
-            eventPtr.ref.event as Pointer<struct_wlr_xdg_toplevel_resize_event>;
-        WindowEdge edge = _getEdgeFromWlrResizeEvent(wlrEventPtr);
-        window.onResizeRequest?.call(WindowResizeRequestEvent(window, edge));
-        break;
-      case enum_wb_event_type.event_type_window_request_maximize:
-        var hadRequestedMaximzed =
-            window._wlrXdgToplevelPtr.ref.requested.maximized;
-        if (hadRequestedMaximzed) {
-          window.onMaximizeRequest?.call(WindowMaximizeRequestEvent(window));
-        } else {
-          window.onUnmaximizeRequest
-              ?.call(WindowUnmaximizeRequestEvent(window));
-        }
-        break;
-      case enum_wb_event_type.event_type_window_request_minimize:
-        window.onMinimizeRequest?.call(WindowMinimizeRequestEvent(window));
-        break;
-      case enum_wb_event_type.event_type_window_request_fullscreen:
-        var hadRequestedFullscreen =
-            window._wlrXdgToplevelPtr.ref.requested.fullscreen;
-        if (hadRequestedFullscreen) {
-          window.onFullscreenRequest
-              ?.call(WindowFullscreenRequestEvent(window));
-        } else {
-          window.onUnfullscreenRequest
-              ?.call(WindowUnfullscreenRequestEvent(window));
-        }
-        break;
-      case enum_wb_event_type.event_type_window_request_show_window_menu:
-        var wlrEventPtr = eventPtr.ref.event
-            as Pointer<struct_wlr_xdg_toplevel_show_window_menu_event>;
-        window.onWindowMenuRequest?.call(WindowMenuRequestEvent(
-            window, wlrEventPtr.ref.x, wlrEventPtr.ref.y));
-        break;
-      case enum_wb_event_type.event_type_window_set_title:
-        window.onTitleChange?.call(WindowTitleChangeEvent(window));
-        break;
-      case enum_wb_event_type.event_type_window_set_app_id:
-        window.onAppIdChange?.call(WindowAppIdChangeEvent(window));
-        break;
-      case enum_wb_event_type.event_type_window_set_parent:
-        var parentPtr = window._windowPtr.ref.wlr_xdg_toplevel.ref.parent;
-        window.parent = _windowInstances[parentPtr];
-        window.onParentChange?.call(WindowParentChangeEvent(window));
-        break;
-      default:
-        throw ArgumentError("Internal error: unknown event type $type");
+    if (type == enum_wb_event_type.event_type_window_destroy) {
+      _windowInstances.remove(window._windowPtr);
     }
   }
 
