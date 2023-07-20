@@ -11,14 +11,14 @@ class KeyboardKeyEvent extends KeyboardEvent {
   /// Whether the button is pressed or not.
   final bool isPressed;
 
-  /// The time elapsed in milliseconds.
-  final int elapsedTimeMilliseconds;
+  /// The time elapsed.
+  final Duration elapsedTime;
 
   KeyboardKeyEvent(
-    keyboard,
+    KeyboardDevice keyboard,
     this.code,
     this.isPressed,
-    this.elapsedTimeMilliseconds,
+    this.elapsedTime,
   )   : key = InputDeviceButton.values[code],
         super(keyboard);
 }

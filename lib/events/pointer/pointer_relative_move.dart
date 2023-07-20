@@ -9,9 +9,9 @@ class PointerRelativeMoveEvent extends PointerMoveEvent {
   final double deltaY;
 
   PointerRelativeMoveEvent(
-    pointer,
+    PointerDevice pointer,
     this.deltaX,
     this.deltaY,
-    elapsedTimeMilliseconds,
-  ) : super(pointer, elapsedTimeMilliseconds);
+    Duration elapsedTime,
+  ) : super(pointer, elapsedTime);
 }

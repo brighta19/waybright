@@ -711,7 +711,7 @@ class Window {
 
     _wblib.waybright_window_submit_pointer_move_event(
       _windowPtr,
-      update.event.elapsedTimeMilliseconds,
+      update.event.elapsedTime.inMilliseconds,
       cursorX,
       cursorY,
     );
@@ -727,7 +727,7 @@ class Window {
     // that the window pointer is not null before submitting the event
     _wblib.waybright_window_submit_pointer_button_event(
       _windowPtr,
-      update.event.elapsedTimeMilliseconds,
+      update.event.elapsedTime.inMilliseconds,
       update.event.code,
       update.event.isPressed ? 1 : 0,
     );
@@ -766,7 +766,7 @@ class Window {
 
     _wblib.waybright_window_submit_pointer_axis_event(
       _windowPtr,
-      update.event.elapsedTimeMilliseconds,
+      update.event.elapsedTime.inMilliseconds,
       orientation,
       update.event.delta,
       update.event.notches,
@@ -780,7 +780,7 @@ class Window {
 
     _wblib.waybright_window_submit_keyboard_key_event(
       _windowPtr,
-      update.event.elapsedTimeMilliseconds,
+      update.event.elapsedTime.inMilliseconds,
       update.event.code,
       update.event.isPressed ? 1 : 0,
     );

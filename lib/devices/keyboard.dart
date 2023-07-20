@@ -26,7 +26,7 @@ class KeyboardDevice extends InputDevice {
             wlrEventPtr.ref.keycode,
             wlrEventPtr.ref.state ==
                 enum_wl_keyboard_key_state.WL_KEYBOARD_KEY_STATE_PRESSED,
-            wlrEventPtr.ref.time_msec,
+            Duration(milliseconds: wlrEventPtr.ref.time_msec),
           ));
           break;
         case enum_wb_event_type.event_type_keyboard_modifiers:

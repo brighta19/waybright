@@ -12,10 +12,10 @@ class PointerAbsoluteMoveEvent extends PointerMoveEvent {
   final double y;
 
   PointerAbsoluteMoveEvent(
-    pointer,
+    PointerDevice pointer,
     this.monitor,
     this.x,
     this.y,
-    elapsedTimeMilliseconds,
-  ) : super(pointer, elapsedTimeMilliseconds);
+    Duration elapsedTime,
+  ) : super(pointer, elapsedTime);
 }

@@ -12,10 +12,10 @@ class PointerButtonEvent extends PointerEvent {
   final bool isPressed;
 
   PointerButtonEvent(
-    pointer,
+    PointerDevice pointer,
     this.code,
     this.isPressed,
-    elapsedTimeMilliseconds,
+    Duration elapsedTime,
   )   : button = InputDeviceButton.values[code],
-        super(pointer, elapsedTimeMilliseconds);
+        super(pointer, elapsedTime);
 }

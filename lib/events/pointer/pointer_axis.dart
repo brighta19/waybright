@@ -15,11 +15,11 @@ class PointerAxisEvent extends PointerEvent {
   final PointerAxisOrientation orientation;
 
   PointerAxisEvent(
-    pointer,
+    PointerDevice pointer,
     this.delta,
     this.notches,
     this.source,
     this.orientation,
-    elapsedTimeMilliseconds,
-  ) : super(pointer, elapsedTimeMilliseconds);
+    Duration elapsedTime,
+  ) : super(pointer, elapsedTime);
 }

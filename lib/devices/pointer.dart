@@ -99,7 +99,7 @@ class PointerDevice extends InputDevice {
             pointer,
             wlrEventPtr.ref.delta_x,
             wlrEventPtr.ref.delta_y,
-            wlrEventPtr.ref.time_msec,
+            Duration(milliseconds: wlrEventPtr.ref.time_msec),
           ));
           break;
         case enum_wb_event_type.event_type_pointer_teleport:
@@ -112,7 +112,7 @@ class PointerDevice extends InputDevice {
             details.monitor,
             details.x,
             details.y,
-            wlrEventPtr.ref.time_msec,
+            Duration(milliseconds: wlrEventPtr.ref.time_msec),
           ));
           break;
         case enum_wb_event_type.event_type_pointer_button:
@@ -122,7 +122,7 @@ class PointerDevice extends InputDevice {
             pointer,
             wlrEventPtr.ref.button,
             wlrEventPtr.ref.state == enum_wlr_button_state.WLR_BUTTON_PRESSED,
-            wlrEventPtr.ref.time_msec,
+            Duration(milliseconds: wlrEventPtr.ref.time_msec),
           ));
           break;
         case enum_wb_event_type.event_type_pointer_axis:
@@ -140,7 +140,7 @@ class PointerDevice extends InputDevice {
             wlrEventPtr.ref.delta_discrete,
             source,
             orientation,
-            wlrEventPtr.ref.time_msec,
+            Duration(milliseconds: wlrEventPtr.ref.time_msec),
           ));
           break;
       }
