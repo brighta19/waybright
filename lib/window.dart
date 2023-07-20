@@ -2,7 +2,6 @@ part of "./waybright.dart";
 
 // TODO: maybe split normal (toplevel) windows and popups into separate classes
 // TODO: add set bounds method
-// TODO: add set tiled method
 // TODO: use xdg positioner for popup windows
 // TODO: add user events to window events
 // TODO: maybe create texture class
@@ -333,6 +332,30 @@ class Window {
 
   void _setResizingAttribute(bool value) =>
       _wblib.wlr_xdg_toplevel_set_resizing(_wlrXdgToplevelPtr, value);
+
+  void _setTiledAttribute(List<WindowEdge> edges) {
+    var value = 0;
+    for (var edge in edges) {
+      switch (edge) {
+        case WindowEdge.top:
+          value |= enum_wlr_edges.WLR_EDGE_TOP;
+          break;
+        case WindowEdge.bottom:
+          value |= enum_wlr_edges.WLR_EDGE_BOTTOM;
+          break;
+        case WindowEdge.left:
+          value |= enum_wlr_edges.WLR_EDGE_LEFT;
+          break;
+        case WindowEdge.right:
+          value |= enum_wlr_edges.WLR_EDGE_RIGHT;
+          break;
+        default:
+          throw ArgumentError("Invalid window edge $edge");
+      }
+    }
+
+    _wblib.wlr_xdg_toplevel_set_tiled(_wlrXdgToplevelPtr, value);
+  }
 
   void _setSize({int? width, int? height}) {
     width ??= this.width;
@@ -724,6 +747,23 @@ class Window {
     if (isPopup) return;
 
     _setResizingAttribute(isResizing);
+  }
+
+  /// Noitifies this window about whether it is in a tiled layout or not.
+  ///
+  /// [tiledEdges] is a list of edges that are considered to be adjacent to
+  /// another part of the tiling grid. If empty, the window is not tiled.
+  ///
+  /// Only the edges [WindowEdge.top], [WindowEdge.bottom], [WindowEdge.left],
+  /// [WindowEdge.right], and [WindowEdge.none] are considered. If any other
+  /// edge is provided, it will be ignored.
+  ///
+  /// The tiling functionality is handled by the compositor, but the application
+  /// may want to draw itself differently while tiled.
+  void notifyTiledEdges(List<WindowEdge> tiledEdges) {
+    if (isPopup) return;
+
+    _setTiledAttribute(tiledEdges);
   }
 
   /// Requests that this window be closed.
