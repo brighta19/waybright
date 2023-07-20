@@ -142,10 +142,11 @@ class Window {
           _completeAndClearCompleters(window._unfullscreenCompleters);
           _completeAndClearCompleters(window._fullscreenCompleters);
         }
-        if (window._previousWidth != window.textureWidth ||
-            window._previousHeight != window.textureHeight) {
+
+        if (window._resizeCompleters.isNotEmpty) {
           window.onResize?.call(WindowResizeEvent(
               window, window._previousWidth, window._previousHeight));
+          _completeAndClearCompleters(window._resizeCompleters);
         }
 
         // This is a workaround to allow completers to complete their futures
@@ -240,6 +241,7 @@ class Window {
   final _unmaximizeCompleters = <Completer<void>>[];
   final _fullscreenCompleters = <Completer<void>>[];
   final _unfullscreenCompleters = <Completer<void>>[];
+  final _resizeCompleters = <Completer<void>>[];
 
   Window._fromPointer(
     this._windowPtr,
@@ -262,21 +264,17 @@ class Window {
     }
   }
 
-  void _setMaximizeAttribute(bool value) {
-    _wblib.wlr_xdg_toplevel_set_maximized(_wlrXdgToplevelPtr, value);
-  }
+  void _setMaximizeAttribute(bool value) =>
+      _wblib.wlr_xdg_toplevel_set_maximized(_wlrXdgToplevelPtr, value);
 
-  void _setFullscreenAttribute(bool value) {
-    _wblib.wlr_xdg_toplevel_set_fullscreen(_wlrXdgToplevelPtr, value);
-  }
+  void _setFullscreenAttribute(bool value) =>
+      _wblib.wlr_xdg_toplevel_set_fullscreen(_wlrXdgToplevelPtr, value);
 
-  void _setActiveAttribute(bool value) {
-    _wblib.wlr_xdg_toplevel_set_activated(_wlrXdgToplevelPtr, value);
-  }
+  void _setActiveAttribute(bool value) =>
+      _wblib.wlr_xdg_toplevel_set_activated(_wlrXdgToplevelPtr, value);
 
-  void _setResizingAttribute(bool value) {
-    _wblib.wlr_xdg_toplevel_set_resizing(_wlrXdgToplevelPtr, value);
-  }
+  void _setResizingAttribute(bool value) =>
+      _wblib.wlr_xdg_toplevel_set_resizing(_wlrXdgToplevelPtr, value);
 
   void _setSize({int? width, int? height}) {
     width ??= this.width;
@@ -660,7 +658,7 @@ class Window {
     return deactivateCompleter.future;
   }
 
-  /// Notifies this window that it is being resized.
+  /// Notifies this window about whether is being resized or not.
   ///
   /// The resize functionality is handled by the compositor, but the application
   /// may want to draw itself differently while resizing.
@@ -696,10 +694,16 @@ class Window {
   /// called.
   ///
   /// This method does nothing if this is a popup window.
-  void requestSize({int? width, int? height}) {
-    if (isPopup) return;
+  Future<void> requestSize({int? width, int? height}) {
+    if (isPopup || (width == this.width && height == this.height)) {
+      return Future.value();
+    }
 
     _setSize(width: width, height: height);
+
+    var resizeCompleter = Completer<void>();
+    _resizeCompleters.add(resizeCompleter);
+    return resizeCompleter.future;
   }
 
   /// Submits pointer movement updates to this window.
