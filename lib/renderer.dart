@@ -78,13 +78,8 @@ class Renderer {
 
   void begin() {
     var rendererPtr = _rendererPtr;
-    var monitor = _monitor;
-    if (rendererPtr != null && monitor != null) {
+    if (rendererPtr != null) {
       _wblib.waybright_renderer_begin(rendererPtr);
-
-      if (monitor.isDamaged) {
-        monitor._updateDamagedRegions();
-      }
     }
   }
 
@@ -97,8 +92,13 @@ class Renderer {
 
   void render() {
     var rendererPtr = _rendererPtr;
-    if (rendererPtr != null) {
+    var monitor = _monitor;
+    if (rendererPtr != null && monitor != null) {
       _wblib.waybright_renderer_render(rendererPtr);
+
+      if (monitor.isDamaged) {
+        monitor._updateDamagedRegions();
+      }
     }
   }
 

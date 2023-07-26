@@ -50,6 +50,7 @@ class WindowMoveRequestEvent extends WindowEvent {
 
 /// A window resize request event.
 class WindowResizeRequestEvent extends WindowEvent {
+  /// The window edge.
   final WindowEdge edge;
 
   WindowResizeRequestEvent(super.window, this.edge);
