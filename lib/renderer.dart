@@ -102,10 +102,11 @@ class Renderer {
     }
   }
 
-  void scissor(int x, int y, int width, int height) {
+  void scissor(num x, num y, int width, int height) {
     var rendererPtr = _rendererPtr;
     if (rendererPtr != null) {
-      _wblib.waybright_renderer_scissor(rendererPtr, x, y, width, height);
+      _wblib.waybright_renderer_scissor(
+          rendererPtr, x.toInt(), y.toInt(), width, height);
     }
   }
 }

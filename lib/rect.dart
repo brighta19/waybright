@@ -1,8 +1,8 @@
 part of 'waybright.dart';
 
 class Rect {
-  int x;
-  int y;
+  num x;
+  num y;
   int width;
   int height;
 

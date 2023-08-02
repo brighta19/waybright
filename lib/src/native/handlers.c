@@ -469,8 +469,8 @@ void handle_cursor_image_event(struct wl_listener *listener, void *data) {
     struct wlr_surface* wlr_surface = event->surface;
 
     struct waybright_image_event wb_image_event = {
-        NULL,
-        event
+        .wb_image = NULL,
+        .event = event
     };
 
     if (!wlr_surface) {
@@ -479,8 +479,12 @@ void handle_cursor_image_event(struct wl_listener *listener, void *data) {
         return;
     }
 
-    wb_image_event.wb_image = waybright_image_create_from_surface(wlr_surface);
+    struct waybright_image* wb_image = waybright_image_create_from_surface(wlr_surface);
+    wb_image_event.wb_image = wb_image;
 
     if (wb->handle_event)
         wb->handle_event(event_type_cursor_image, &wb_image_event);
+
+    if (wb_image->handle_event)
+        wb_image->handle_event(event_type_image_load, wb_image);
 }

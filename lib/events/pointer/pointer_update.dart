@@ -9,10 +9,10 @@ class PointerUpdate<PointerEvent> {
   final PointerEvent event;
 
   /// The cursor's vertical distance relative to the window's position.
-  final double windowCursorX;
+  final num windowCursorX;
 
   /// The cursor's horizontal distance relative to the window's position.
-  final double windowCursorY;
+  final num windowCursorY;
 
   PointerUpdate(
     this.pointer,

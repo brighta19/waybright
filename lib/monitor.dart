@@ -180,18 +180,30 @@ class Monitor {
     _disable();
   }
 
-  /// Schedule a frame event for this monitor.
-  void scheduleFrame() {
+  /// Schedule a frame event for this monitor. Can be called multiple times
+  /// without scheduling multiple frame events.
+  void scheduleFrameEvent() {
     _wblib.wlr_output_schedule_frame(_monitorPtr.ref.wlr_output);
   }
 
-  /// Damage a region of this monitor.
-  void damageRegion(Rect area) => _damagedFrameRegions.add(area);
+  /// Damage a region of this monitor. Also schedules a frame event unless
+  /// specified otherwise.
+  void damageRegion(Rect area, {bool scheduleFrameEvent = true}) {
+    _damagedFrameRegions.add(area);
+    if (scheduleFrameEvent) this.scheduleFrameEvent();
+  }
 
-  /// Damage multiple regions of this monitor.
-  void damageRegions(List<Rect> areas) => _damagedFrameRegions.addAll(areas);
+  /// Damage multiple regions of this monitor. Also schedules a frame event
+  /// unless specified otherwise.
+  void damageRegions(List<Rect> areas, {bool scheduleFrameEvent = true}) {
+    _damagedFrameRegions.addAll(areas);
+    if (scheduleFrameEvent) this.scheduleFrameEvent();
+  }
 
-  /// Damage this monitor's whole region.
-  void damageWholeRegion() =>
-      _damagedFrameRegions.add(Rect(0, 0, mode.width, mode.height));
+  /// Damage this monitor's whole region. Also schedules a frame event unless
+  /// specified otherwise.
+  void damageWholeRegion({bool scheduleFrameEvent = true}) {
+    _damagedFrameRegions.add(Rect(0, 0, mode.width, mode.height));
+    if (scheduleFrameEvent) this.scheduleFrameEvent();
+  }
 }
