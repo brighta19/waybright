@@ -92,12 +92,10 @@ void initializeCurrentMonitor() {
   if (monitor == null) return;
 
   var preferredMode = monitor.preferredMode;
-  if (preferredMode == null) {
-    compositor.closeSocket();
-    return;
+  if (preferredMode != null) {
+    monitor.mode = preferredMode;
   }
 
-  monitor.mode = preferredMode;
   monitor.enable();
 
   var renderer = monitor.renderer;
