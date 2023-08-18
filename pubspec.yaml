@@ -1,6 +1,6 @@
 name: waybright
 description: A library for building wayland compositors.
-version: 1.0.0
+version: 0.1.0
 repository: https://github.com/brighta19/waybright
 
 environment:
