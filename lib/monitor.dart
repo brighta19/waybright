@@ -37,6 +37,7 @@ class Monitor {
 
   final Pointer<struct_waybright_monitor> _monitorPtr;
   final _modes = <Mode>[];
+  bool _isWholeRegionConfirmedDamaged = false;
   final List<Rect> _damagedBufferRegions = [];
   final List<Rect> _damagedFrameRegions = [];
 
@@ -67,6 +68,7 @@ class Monitor {
     _damagedBufferRegions.clear();
     _damagedBufferRegions.addAll(_damagedFrameRegions);
     _damagedFrameRegions.clear();
+    _isWholeRegionConfirmedDamaged = false;
   }
 
   /// A handler that is called when this monitor is being removed.
@@ -189,6 +191,8 @@ class Monitor {
   /// Damage a region of this monitor. Also schedules a frame event unless
   /// specified otherwise.
   void damageRegion(Rect area, {bool scheduleFrameEvent = true}) {
+    if (_isWholeRegionConfirmedDamaged) return;
+
     _damagedFrameRegions.add(area);
     if (scheduleFrameEvent) this.scheduleFrameEvent();
   }
@@ -196,6 +200,8 @@ class Monitor {
   /// Damage multiple regions of this monitor. Also schedules a frame event
   /// unless specified otherwise.
   void damageRegions(List<Rect> areas, {bool scheduleFrameEvent = true}) {
+    if (_isWholeRegionConfirmedDamaged) return;
+
     _damagedFrameRegions.addAll(areas);
     if (scheduleFrameEvent) this.scheduleFrameEvent();
   }
@@ -203,7 +209,11 @@ class Monitor {
   /// Damage this monitor's whole region. Also schedules a frame event unless
   /// specified otherwise.
   void damageWholeRegion({bool scheduleFrameEvent = true}) {
+    if (_isWholeRegionConfirmedDamaged) return;
+
+    _damagedFrameRegions.clear();
     _damagedFrameRegions.add(Rect(0, 0, mode.width, mode.height));
+    _isWholeRegionConfirmedDamaged = true;
     if (scheduleFrameEvent) this.scheduleFrameEvent();
   }
 }
