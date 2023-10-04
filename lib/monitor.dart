@@ -52,6 +52,10 @@ class Monitor {
     renderer._monitor = this;
     _monitorInstances[_monitorPtr] = this;
     _monitorPtr.ref.handle_event = Pointer.fromFunction(_onEvent);
+    _mode = Mode(
+        _monitorPtr.ref.wlr_output.ref.width,
+        _monitorPtr.ref.wlr_output.ref.height,
+        _monitorPtr.ref.wlr_output.ref.refresh);
   }
 
   void _enable() {
@@ -100,6 +104,12 @@ class Monitor {
   /// This monitor's serial number.
   String? get serialNumber =>
       _toDartString(_monitorPtr.ref.wlr_output.ref.serial);
+
+  /// This monitor's resolution width.
+  int get resolutionWidth => _mode.width;
+
+  /// This monitor's resolution height.
+  int get resolutionHeight => _mode.height;
 
   /// This monitor's physical width in millimeters.
   int get physicalWidth => _monitorPtr.ref.wlr_output.ref.phys_width;
@@ -212,7 +222,7 @@ class Monitor {
     if (_isWholeRegionConfirmedDamaged) return;
 
     _damagedFrameRegions.clear();
-    _damagedFrameRegions.add(Rect(0, 0, mode.width, mode.height));
+    _damagedFrameRegions.add(Rect(0, 0, resolutionWidth, resolutionHeight));
     _isWholeRegionConfirmedDamaged = true;
     if (scheduleFrameEvent) this.scheduleFrameEvent();
   }

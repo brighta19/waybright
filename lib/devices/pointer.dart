@@ -58,9 +58,9 @@ _PointerTeleportDetails? _getMonitorFromWlrTeleportEvent(
   var outputWidthSum = 0;
   var maxOutputHeight = 0;
   for (var monitor in monitors.toList()) {
-    outputWidthSum += monitor.mode.width;
-    if (monitor.mode.height > maxOutputHeight) {
-      maxOutputHeight = monitor.mode.height;
+    outputWidthSum += monitor.resolutionWidth;
+    if (monitor.resolutionHeight > maxOutputHeight) {
+      maxOutputHeight = monitor.resolutionHeight;
     }
   }
 
@@ -69,11 +69,12 @@ _PointerTeleportDetails? _getMonitorFromWlrTeleportEvent(
 
   var layoutMonitorX = 0;
   for (var monitor in monitors.toList()) {
-    if (x >= layoutMonitorX && x < layoutMonitorX + monitor.mode.width) {
+    if (x >= layoutMonitorX && x < layoutMonitorX + monitor.resolutionWidth) {
       return _PointerTeleportDetails(monitor, x - layoutMonitorX, y);
     }
-    layoutMonitorX += monitor.mode.width;
+    layoutMonitorX += monitor.resolutionWidth;
   }
+
   return null;
 }
 

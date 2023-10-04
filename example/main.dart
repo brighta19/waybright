@@ -142,8 +142,8 @@ void initializeCurrentMonitor() {
     renderer.render();
   };
 
-  cursorX = monitor.mode.width / 2;
-  cursorY = monitor.mode.height / 2;
+  cursorX = monitor.resolutionWidth / 2;
+  cursorY = monitor.resolutionHeight / 2;
 }
 
 void onNewPopupWindow(MyWindow window) {

@@ -8,7 +8,7 @@ class Mode {
   /// The resolution height.
   final int height;
 
-  /// The refresh rate in millihertz.
+  /// The refresh rate in millihertz. May be zero.
   final int refreshRate;
 
   Pointer<struct_wlr_output_mode>? _outputModePtr;
