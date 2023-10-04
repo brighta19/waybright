@@ -23,6 +23,7 @@ void handle_monitor_new_event(struct wl_listener *listener, void *data) {
     struct wlr_output *wlr_output = data;
 
     wlr_output_init_render(wlr_output, wb->wlr_allocator, wb->wlr_renderer);
+    wlr_output_create_global(wlr_output);
 
     struct waybright_renderer* wb_renderer = calloc(sizeof(struct waybright_renderer), 1);
     wb_renderer->wlr_output = wlr_output;
