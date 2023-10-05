@@ -299,6 +299,12 @@ void handle_pointer_axis_event(struct wl_listener *listener, void *data) {
         wb_pointer->handle_event(event_type_pointer_axis, &wb_pointer_event);
 }
 
+void handle_pointer_frame_event(struct wl_listener *listener, void *data) {
+    struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.frame);
+
+	wlr_seat_pointer_notify_frame(wb_pointer->wb->wlr_seat);
+}
+
 void handle_pointer_button_event(struct wl_listener *listener, void *data) {
     struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.button);
     struct wlr_event_pointer_button* event = data;
@@ -337,6 +343,8 @@ void handle_pointer_new_event(struct waybright* wb, struct waybright_pointer* wb
     wl_signal_add(&wlr_pointer->events.button, &wb_pointer->listeners.button);
     wb_pointer->listeners.axis.notify = handle_pointer_axis_event;
     wl_signal_add(&wlr_pointer->events.axis, &wb_pointer->listeners.axis);
+    wb_pointer->listeners.frame.notify = handle_pointer_frame_event;
+    wl_signal_add(&wlr_pointer->events.frame, &wb_pointer->listeners.frame);
 }
 
 void handle_keyboard_remove_event(struct wl_listener* listener, void *data) {

@@ -184,6 +184,7 @@ struct waybright_pointer {
         struct wl_listener teleport;
         struct wl_listener button;
         struct wl_listener axis;
+        struct wl_listener frame;
     } listeners;
 
     void(*handle_event)(int type, void* data);

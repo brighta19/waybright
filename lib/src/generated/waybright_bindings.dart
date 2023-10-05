@@ -45,9 +45,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_session_destroyPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Pointer<struct_wlr_session>)>>('wlr_session_destroy');
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_session>)>>(
+      'wlr_session_destroy');
   late final _wlr_session_destroy = _wlr_session_destroyPtr
       .asFunction<void Function(ffi.Pointer<struct_wlr_session>)>();
 
@@ -151,9 +151,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_backend_startPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Bool Function(
-              ffi.Pointer<struct_wlr_backend>)>>('wlr_backend_start');
+          ffi
+          .NativeFunction<ffi.Bool Function(ffi.Pointer<struct_wlr_backend>)>>(
+      'wlr_backend_start');
   late final _wlr_backend_start = _wlr_backend_startPtr
       .asFunction<bool Function(ffi.Pointer<struct_wlr_backend>)>();
 
@@ -166,9 +166,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_backend_destroyPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Pointer<struct_wlr_backend>)>>('wlr_backend_destroy');
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_backend>)>>(
+      'wlr_backend_destroy');
   late final _wlr_backend_destroy = _wlr_backend_destroyPtr
       .asFunction<void Function(ffi.Pointer<struct_wlr_backend>)>();
 
@@ -197,8 +197,8 @@ class WaybrightLibrary {
   }
 
   late final _wlr_backend_get_presentation_clockPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Int Function(ffi.Pointer<struct_wlr_backend>)>>(
+          ffi
+          .NativeFunction<ffi.Int Function(ffi.Pointer<struct_wlr_backend>)>>(
       'wlr_backend_get_presentation_clock');
   late final _wlr_backend_get_presentation_clock =
       _wlr_backend_get_presentation_clockPtr
@@ -213,9 +213,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_backend_get_drm_fdPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Int Function(
-              ffi.Pointer<struct_wlr_backend>)>>('wlr_backend_get_drm_fd');
+          ffi
+          .NativeFunction<ffi.Int Function(ffi.Pointer<struct_wlr_backend>)>>(
+      'wlr_backend_get_drm_fd');
   late final _wlr_backend_get_drm_fd = _wlr_backend_get_drm_fdPtr
       .asFunction<int Function(ffi.Pointer<struct_wlr_backend>)>();
 
@@ -2984,9 +2984,9 @@ class WaybrightLibrary {
   }
 
   late final _pixman_glyph_cache_createPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Pointer<struct_pixman_glyph_cache_t>
-              Function()>>('pixman_glyph_cache_create');
+          ffi
+          .NativeFunction<ffi.Pointer<struct_pixman_glyph_cache_t> Function()>>(
+      'pixman_glyph_cache_create');
   late final _pixman_glyph_cache_create = _pixman_glyph_cache_createPtr
       .asFunction<ffi.Pointer<struct_pixman_glyph_cache_t> Function()>();
 
@@ -3769,9 +3769,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_texture_destroyPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Pointer<struct_wlr_texture>)>>('wlr_texture_destroy');
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_texture>)>>(
+      'wlr_texture_destroy');
   late final _wlr_texture_destroy = _wlr_texture_destroyPtr
       .asFunction<void Function(ffi.Pointer<struct_wlr_texture>)>();
 
@@ -3858,9 +3858,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_renderer_endPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Pointer<struct_wlr_renderer>)>>('wlr_renderer_end');
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_renderer>)>>(
+      'wlr_renderer_end');
   late final _wlr_renderer_end = _wlr_renderer_endPtr
       .asFunction<void Function(ffi.Pointer<struct_wlr_renderer>)>();
 
@@ -4178,9 +4178,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_renderer_get_drm_fdPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Int Function(
-              ffi.Pointer<struct_wlr_renderer>)>>('wlr_renderer_get_drm_fd');
+          ffi
+          .NativeFunction<ffi.Int Function(ffi.Pointer<struct_wlr_renderer>)>>(
+      'wlr_renderer_get_drm_fd');
   late final _wlr_renderer_get_drm_fd = _wlr_renderer_get_drm_fdPtr
       .asFunction<int Function(ffi.Pointer<struct_wlr_renderer>)>();
 
@@ -4193,9 +4193,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_renderer_destroyPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Pointer<struct_wlr_renderer>)>>('wlr_renderer_destroy');
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_renderer>)>>(
+      'wlr_renderer_destroy');
   late final _wlr_renderer_destroy = _wlr_renderer_destroyPtr
       .asFunction<void Function(ffi.Pointer<struct_wlr_renderer>)>();
 
@@ -4302,9 +4302,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_buffer_dropPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Pointer<struct_wlr_buffer>)>>('wlr_buffer_drop');
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_buffer>)>>(
+      'wlr_buffer_drop');
   late final _wlr_buffer_drop = _wlr_buffer_dropPtr
       .asFunction<void Function(ffi.Pointer<struct_wlr_buffer>)>();
 
@@ -4333,9 +4333,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_buffer_unlockPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Pointer<struct_wlr_buffer>)>>('wlr_buffer_unlock');
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_buffer>)>>(
+      'wlr_buffer_unlock');
   late final _wlr_buffer_unlock = _wlr_buffer_unlockPtr
       .asFunction<void Function(ffi.Pointer<struct_wlr_buffer>)>();
 
@@ -4435,8 +4435,8 @@ class WaybrightLibrary {
   }
 
   late final _wlr_buffer_end_data_ptr_accessPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<struct_wlr_buffer>)>>(
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_buffer>)>>(
       'wlr_buffer_end_data_ptr_access');
   late final _wlr_buffer_end_data_ptr_access =
       _wlr_buffer_end_data_ptr_accessPtr
@@ -4488,9 +4488,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_resource_is_bufferPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Bool Function(
-              ffi.Pointer<struct_wl_resource>)>>('wlr_resource_is_buffer');
+          ffi
+          .NativeFunction<ffi.Bool Function(ffi.Pointer<struct_wl_resource>)>>(
+      'wlr_resource_is_buffer');
   late final _wlr_resource_is_buffer = _wlr_resource_is_bufferPtr
       .asFunction<bool Function(ffi.Pointer<struct_wl_resource>)>();
 
@@ -4546,9 +4546,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_output_create_globalPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Pointer<struct_wlr_output>)>>('wlr_output_create_global');
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_output>)>>(
+      'wlr_output_create_global');
   late final _wlr_output_create_global = _wlr_output_create_globalPtr
       .asFunction<void Function(ffi.Pointer<struct_wlr_output>)>();
 
@@ -4561,9 +4561,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_output_destroy_globalPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Pointer<struct_wlr_output>)>>('wlr_output_destroy_global');
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_output>)>>(
+      'wlr_output_destroy_global');
   late final _wlr_output_destroy_global = _wlr_output_destroy_globalPtr
       .asFunction<void Function(ffi.Pointer<struct_wlr_output>)>();
 
@@ -4779,9 +4779,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_output_schedule_donePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Pointer<struct_wlr_output>)>>('wlr_output_schedule_done');
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_output>)>>(
+      'wlr_output_schedule_done');
   late final _wlr_output_schedule_done = _wlr_output_schedule_donePtr
       .asFunction<void Function(ffi.Pointer<struct_wlr_output>)>();
 
@@ -4794,9 +4794,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_output_destroyPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Pointer<struct_wlr_output>)>>('wlr_output_destroy');
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_output>)>>(
+      'wlr_output_destroy');
   late final _wlr_output_destroy = _wlr_output_destroyPtr
       .asFunction<void Function(ffi.Pointer<struct_wlr_output>)>();
 
@@ -4893,8 +4893,8 @@ class WaybrightLibrary {
   }
 
   late final _wlr_output_preferred_read_formatPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Uint32 Function(ffi.Pointer<struct_wlr_output>)>>(
+          ffi
+          .NativeFunction<ffi.Uint32 Function(ffi.Pointer<struct_wlr_output>)>>(
       'wlr_output_preferred_read_format');
   late final _wlr_output_preferred_read_format =
       _wlr_output_preferred_read_formatPtr
@@ -4927,9 +4927,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_output_testPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Bool Function(
-              ffi.Pointer<struct_wlr_output>)>>('wlr_output_test');
+          ffi
+          .NativeFunction<ffi.Bool Function(ffi.Pointer<struct_wlr_output>)>>(
+      'wlr_output_test');
   late final _wlr_output_test = _wlr_output_testPtr
       .asFunction<bool Function(ffi.Pointer<struct_wlr_output>)>();
 
@@ -4942,9 +4942,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_output_commitPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Bool Function(
-              ffi.Pointer<struct_wlr_output>)>>('wlr_output_commit');
+          ffi
+          .NativeFunction<ffi.Bool Function(ffi.Pointer<struct_wlr_output>)>>(
+      'wlr_output_commit');
   late final _wlr_output_commit = _wlr_output_commitPtr
       .asFunction<bool Function(ffi.Pointer<struct_wlr_output>)>();
 
@@ -4957,9 +4957,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_output_rollbackPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Pointer<struct_wlr_output>)>>('wlr_output_rollback');
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_output>)>>(
+      'wlr_output_rollback');
   late final _wlr_output_rollback = _wlr_output_rollbackPtr
       .asFunction<void Function(ffi.Pointer<struct_wlr_output>)>();
 
@@ -5009,9 +5009,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_output_schedule_framePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Pointer<struct_wlr_output>)>>('wlr_output_schedule_frame');
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_output>)>>(
+      'wlr_output_schedule_frame');
   late final _wlr_output_schedule_frame = _wlr_output_schedule_framePtr
       .asFunction<void Function(ffi.Pointer<struct_wlr_output>)>();
 
@@ -5024,9 +5024,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_output_get_gamma_sizePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Size Function(
-              ffi.Pointer<struct_wlr_output>)>>('wlr_output_get_gamma_size');
+          ffi
+          .NativeFunction<ffi.Size Function(ffi.Pointer<struct_wlr_output>)>>(
+      'wlr_output_get_gamma_size');
   late final _wlr_output_get_gamma_size = _wlr_output_get_gamma_sizePtr
       .asFunction<int Function(ffi.Pointer<struct_wlr_output>)>();
 
@@ -5700,8 +5700,8 @@ class WaybrightLibrary {
   }
 
   late final _wlr_surface_destroy_role_objectPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<struct_wlr_surface>)>>(
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<struct_wlr_surface>)>>(
       'wlr_surface_destroy_role_object');
   late final _wlr_surface_destroy_role_object =
       _wlr_surface_destroy_role_objectPtr
@@ -5716,9 +5716,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_surface_has_bufferPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Bool Function(
-              ffi.Pointer<struct_wlr_surface>)>>('wlr_surface_has_buffer');
+          ffi
+          .NativeFunction<ffi.Bool Function(ffi.Pointer<struct_wlr_surface>)>>(
+      'wlr_surface_has_buffer');
   late final _wlr_surface_has_buffer = _wlr_surface_has_bufferPtr
       .asFunction<bool Function(ffi.Pointer<struct_wlr_surface>)>();
 
@@ -7938,9 +7938,9 @@ class WaybrightLibrary {
   }
 
   late final _wlr_surface_is_xdg_surfacePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Bool Function(
-              ffi.Pointer<struct_wlr_surface>)>>('wlr_surface_is_xdg_surface');
+          ffi
+          .NativeFunction<ffi.Bool Function(ffi.Pointer<struct_wlr_surface>)>>(
+      'wlr_surface_is_xdg_surface');
   late final _wlr_surface_is_xdg_surface = _wlr_surface_is_xdg_surfacePtr
       .asFunction<bool Function(ffi.Pointer<struct_wlr_surface>)>();
 
@@ -9742,8 +9742,9 @@ class struct_wl_resource extends ffi.Struct {
   external struct_wl_object object;
 
   external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<struct_wl_resource>)>> destroy;
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<struct_wl_resource>)>>
+      destroy;
 
   external struct_wl_list link;
 
@@ -11968,6 +11969,8 @@ class UnnamedStruct35 extends ffi.Struct {
   external struct_wl_listener button;
 
   external struct_wl_listener axis;
+
+  external struct_wl_listener frame;
 }
 
 class struct_waybright_keyboard extends ffi.Struct {
