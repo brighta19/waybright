@@ -9,8 +9,8 @@ void waybright_pointer_destroy(struct waybright_pointer* wb_pointer) {
     wl_list_remove(&wb_pointer->listeners.destroy.link);
     wl_list_remove(&wb_pointer->listeners.axis.link);
     wl_list_remove(&wb_pointer->listeners.button.link);
-    wl_list_remove(&wb_pointer->listeners.move.link);
-    wl_list_remove(&wb_pointer->listeners.teleport.link);
+    wl_list_remove(&wb_pointer->listeners.relative_move.link);
+    wl_list_remove(&wb_pointer->listeners.absolute_move.link);
 
     free(wb_pointer);
 }

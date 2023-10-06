@@ -50,7 +50,7 @@ PointerAxisOrientation _getPointerAxisOrientationFromWlrAxisEvent(
   }
 }
 
-_PointerTeleportDetails? _getMonitorFromWlrTeleportEvent(
+_PointerTeleportDetails? _getMonitorFromWlrAbsoluteMovetEvent(
     Pointer<struct_wlr_pointer_motion_absolute_event> event) {
   var monitors = Monitor._monitorInstances.values;
 
@@ -93,22 +93,22 @@ class PointerDevice extends InputDevice {
           pointer.onRemove?.call(RemovePointerEvent());
           _pointerInstances.remove(pointer);
           break;
-        case enum_wb_event_type.event_type_pointer_move:
+        case enum_wb_event_type.event_type_pointer_relative_move:
           var wlrEventPtr =
               eventPtr.ref.event as Pointer<struct_wlr_pointer_motion_event>;
-          pointer.onMove?.call(PointerRelativeMoveEvent(
+          pointer.onRelativeMove?.call(PointerRelativeMoveEvent(
             pointer,
             wlrEventPtr.ref.delta_x,
             wlrEventPtr.ref.delta_y,
             Duration(milliseconds: wlrEventPtr.ref.time_msec),
           ));
           break;
-        case enum_wb_event_type.event_type_pointer_teleport:
+        case enum_wb_event_type.event_type_pointer_absolute_move:
           var wlrEventPtr = eventPtr.ref.event
               as Pointer<struct_wlr_pointer_motion_absolute_event>;
-          var details = _getMonitorFromWlrTeleportEvent(wlrEventPtr);
+          var details = _getMonitorFromWlrAbsoluteMovetEvent(wlrEventPtr);
           if (details == null) return;
-          pointer.onTeleport?.call(PointerAbsoluteMoveEvent(
+          pointer.onAbsoluteMove?.call(PointerAbsoluteMoveEvent(
             pointer,
             details.monitor,
             details.x,
@@ -154,8 +154,8 @@ class PointerDevice extends InputDevice {
   Pointer<struct_waybright_pointer>? _pointerPtr;
 
   void Function(RemovePointerEvent event)? onRemove;
-  void Function(PointerRelativeMoveEvent event)? onMove;
-  void Function(PointerAbsoluteMoveEvent event)? onTeleport;
+  void Function(PointerRelativeMoveEvent event)? onRelativeMove;
+  void Function(PointerAbsoluteMoveEvent event)? onAbsoluteMove;
   void Function(PointerButtonEvent event)? onButton;
   void Function(PointerAxisEvent event)? onAxis;
 

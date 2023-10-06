@@ -231,14 +231,14 @@ void onNewPointer(PointerDevice pointer) {
     ));
   }
 
-  pointer.onMove = (event) {
+  pointer.onRelativeMove = (event) {
     cursorX += event.deltaX;
     cursorY += event.deltaY;
 
     if (!isGrabbingWindow) handleMovement(event);
   };
 
-  pointer.onTeleport = (event) {
+  pointer.onAbsoluteMove = (event) {
     cursorX = event.x;
     cursorY = event.y;
 

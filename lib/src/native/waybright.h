@@ -46,8 +46,8 @@ enum wb_event_type {
     event_type_input_new,
 
     event_type_pointer_remove,
-    event_type_pointer_move,
-    event_type_pointer_teleport,
+    event_type_pointer_relative_move,
+    event_type_pointer_absolute_move,
     event_type_pointer_button,
     event_type_pointer_axis,
 
@@ -180,8 +180,8 @@ struct waybright_pointer {
 
     struct {
         struct wl_listener destroy;
-        struct wl_listener move;
-        struct wl_listener teleport;
+        struct wl_listener relative_move;
+        struct wl_listener absolute_move;
         struct wl_listener button;
         struct wl_listener axis;
         struct wl_listener frame;

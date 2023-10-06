@@ -18,7 +18,8 @@ void handle_xdg_toplevel_set_title_event(struct wl_listener *listener, void *dat
 void handle_xdg_toplevel_set_app_id_event(struct wl_listener *listener, void *data);
 void handle_xdg_toplevel_set_parent_event(struct wl_listener *listener, void *data);
 
-void handle_pointer_teleport_event(struct wl_listener *listener, void *data);
+void handle_pointer_relative_move_event(struct wl_listener *listener, void *data);
+void handle_pointer_absolute_move_event(struct wl_listener *listener, void *data);
 void handle_pointer_axis_event(struct wl_listener *listener, void *data);
 void handle_pointer_button_event(struct wl_listener *listener, void *data);
 void handle_pointer_remove_event(struct wl_listener* listener, void *data);

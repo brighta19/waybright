@@ -260,8 +260,8 @@ void handle_new_xdg_surface_event(struct wl_listener *listener, void *data) {
         wb->handle_event(event_type_window_new, wb_window);
 }
 
-void handle_pointer_move_event(struct wl_listener *listener, void *data) {
-    struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.move);
+void handle_pointer_relative_move_event(struct wl_listener *listener, void *data) {
+    struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.relative_move);
     struct wlr_event_pointer_motion* event = data;
 
     struct waybright_pointer_event wb_pointer_event = {
@@ -270,11 +270,11 @@ void handle_pointer_move_event(struct wl_listener *listener, void *data) {
     };
 
     if (wb_pointer->handle_event)
-        wb_pointer->handle_event(event_type_pointer_move, &wb_pointer_event);
+        wb_pointer->handle_event(event_type_pointer_relative_move, &wb_pointer_event);
 }
 
-void handle_pointer_teleport_event(struct wl_listener *listener, void *data) {
-    struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.teleport);
+void handle_pointer_absolute_move_event(struct wl_listener *listener, void *data) {
+    struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.absolute_move);
     struct wlr_event_pointer_motion_absolute* event = data;
 
     struct waybright_pointer_event wb_pointer_event = {
@@ -283,7 +283,7 @@ void handle_pointer_teleport_event(struct wl_listener *listener, void *data) {
     };
 
     if (wb_pointer->handle_event)
-        wb_pointer->handle_event(event_type_pointer_teleport, &wb_pointer_event);
+        wb_pointer->handle_event(event_type_pointer_absolute_move, &wb_pointer_event);
 }
 
 void handle_pointer_axis_event(struct wl_listener *listener, void *data) {
@@ -335,10 +335,10 @@ void handle_pointer_new_event(struct waybright* wb, struct waybright_pointer* wb
 
     struct wlr_pointer* wlr_pointer = wb_pointer->wlr_pointer;
 
-    wb_pointer->listeners.move.notify = handle_pointer_move_event;
-    wl_signal_add(&wlr_pointer->events.motion, &wb_pointer->listeners.move);
-    wb_pointer->listeners.teleport.notify = handle_pointer_teleport_event;
-    wl_signal_add(&wlr_pointer->events.motion_absolute, &wb_pointer->listeners.teleport);
+    wb_pointer->listeners.relative_move.notify = handle_pointer_relative_move_event;
+    wl_signal_add(&wlr_pointer->events.motion, &wb_pointer->listeners.relative_move);
+    wb_pointer->listeners.absolute_move.notify = handle_pointer_absolute_move_event;
+    wl_signal_add(&wlr_pointer->events.motion_absolute, &wb_pointer->listeners.absolute_move);
     wb_pointer->listeners.button.notify = handle_pointer_button_event;
     wl_signal_add(&wlr_pointer->events.button, &wb_pointer->listeners.button);
     wb_pointer->listeners.axis.notify = handle_pointer_axis_event;
