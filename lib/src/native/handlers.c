@@ -302,7 +302,7 @@ void handle_pointer_axis_event(struct wl_listener *listener, void *data) {
 void handle_pointer_frame_event(struct wl_listener *listener, void *data) {
     struct waybright_pointer* wb_pointer = wl_container_of(listener, wb_pointer, listeners.frame);
 
-	wlr_seat_pointer_notify_frame(wb_pointer->wb->wlr_seat);
+    wlr_seat_pointer_notify_frame(wb_pointer->wb->wlr_seat);
 }
 
 void handle_pointer_button_event(struct wl_listener *listener, void *data) {

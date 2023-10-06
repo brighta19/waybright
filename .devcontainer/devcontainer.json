@@ -1,16 +1,16 @@
 {
-	"name": "waybright-dev-env",
+    "name": "waybright-dev-env",
 
-	"build": {
-		"dockerfile": "Dockerfile"
-	},
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
 
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"dart-code.dart-code",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "dart-code.dart-code",
                 "ms-vscode.cpptools"
-			]
-		}
-	}
+            ]
+        }
+    }
 }
