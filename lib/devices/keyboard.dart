@@ -41,9 +41,9 @@ class KeyboardDevice extends InputDevice {
 
   Pointer<struct_waybright_keyboard>? _keyboardPtr;
 
-  void Function(RemoveKeyboardEvent)? onRemove;
-  void Function(KeyboardKeyEvent)? onKey;
-  void Function(KeyboardModifiersEvent)? onModifiers;
+  void Function(RemoveKeyboardEvent event)? onRemove;
+  void Function(KeyboardKeyEvent event)? onKey;
+  void Function(KeyboardModifiersEvent event)? onModifiers;
 
   KeyboardDevice() : super(InputDeviceType.keyboard) {
     _keyboardInstances.add(this);

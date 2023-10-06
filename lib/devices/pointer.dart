@@ -153,11 +153,11 @@ class PointerDevice extends InputDevice {
 
   Pointer<struct_waybright_pointer>? _pointerPtr;
 
-  void Function(RemovePointerEvent)? onRemove;
-  void Function(PointerRelativeMoveEvent)? onMove;
-  void Function(PointerAbsoluteMoveEvent)? onTeleport;
-  void Function(PointerButtonEvent)? onButton;
-  void Function(PointerAxisEvent)? onAxis;
+  void Function(RemovePointerEvent event)? onRemove;
+  void Function(PointerRelativeMoveEvent event)? onMove;
+  void Function(PointerAbsoluteMoveEvent event)? onTeleport;
+  void Function(PointerButtonEvent event)? onButton;
+  void Function(PointerAxisEvent event)? onAxis;
 
   PointerDevice() : super(InputDeviceType.pointer) {
     _pointerInstances.add(this);
