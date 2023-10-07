@@ -1,5 +1,5 @@
 {
-    "name": "waybright-dev-env",
+    "name": "waybright-dev",
 
     "build": {
         "dockerfile": "Dockerfile"
