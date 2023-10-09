@@ -2,6 +2,7 @@
 
 #include <time.h>
 #include <wlr/render/gles2.h>
+#include <wlr/render/pixman.h>
 #include <wlr/types/wlr_matrix.h>
 #include <wlr/util/box.h>
 #include "waybright.h"
@@ -85,11 +86,16 @@ void waybright_renderer_draw_image(struct waybright_renderer* wb_renderer, struc
     float matrix[9];
     wlr_matrix_project_box(matrix, &wlr_box, WL_OUTPUT_TRANSFORM_NORMAL, 0.0, wlr_output->transform_matrix);
 
-    // A fix for the assertion failure on wlr_texture_is_gles2(wlr_texture).
+    // A fix for the assertion failure on wlr_texture_is_gles2/pixman(wlr_texture).
     // The pointer to the texture's implementation is different from the
     // pointer to the renderer's implementation.
-    if (wlr_renderer_is_gles2(wlr_renderer) && !wlr_texture_is_gles2(wlr_texture))
+    // TODO: Investigate why this happens.
+    if (
+        (wlr_renderer_is_gles2(wlr_renderer) && !wlr_texture_is_gles2(wlr_texture)) ||
+        (wlr_renderer_is_pixman(wlr_renderer) && !wlr_texture_is_pixman(wlr_texture))
+     ) {
         return;
+     }
 
     wlr_render_texture_with_matrix(wlr_renderer, wlr_texture, matrix, alpha);
 }
