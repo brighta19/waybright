@@ -12,12 +12,12 @@ enum PointerAxisOrientation {
   horizontal,
 }
 
-class _PointerTeleportDetails {
+class _PointerAbsoluteMoveDetails {
   Monitor monitor;
   double x;
   double y;
 
-  _PointerTeleportDetails(this.monitor, this.x, this.y);
+  _PointerAbsoluteMoveDetails(this.monitor, this.x, this.y);
 }
 
 class RemovePointerEvent {}
@@ -50,11 +50,12 @@ PointerAxisOrientation _getPointerAxisOrientationFromWlrAxisEvent(
   }
 }
 
-_PointerTeleportDetails? _getMonitorFromWlrAbsoluteMovetEvent(
+_PointerAbsoluteMoveDetails? _getMonitorFromWlrAbsoluteMovetEvent(
     Pointer<struct_wlr_pointer_motion_absolute_event> event) {
   var monitors = Monitor._monitorInstances.values;
+  if (monitors.isEmpty) return null;
 
-// Imagine a layout where new monitors are added to the right.
+  // Imagine a layout where new monitors are added to the right.
   var outputWidthSum = 0;
   var maxOutputHeight = 0;
   for (var monitor in monitors.toList()) {
@@ -67,14 +68,20 @@ _PointerTeleportDetails? _getMonitorFromWlrAbsoluteMovetEvent(
   var x = event.ref.x * outputWidthSum;
   var y = event.ref.y * maxOutputHeight;
 
+  if (x < 0) {
+    return _PointerAbsoluteMoveDetails(monitors.first, x, y);
+  } else if (x > outputWidthSum) {
+    return _PointerAbsoluteMoveDetails(
+        monitors.last, x - outputWidthSum + monitors.last.resolutionWidth, y);
+  }
+
   var layoutMonitorX = 0;
   for (var monitor in monitors.toList()) {
     if (x >= layoutMonitorX && x < layoutMonitorX + monitor.resolutionWidth) {
-      return _PointerTeleportDetails(monitor, x - layoutMonitorX, y);
+      return _PointerAbsoluteMoveDetails(monitor, x - layoutMonitorX, y);
     }
     layoutMonitorX += monitor.resolutionWidth;
   }
-
   return null;
 }
 
