@@ -2,6 +2,9 @@ import 'dart:math';
 
 class EasingFunctions {
   static double constant(double t) => 1.0;
+  static double step(double t) => t < 0.5 ? 0.0 : 1.0;
+  static double Function(double t) stepsFunction(int steps) =>
+      (double t) => (t * steps).floor() / steps;
   static double linear(double t) => t;
 
   static double easeInSine(double t) => 1.0 - cos((t * pi) / 2);
@@ -112,6 +115,8 @@ class Animation {
   Duration get _timeDifference => DateTime.now().difference(_startTime);
   double get _t => (_timeDifference.inMilliseconds / duration.inMilliseconds)
       .clamp(0.0, 1.0);
+  bool get _isDelayedTime =>
+      (_timeDifference.inMilliseconds / duration.inMilliseconds) < 0.0;
   bool get isDone => _t == 1.0;
 
   Animation({
@@ -124,7 +129,7 @@ class Animation {
         _startTime = DateTime.now().add(delay ?? Duration.zero);
 
   update() {
-    onUpdate(easing(_t));
+    onUpdate(_isDelayedTime ? 0.0 : easing(_t));
     if (isDone) onDone?.call();
   }
 }
