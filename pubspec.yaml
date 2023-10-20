@@ -29,7 +29,6 @@ ffigen:
     include:
       - '^waybright_.*'
       - '^wlr_.*'
-      - '^pixman_.*'
   structs:
     include:
       - '^waybright_.*'

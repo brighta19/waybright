@@ -49,12 +49,12 @@ List<Rect> _getDamagedRegions(Window window) {
   var damageRegionPtr = calloc<struct_pixman_region32>();
   var numBoxesPtr = calloc<Int>();
 
-  _wblib.pixman_region32_init(damageRegionPtr);
+  _wblib.waybright_pixman_region32_init(damageRegionPtr);
   _wblib.wlr_surface_get_effective_damage(
       window._wlrXdgSurfacePtr.ref.surface, damageRegionPtr);
 
   var boxesPtr =
-      _wblib.pixman_region32_rectangles(damageRegionPtr, numBoxesPtr);
+      _wblib.waybright_pixman_region32_rectangles(damageRegionPtr, numBoxesPtr);
   var numBoxes = numBoxesPtr.value;
 
   for (var i = 0; i < numBoxes; i++) {
@@ -63,7 +63,7 @@ List<Rect> _getDamagedRegions(Window window) {
     damagedRegions.add(Rect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1));
   }
 
-  _wblib.pixman_region32_fini(damageRegionPtr);
+  _wblib.waybright_pixman_region32_fini(damageRegionPtr);
   calloc.free(damageRegionPtr);
   calloc.free(numBoxesPtr);
 

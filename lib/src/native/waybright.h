@@ -258,3 +258,7 @@ void waybright_keyboard_clear_focus(struct waybright_keyboard* wb_keyboard);
 void waybright_image_destroy(struct waybright_image* wb_image);
 struct waybright_image* waybright_image_create_from_surface(struct wlr_surface* wlr_surface);
 struct waybright_image* waybright_image_create_from_texture(struct wlr_texture* wlr_texture);
+
+void waybright_pixman_region32_init(struct pixman_region32* region);
+void waybright_pixman_region32_fini(struct pixman_region32* region);
+struct pixman_box32* waybright_pixman_region32_rectangles(struct pixman_region32* region, int* n_rects);
