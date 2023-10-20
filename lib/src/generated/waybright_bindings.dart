@@ -8478,6 +8478,26 @@ class WaybrightLibrary {
   late final _waybright_monitor_disable = _waybright_monitor_disablePtr
       .asFunction<void Function(ffi.Pointer<struct_waybright_monitor>)>();
 
+  ffi.Pointer<struct_waybright_window> waybright_window_create(
+    ffi.Pointer<struct_waybright> wb,
+    ffi.Pointer<struct_wlr_xdg_surface> wlr_xdg_surface,
+  ) {
+    return _waybright_window_create(
+      wb,
+      wlr_xdg_surface,
+    );
+  }
+
+  late final _waybright_window_createPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<struct_waybright_window> Function(
+              ffi.Pointer<struct_waybright>,
+              ffi.Pointer<struct_wlr_xdg_surface>)>>('waybright_window_create');
+  late final _waybright_window_create = _waybright_window_createPtr.asFunction<
+      ffi.Pointer<struct_waybright_window> Function(
+          ffi.Pointer<struct_waybright>,
+          ffi.Pointer<struct_wlr_xdg_surface>)>();
+
   void waybright_window_destroy(
     ffi.Pointer<struct_waybright_window> wb_window,
   ) {

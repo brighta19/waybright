@@ -1,5 +1,14 @@
 #include "waybright.h"
 
+struct waybright_window* waybright_window_create(struct waybright* wb, struct wlr_xdg_surface* wlr_xdg_surface) {
+    struct waybright_window* wb_window = calloc(sizeof(struct waybright_window), 1);
+
+    wb_window->wb = wb;
+    wb_window->wlr_xdg_surface = wlr_xdg_surface;
+    wb_window->wlr_xdg_toplevel = wlr_xdg_surface->toplevel;
+
+    return wb_window;
+}
 
 void waybright_window_destroy(struct waybright_window* wb_window) {
     if (!wb_window) return;

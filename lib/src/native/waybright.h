@@ -239,6 +239,7 @@ void waybright_monitor_destroy(struct waybright_monitor* wb_monitor);
 void waybright_monitor_enable(struct waybright_monitor* wb_monitor);
 void waybright_monitor_disable(struct waybright_monitor* wb_monitor);
 
+struct waybright_window* waybright_window_create(struct waybright* wb, struct wlr_xdg_surface* wlr_xdg_surface);
 void waybright_window_destroy(struct waybright_window* wb_window);
 void waybright_window_submit_pointer_move_event(struct waybright_window* wb_window, int time, int sx, int sy);
 void waybright_window_submit_pointer_button_event(struct waybright_window* wb_window, int time, int button, int pressed);

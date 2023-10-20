@@ -221,10 +221,7 @@ void handle_new_xdg_surface_event(struct wl_listener *listener, void *data) {
         return;
 
     struct wlr_xdg_toplevel* wlr_xdg_toplevel = wlr_xdg_surface->toplevel;
-    struct waybright_window* wb_window = calloc(sizeof(struct waybright_window), 1);
-    wb_window->wb = wb;
-    wb_window->wlr_xdg_surface = wlr_xdg_surface;
-    wb_window->wlr_xdg_toplevel = wlr_xdg_toplevel;
+    struct waybright_window* wb_window = waybright_window_create(wb, wlr_xdg_surface);
 
     wb_window->listeners.map.notify = handle_xdg_surface_map_event;
     wl_signal_add(&wlr_xdg_surface->events.map, &wb_window->listeners.map);
