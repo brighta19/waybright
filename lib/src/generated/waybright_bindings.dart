@@ -4107,6 +4107,56 @@ class WaybrightLibrary {
           bool Function(
               ffi.Pointer<struct_wlr_seat>, ffi.Pointer<struct_wlr_surface>)>();
 
+  bool wlr_surface_is_subsurface(
+    ffi.Pointer<struct_wlr_surface> surface,
+  ) {
+    return _wlr_surface_is_subsurface(
+      surface,
+    );
+  }
+
+  late final _wlr_surface_is_subsurfacePtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Bool Function(ffi.Pointer<struct_wlr_surface>)>>(
+      'wlr_surface_is_subsurface');
+  late final _wlr_surface_is_subsurface = _wlr_surface_is_subsurfacePtr
+      .asFunction<bool Function(ffi.Pointer<struct_wlr_surface>)>();
+
+  ffi.Pointer<struct_wlr_subsurface> wlr_subsurface_from_wlr_surface(
+    ffi.Pointer<struct_wlr_surface> surface,
+  ) {
+    return _wlr_subsurface_from_wlr_surface(
+      surface,
+    );
+  }
+
+  late final _wlr_subsurface_from_wlr_surfacePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<struct_wlr_subsurface> Function(
+                  ffi.Pointer<struct_wlr_surface>)>>(
+      'wlr_subsurface_from_wlr_surface');
+  late final _wlr_subsurface_from_wlr_surface =
+      _wlr_subsurface_from_wlr_surfacePtr.asFunction<
+          ffi.Pointer<struct_wlr_subsurface> Function(
+              ffi.Pointer<struct_wlr_surface>)>();
+
+  ffi.Pointer<struct_wlr_subcompositor> wlr_subcompositor_create(
+    ffi.Pointer<struct_wl_display> display,
+  ) {
+    return _wlr_subcompositor_create(
+      display,
+    );
+  }
+
+  late final _wlr_subcompositor_createPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<struct_wlr_subcompositor> Function(
+              ffi.Pointer<struct_wl_display>)>>('wlr_subcompositor_create');
+  late final _wlr_subcompositor_create =
+      _wlr_subcompositor_createPtr.asFunction<
+          ffi.Pointer<struct_wlr_subcompositor> Function(
+              ffi.Pointer<struct_wl_display>)>();
+
   ffi.Pointer<struct_wlr_xdg_shell> wlr_xdg_shell_create(
     ffi.Pointer<struct_wl_display> display,
     int version,
@@ -5450,6 +5500,81 @@ class WaybrightLibrary {
       _waybright_image_create_from_texturePtr.asFunction<
           ffi.Pointer<struct_waybright_image> Function(
               ffi.Pointer<struct_wlr_texture>)>();
+
+  ffi.Pointer<struct_waybright_subwindow> waybright_subwindow_create(
+    ffi.Pointer<struct_wlr_subsurface> wlr_subsurface,
+    ffi.Pointer<struct_waybright_subwindow_tree> parent,
+  ) {
+    return _waybright_subwindow_create(
+      wlr_subsurface,
+      parent,
+    );
+  }
+
+  late final _waybright_subwindow_createPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<struct_waybright_subwindow> Function(
+                  ffi.Pointer<struct_wlr_subsurface>,
+                  ffi.Pointer<struct_waybright_subwindow_tree>)>>(
+      'waybright_subwindow_create');
+  late final _waybright_subwindow_create =
+      _waybright_subwindow_createPtr.asFunction<
+          ffi.Pointer<struct_waybright_subwindow> Function(
+              ffi.Pointer<struct_wlr_subsurface>,
+              ffi.Pointer<struct_waybright_subwindow_tree>)>();
+
+  void waybright_subwindow_destroy(
+    ffi.Pointer<struct_waybright_subwindow> wb_subwindow,
+  ) {
+    return _waybright_subwindow_destroy(
+      wb_subwindow,
+    );
+  }
+
+  late final _waybright_subwindow_destroyPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_waybright_subwindow>)>>(
+      'waybright_subwindow_destroy');
+  late final _waybright_subwindow_destroy = _waybright_subwindow_destroyPtr
+      .asFunction<void Function(ffi.Pointer<struct_waybright_subwindow>)>();
+
+  ffi.Pointer<struct_waybright_subwindow_tree> waybright_subwindow_tree_create(
+    ffi.Pointer<struct_waybright> wb,
+    ffi.Pointer<struct_wlr_surface> wlr_surface,
+  ) {
+    return _waybright_subwindow_tree_create(
+      wb,
+      wlr_surface,
+    );
+  }
+
+  late final _waybright_subwindow_tree_createPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<struct_waybright_subwindow_tree> Function(
+                  ffi.Pointer<struct_waybright>,
+                  ffi.Pointer<struct_wlr_surface>)>>(
+      'waybright_subwindow_tree_create');
+  late final _waybright_subwindow_tree_create =
+      _waybright_subwindow_tree_createPtr.asFunction<
+          ffi.Pointer<struct_waybright_subwindow_tree> Function(
+              ffi.Pointer<struct_waybright>,
+              ffi.Pointer<struct_wlr_surface>)>();
+
+  void waybright_subwindow_tree_destroy(
+    ffi.Pointer<struct_waybright_subwindow_tree> waybright_subwindow_tree,
+  ) {
+    return _waybright_subwindow_tree_destroy(
+      waybright_subwindow_tree,
+    );
+  }
+
+  late final _waybright_subwindow_tree_destroyPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_waybright_subwindow_tree>)>>(
+      'waybright_subwindow_tree_destroy');
+  late final _waybright_subwindow_tree_destroy =
+      _waybright_subwindow_tree_destroyPtr.asFunction<
+          void Function(ffi.Pointer<struct_waybright_subwindow_tree>)>();
 
   void waybright_pixman_region32_init(
     ffi.Pointer<struct_pixman_region32> region,
@@ -7636,6 +7761,74 @@ class struct_wlr_seat_keyboard_focus_change_event extends ffi.Struct {
   external ffi.Pointer<struct_wlr_surface> new_surface;
 }
 
+class struct_wlr_subsurface_parent_state extends ffi.Struct {
+  @ffi.Int32()
+  external int x;
+
+  @ffi.Int32()
+  external int y;
+
+  external struct_wl_list link;
+}
+
+class struct_wlr_subsurface extends ffi.Struct {
+  external ffi.Pointer<struct_wl_resource> resource;
+
+  external ffi.Pointer<struct_wlr_surface> surface;
+
+  external ffi.Pointer<struct_wlr_surface> parent;
+
+  external struct_wlr_subsurface_parent_state current;
+
+  external struct_wlr_subsurface_parent_state pending;
+
+  @ffi.Uint32()
+  external int cached_seq;
+
+  @ffi.Bool()
+  external bool has_cache;
+
+  @ffi.Bool()
+  external bool synchronized;
+
+  @ffi.Bool()
+  external bool reordered;
+
+  @ffi.Bool()
+  external bool mapped;
+
+  @ffi.Bool()
+  external bool added;
+
+  external struct_wl_listener surface_client_commit;
+
+  external struct_wl_listener parent_destroy;
+
+  external UnnamedStruct24 events;
+
+  external ffi.Pointer<ffi.Void> data;
+}
+
+class UnnamedStruct24 extends ffi.Struct {
+  external struct_wl_signal destroy;
+
+  external struct_wl_signal map;
+
+  external struct_wl_signal unmap;
+}
+
+class struct_wlr_subcompositor extends ffi.Struct {
+  external ffi.Pointer<struct_wl_global> global;
+
+  external struct_wl_listener display_destroy;
+
+  external UnnamedStruct25 events;
+}
+
+class UnnamedStruct25 extends ffi.Struct {
+  external struct_wl_signal destroy;
+}
+
 class struct_wlr_xdg_shell extends ffi.Struct {
   external ffi.Pointer<struct_wl_global> global;
 
@@ -7651,12 +7844,12 @@ class struct_wlr_xdg_shell extends ffi.Struct {
 
   external struct_wl_listener display_destroy;
 
-  external UnnamedStruct24 events;
+  external UnnamedStruct26 events;
 
   external ffi.Pointer<ffi.Void> data;
 }
 
-class UnnamedStruct24 extends ffi.Struct {
+class UnnamedStruct26 extends ffi.Struct {
   external struct_wl_signal new_surface;
 
   external struct_wl_signal destroy;
@@ -7700,11 +7893,11 @@ class struct_wlr_xdg_positioner_rules extends ffi.Struct {
   @ffi.Uint32()
   external int parent_configure_serial;
 
-  external UnnamedStruct25 size;
+  external UnnamedStruct27 size;
 
-  external UnnamedStruct25 parent_size;
+  external UnnamedStruct27 parent_size;
 
-  external UnnamedStruct26 offset;
+  external UnnamedStruct28 offset;
 }
 
 abstract class enum_xdg_positioner_anchor {
@@ -7741,7 +7934,7 @@ abstract class enum_xdg_positioner_constraint_adjustment {
   static const int XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_RESIZE_Y = 32;
 }
 
-class UnnamedStruct25 extends ffi.Struct {
+class UnnamedStruct27 extends ffi.Struct {
   @ffi.Int32()
   external int width;
 
@@ -7749,7 +7942,7 @@ class UnnamedStruct25 extends ffi.Struct {
   external int height;
 }
 
-class UnnamedStruct26 extends ffi.Struct {
+class UnnamedStruct28 extends ffi.Struct {
   @ffi.Int32()
   external int x;
 
@@ -7806,7 +7999,7 @@ class struct_wlr_xdg_popup extends ffi.Struct {
 
   external struct_wlr_xdg_popup_state pending;
 
-  external UnnamedStruct30 events;
+  external UnnamedStruct32 events;
 
   external struct_wl_list grab_link;
 }
@@ -7849,7 +8042,7 @@ class struct_wlr_xdg_surface extends ffi.Struct {
 
   external struct_wl_listener surface_commit;
 
-  external UnnamedStruct29 events;
+  external UnnamedStruct31 events;
 
   external ffi.Pointer<ffi.Void> data;
 }
@@ -7890,7 +8083,7 @@ class struct_wlr_xdg_toplevel extends ffi.Struct {
 
   external ffi.Pointer<ffi.Char> app_id;
 
-  external UnnamedStruct28 events;
+  external UnnamedStruct30 events;
 }
 
 class struct_wlr_xdg_toplevel_state extends ffi.Struct {
@@ -7953,13 +8146,13 @@ class struct_wlr_xdg_toplevel_configure extends ffi.Struct {
   @ffi.Int32()
   external int height;
 
-  external UnnamedStruct27 bounds;
+  external UnnamedStruct29 bounds;
 
   @ffi.Uint32()
   external int wm_capabilities;
 }
 
-class UnnamedStruct27 extends ffi.Struct {
+class UnnamedStruct29 extends ffi.Struct {
   @ffi.Int32()
   external int width;
 
@@ -7982,7 +8175,7 @@ class struct_wlr_xdg_toplevel_requested extends ffi.Struct {
   external struct_wl_listener fullscreen_output_destroy;
 }
 
-class UnnamedStruct28 extends ffi.Struct {
+class UnnamedStruct30 extends ffi.Struct {
   external struct_wl_signal request_maximize;
 
   external struct_wl_signal request_fullscreen;
@@ -8009,7 +8202,7 @@ class struct_wlr_xdg_surface_state extends ffi.Struct {
   external struct_wlr_box geometry;
 }
 
-class UnnamedStruct29 extends ffi.Struct {
+class UnnamedStruct31 extends ffi.Struct {
   external struct_wl_signal destroy;
 
   external struct_wl_signal ping_timeout;
@@ -8025,7 +8218,7 @@ class UnnamedStruct29 extends ffi.Struct {
   external struct_wl_signal ack_configure;
 }
 
-class UnnamedStruct30 extends ffi.Struct {
+class UnnamedStruct32 extends ffi.Struct {
   external struct_wl_signal reposition;
 }
 
@@ -8181,7 +8374,7 @@ class struct_waybright_image extends ffi.Struct {
 
   external ffi.Pointer<ffi.Char> path;
 
-  external UnnamedStruct31 listeners;
+  external UnnamedStruct33 listeners;
 
   @ffi.Int()
   external int width;
@@ -8195,7 +8388,7 @@ class struct_waybright_image extends ffi.Struct {
       handle_event;
 }
 
-class UnnamedStruct31 extends ffi.Struct {
+class UnnamedStruct33 extends ffi.Struct {
   external struct_wl_listener load;
 
   external struct_wl_listener destroy;
@@ -8208,7 +8401,7 @@ class struct_waybright_monitor extends ffi.Struct {
 
   external ffi.Pointer<struct_wlr_output> wlr_output;
 
-  external UnnamedStruct33 listeners;
+  external UnnamedStruct35 listeners;
 
   external ffi.Pointer<
           ffi.NativeFunction<
@@ -8238,7 +8431,7 @@ class struct_waybright extends ffi.Struct {
 
   external ffi.Pointer<ffi.Char> socket_name;
 
-  external UnnamedStruct32 listeners;
+  external UnnamedStruct34 listeners;
 
   external ffi.Pointer<
           ffi.NativeFunction<
@@ -8248,7 +8441,7 @@ class struct_waybright extends ffi.Struct {
 
 class struct_wl_event_loop extends ffi.Opaque {}
 
-class UnnamedStruct32 extends ffi.Struct {
+class UnnamedStruct34 extends ffi.Struct {
   external struct_wl_listener monitor_new;
 
   external struct_wl_listener new_xdg_surface;
@@ -8258,7 +8451,7 @@ class UnnamedStruct32 extends ffi.Struct {
   external struct_wl_listener cursor_image;
 }
 
-class UnnamedStruct33 extends ffi.Struct {
+class UnnamedStruct35 extends ffi.Struct {
   external struct_wl_listener destroy;
 
   external struct_wl_listener frame;
@@ -8279,7 +8472,9 @@ class struct_waybright_window extends ffi.Struct {
 
   external ffi.Pointer<struct_wlr_xdg_popup> wlr_xdg_popup;
 
-  external UnnamedStruct34 listeners;
+  external ffi.Pointer<struct_waybright_subwindow_tree> subwindow_tree;
+
+  external UnnamedStruct38 listeners;
 
   external ffi.Pointer<
           ffi.NativeFunction<
@@ -8287,7 +8482,51 @@ class struct_waybright_window extends ffi.Struct {
       handle_event;
 }
 
-class UnnamedStruct34 extends ffi.Struct {
+class struct_waybright_subwindow_tree extends ffi.Struct {
+  external ffi.Pointer<struct_waybright> wb;
+
+  external ffi.Pointer<struct_waybright_subwindow> wb_subwindow;
+
+  external ffi.Pointer<struct_waybright_subwindow_tree> parent;
+
+  external ffi.Pointer<struct_wlr_surface> wlr_surface;
+
+  external struct_wl_list wb_subwindow_children;
+
+  external UnnamedStruct37 listeners;
+}
+
+class struct_waybright_subwindow extends ffi.Struct {
+  external ffi.Pointer<struct_waybright> wb;
+
+  external ffi.Pointer<struct_waybright_subwindow_tree> parent;
+
+  external ffi.Pointer<struct_waybright_subwindow_tree> child;
+
+  external ffi.Pointer<struct_wlr_subsurface> wlr_subsurface;
+
+  external struct_wl_list link;
+
+  external UnnamedStruct36 listeners;
+}
+
+class UnnamedStruct36 extends ffi.Struct {
+  external struct_wl_listener map;
+
+  external struct_wl_listener unmap;
+
+  external struct_wl_listener destroy;
+}
+
+class UnnamedStruct37 extends ffi.Struct {
+  external struct_wl_listener new_subsurface;
+
+  external struct_wl_listener destroy;
+
+  external struct_wl_listener commit;
+}
+
+class UnnamedStruct38 extends ffi.Struct {
   external struct_wl_listener destroy;
 
   external struct_wl_listener map;
@@ -8295,6 +8534,8 @@ class UnnamedStruct34 extends ffi.Struct {
   external struct_wl_listener unmap;
 
   external struct_wl_listener new_popup;
+
+  external struct_wl_listener new_subsurface;
 
   external struct_wl_listener commit;
 
@@ -8340,7 +8581,7 @@ class struct_waybright_pointer extends ffi.Struct {
   @ffi.Double()
   external double y;
 
-  external UnnamedStruct35 listeners;
+  external UnnamedStruct39 listeners;
 
   external ffi.Pointer<
           ffi.NativeFunction<
@@ -8348,7 +8589,7 @@ class struct_waybright_pointer extends ffi.Struct {
       handle_event;
 }
 
-class UnnamedStruct35 extends ffi.Struct {
+class UnnamedStruct39 extends ffi.Struct {
   external struct_wl_listener destroy;
 
   external struct_wl_listener relative_move;
@@ -8369,7 +8610,7 @@ class struct_waybright_keyboard extends ffi.Struct {
 
   external ffi.Pointer<struct_wlr_keyboard> wlr_keyboard;
 
-  external UnnamedStruct36 listeners;
+  external UnnamedStruct40 listeners;
 
   external ffi.Pointer<
           ffi.NativeFunction<
@@ -8377,7 +8618,7 @@ class struct_waybright_keyboard extends ffi.Struct {
       handle_event;
 }
 
-class UnnamedStruct36 extends ffi.Struct {
+class UnnamedStruct40 extends ffi.Struct {
   external struct_wl_listener destroy;
 
   external struct_wl_listener key;

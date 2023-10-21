@@ -4,6 +4,13 @@ void handle_monitor_remove_event(struct wl_listener *listener, void *data);
 void handle_monitor_frame_event(struct wl_listener *listener, void *data);
 void handle_monitor_new_event(struct wl_listener *listener, void *data);
 
+void handle_wlr_subsurface_map_event(struct wl_listener *listener, void* data);
+void handle_wlr_subsurface_unmap_event(struct wl_listener *listener, void* data);
+void handle_wlr_subsurface_destroy_event(struct wl_listener *listener, void* data);
+void handle_wlr_subsurface_tree_commit_event(struct wl_listener *listener, void* data);
+void handle_wlr_subsurface_tree_destroy_event(struct wl_listener *listener, void* data);
+void handle_wlr_subsurface_new_event(struct wl_listener *listener, void* data);
+
 void handle_xdg_surface_map_event(struct wl_listener *listener, void *data);
 void handle_xdg_surface_unmap_event(struct wl_listener *listener, void *data);
 void handle_xdg_surface_destroy_event(struct wl_listener *listener, void *data);

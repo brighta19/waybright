@@ -31,6 +31,8 @@ void waybright_window_destroy(struct waybright_window* wb_window) {
         wl_list_remove(&wb_window->listeners.set_parent.link);
     }
 
+    waybright_subwindow_tree_destroy(wb_window->subwindow_tree);
+
     free(wb_window);
 }
 

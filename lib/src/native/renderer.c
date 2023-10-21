@@ -7,6 +7,16 @@
 #include <wlr/util/box.h>
 #include "waybright.h"
 
+struct wlr_surface_render_data {
+    struct waybright_renderer* wb_renderer;
+    int x;
+    int y;
+    int width;
+    int height;
+    float alpha;
+    struct timespec now;
+};
+
 void waybright_renderer_destroy(struct waybright_renderer* wb_renderer) {
     if (!wb_renderer) return;
 
@@ -34,33 +44,46 @@ void waybright_renderer_fill_rect(struct waybright_renderer* wb_renderer, int x,
     wlr_render_rect(wlr_renderer, &wlr_box, color_array, wlr_output->transform_matrix);
 }
 
-void waybright_renderer_draw_window(struct waybright_renderer* wb_renderer, struct waybright_window* wb_window, int x, int y, int width, int height, float alpha) {
-    struct wlr_output* wlr_output = wb_renderer->wlr_output;
+void render_wlr_surface(struct wlr_surface* wlr_surface, int sx, int sy, void* _data) {
+    struct wlr_surface_render_data* data = _data;
+
+    struct wlr_output* wlr_output = data->wb_renderer->wlr_output;
     struct wlr_renderer* wlr_renderer = wlr_output->renderer;
-    struct wlr_surface* wlr_surface = wb_window->wlr_xdg_surface->surface;
 
     struct wlr_texture* wlr_texture = wlr_surface_get_texture(wlr_surface);
     if (!wlr_texture)
         return;
 
     struct wlr_box wlr_box = {
-        .x = x,
-        .y = y,
-        .width = width,
-        .height = height
+        .x = sx + data->x,
+        .y = sy + data->y,
+        .width = wlr_surface->current.width,
+        .height = wlr_surface->current.height
     };
 
     float matrix[9];
     wlr_matrix_project_box(matrix, &wlr_box, wlr_surface->current.transform, 0.0, wlr_output->transform_matrix);
 
-    struct wlr_fbox wlr_fbox;
-    wlr_surface_get_buffer_source_box(wlr_surface, &wlr_fbox);
+    wlr_render_texture_with_matrix(wlr_renderer, wlr_texture, matrix, data->alpha);
 
-    wlr_render_subtexture_with_matrix(wlr_renderer, wlr_texture, &wlr_fbox, matrix, alpha);
+    wlr_surface_send_frame_done(wlr_surface, &data->now);
+}
 
+void waybright_renderer_draw_window(struct waybright_renderer* wb_renderer, struct waybright_window* wb_window, int x, int y, int width, int height, float alpha) {
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
-    wlr_surface_send_frame_done(wlr_surface, &now);
+
+    struct wlr_surface_render_data data = {
+        .wb_renderer = wb_renderer,
+        .x = x,
+        .y = y,
+        .width = width,
+        .height = height,
+        .alpha = alpha,
+        .now = now
+    };
+
+    wlr_surface_for_each_surface(wb_window->wlr_xdg_surface->surface, render_wlr_surface, &data);
 }
 
 void waybright_renderer_draw_image(struct waybright_renderer* wb_renderer, struct waybright_image* wb_image, int x, int y, int width, int height, float alpha) {

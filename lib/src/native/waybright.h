@@ -12,6 +12,7 @@
 #include <wlr/types/wlr_output_damage.h>
 #include <wlr/types/wlr_pointer.h>
 #include <wlr/types/wlr_seat.h>
+#include <wlr/types/wlr_subcompositor.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/edges.h>
 #include <xkbcommon/xkbcommon.h>
@@ -137,11 +138,14 @@ struct waybright_window {
     struct wlr_xdg_toplevel* wlr_xdg_toplevel;
     struct wlr_xdg_popup* wlr_xdg_popup;
 
+    struct waybright_subwindow_tree* subwindow_tree;
+
     struct {
         struct wl_listener destroy;
         struct wl_listener map;
         struct wl_listener unmap;
         struct wl_listener new_popup;
+        struct wl_listener new_subsurface;
         struct wl_listener commit;
         struct wl_listener request_move;
         struct wl_listener request_maximize;
@@ -155,6 +159,36 @@ struct waybright_window {
     } listeners;
 
     void(*handle_event)(int type, void* data);
+};
+
+struct waybright_subwindow_tree {
+    struct waybright* wb;
+    struct waybright_subwindow* wb_subwindow;
+    struct waybright_subwindow_tree* parent;
+
+    struct wlr_surface* wlr_surface;
+    struct wl_list wb_subwindow_children;
+
+    struct {
+        struct wl_listener new_subsurface;
+        struct wl_listener destroy;
+        struct wl_listener commit;
+    } listeners;
+};
+
+struct waybright_subwindow {
+    struct waybright* wb;
+    struct waybright_subwindow_tree* parent;
+    struct waybright_subwindow_tree* child;
+
+    struct wlr_subsurface* wlr_subsurface;
+    struct wl_list link;
+
+    struct {
+        struct wl_listener map;
+        struct wl_listener unmap;
+        struct wl_listener destroy;
+    } listeners;
 };
 
 struct waybright_input {
@@ -258,6 +292,11 @@ void waybright_keyboard_clear_focus(struct waybright_keyboard* wb_keyboard);
 void waybright_image_destroy(struct waybright_image* wb_image);
 struct waybright_image* waybright_image_create_from_surface(struct wlr_surface* wlr_surface);
 struct waybright_image* waybright_image_create_from_texture(struct wlr_texture* wlr_texture);
+
+struct waybright_subwindow* waybright_subwindow_create(struct wlr_subsurface* wlr_subsurface, struct waybright_subwindow_tree* parent);
+void waybright_subwindow_destroy(struct waybright_subwindow* wb_subwindow);
+struct waybright_subwindow_tree* waybright_subwindow_tree_create(struct waybright* wb, struct wlr_surface* wlr_surface);
+void waybright_subwindow_tree_destroy(struct waybright_subwindow_tree* waybright_subwindow_tree);
 
 void waybright_pixman_region32_init(struct pixman_region32* region);
 void waybright_pixman_region32_fini(struct pixman_region32* region);

@@ -47,6 +47,8 @@ void handle_monitor_new_event(struct wl_listener *listener, void *data) {
 void handle_xdg_surface_map_event(struct wl_listener *listener, void *data) {
     struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.map);
 
+    wb_window->subwindow_tree = waybright_subwindow_tree_create(wb_window->wb, wb_window->wlr_xdg_surface->surface);
+
     struct waybright_window_event wb_window_event = { wb_window, NULL };
 
     if (wb_window->handle_event)
@@ -56,6 +58,9 @@ void handle_xdg_surface_map_event(struct wl_listener *listener, void *data) {
 // Called when the surface no longer has a displayable buffer
 void handle_xdg_surface_unmap_event(struct wl_listener *listener, void *data) {
     struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.unmap);
+
+    waybright_subwindow_tree_destroy(wb_window->subwindow_tree);
+    wb_window->subwindow_tree = NULL;
 
     struct waybright_window_event wb_window_event = { wb_window, NULL };
 
@@ -102,6 +107,68 @@ void handle_xdg_surface_new_popup_event(struct wl_listener *listener, void *data
     if (wb_parent_window->handle_event)
         wb_parent_window->handle_event(event_type_window_new_popup, &wb_window_event);
 }
+
+void handle_wlr_subsurface_map_event(struct wl_listener *listener, void* data) {
+    struct waybright_subwindow* wb_subwindow = wl_container_of(listener, wb_subwindow, listeners.map);
+
+    struct waybright_subwindow_tree* wb_subwindow_tree = waybright_subwindow_tree_create(wb_subwindow->wb, wb_subwindow->wlr_subsurface->surface);
+    wb_subwindow_tree->parent = wb_subwindow->parent;
+    wb_subwindow_tree->wb_subwindow = wb_subwindow;
+
+    wb_subwindow->child = wb_subwindow_tree;
+}
+
+// TODO: pointer events for subsurfaces
+// TODO: damage tracking for subsurfaces
+void handle_wlr_subsurface_unmap_event(struct wl_listener *listener, void* data) {
+    struct waybright_subwindow* wb_subwindow = wl_container_of(listener, wb_subwindow, listeners.unmap);
+
+    if (wb_subwindow->child) {
+        waybright_subwindow_tree_destroy(wb_subwindow->child);
+        wb_subwindow->child = NULL;
+    }
+}
+
+void handle_wlr_subsurface_destroy_event(struct wl_listener *listener, void* data) {
+    struct waybright_subwindow* wb_subwindow = wl_container_of(listener, wb_subwindow, listeners.destroy);
+
+    wl_list_remove(&wb_subwindow->link);
+    waybright_subwindow_destroy(wb_subwindow);
+}
+
+void handle_wlr_subsurface_tree_commit_event(struct wl_listener *listener, void* data) {
+    // struct waybright_subwindow_tree* wb_subwindow_tree = wl_container_of(listener, wb_subwindow_tree, listeners.commit);
+    // struct waybright_window* wb_window = wb_subwindow_tree->wb_window;
+
+    // struct waybright_window_event wb_window_event = { wb_window, NULL };
+
+    // if (wb_window->handle_event)
+    //     wb_window->handle_event(event_type_window_commit, &wb_window_event);
+}
+
+void handle_wlr_subsurface_tree_destroy_event(struct wl_listener *listener, void* data) {
+    struct waybright_subwindow_tree* wb_subwindow_tree = wl_container_of(listener, wb_subwindow_tree, listeners.destroy);
+
+    waybright_subwindow_tree_destroy(wb_subwindow_tree);
+}
+
+void handle_wlr_subsurface_new_event(struct wl_listener *listener, void* data) {
+    struct waybright_subwindow_tree* wb_subwindow_tree = wl_container_of(listener, wb_subwindow_tree, listeners.new_subsurface);
+    struct wlr_subsurface* wlr_subsurface = data;
+
+    struct waybright_subwindow* wb_subwindow = waybright_subwindow_create(wlr_subsurface, wb_subwindow_tree);
+
+    struct wlr_subsurface *wlr_subsurface_other;
+    wl_list_for_each(wlr_subsurface_other, &wlr_subsurface->surface->current.subsurfaces_below, current.link) {
+        handle_wlr_subsurface_new_event(&wb_subwindow_tree->listeners.new_subsurface, wlr_subsurface_other);
+    }
+    wl_list_for_each(wlr_subsurface_other, &wlr_subsurface->surface->current.subsurfaces_above, current.link) {
+        handle_wlr_subsurface_new_event(&wb_subwindow_tree->listeners.new_subsurface, wlr_subsurface_other);
+    }
+
+    wl_list_insert(&wb_subwindow_tree->wb_subwindow_children, &wb_subwindow->link);
+}
+
 
 void handle_wlr_surface_commit_event(struct wl_listener *listener, void *data) {
     struct waybright_window* wb_window = wl_container_of(listener, wb_window, listeners.commit);
