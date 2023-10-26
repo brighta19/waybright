@@ -22,6 +22,7 @@ ffigen:
   - '-DWLR_USE_UNSTABLE'
   - '-I/usr/include/pixman-1'
   - '-Ilib/src/native/'
+  - '-I/usr/lib/gcc/x86_64-linux-gnu/11/include/'
   headers:
     entry-points:
       - 'lib/src/native/waybright.h'
