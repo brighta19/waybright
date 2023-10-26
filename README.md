@@ -14,6 +14,9 @@ Only for Linux (and probably WSL).
 - wlroots (v0.16.2)
 - make
 
+The `Dockerfile` located in `.devcontainer/` can be used as a reference for
+ getting everything to work.
+
 ## Using waybright
 
 ### `pubspec.yaml`
