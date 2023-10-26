@@ -280,6 +280,7 @@ void waybright_window_submit_pointer_button_event(struct waybright_window* wb_wi
 void waybright_window_submit_pointer_axis_event(struct waybright_window* wb_window, int time, int orientation, double delta, int delta_discrete, int source);
 void waybright_window_submit_keyboard_key_event(struct waybright_window* wb_window, int time, int keyCode, int pressed);
 void waybright_window_submit_keyboard_modifiers_event(struct waybright_window* wb_window, struct waybright_keyboard* wb_keyboard);
+int waybright_window_has_pointer_focus(struct waybright_window* wb_window);
 
 void waybright_pointer_destroy(struct waybright_pointer* wb_pointer);
 void waybright_pointer_focus_on_window(struct waybright_pointer* wb_pointer, struct waybright_window* wb_window, int sx, int sy);

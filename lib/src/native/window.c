@@ -39,7 +39,18 @@ void waybright_window_destroy(struct waybright_window* wb_window) {
 void waybright_window_submit_pointer_move_event(struct waybright_window* wb_window, int time, int sx, int sy) {
     struct wlr_seat* wlr_seat = wb_window->wb->wlr_seat;
 
-    wlr_seat_pointer_notify_motion(wlr_seat, time, sx, sy);
+    double sub_x, sub_y;
+    struct wlr_surface* wlr_surface = wlr_surface_surface_at(
+        wb_window->wlr_xdg_surface->surface,
+        sx,
+        sy,
+        &sub_x,
+        &sub_y
+    );
+    if (!wlr_surface) return;
+
+    wlr_seat_pointer_notify_enter(wlr_seat, wlr_surface, sub_x, sub_y);
+    wlr_seat_pointer_notify_motion(wlr_seat, time, sub_x, sub_y);
 }
 
 void waybright_window_submit_pointer_button_event(struct waybright_window* wb_window, int time, int button, int pressed) {
@@ -66,4 +77,8 @@ void waybright_window_submit_keyboard_modifiers_event(struct waybright_window* w
     struct wlr_seat* wlr_seat = wb_window->wb->wlr_seat;
 
     wlr_seat_keyboard_notify_modifiers(wlr_seat, &wb_keyboard->wlr_keyboard->modifiers);
+}
+
+int waybright_window_has_pointer_focus(struct waybright_window* wb_window) {
+    return wlr_seat_pointer_surface_has_focus(wb_window->wb->wlr_seat, wb_window->wlr_xdg_surface->surface);
 }

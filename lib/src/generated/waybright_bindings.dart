@@ -5343,6 +5343,22 @@ class WaybrightLibrary {
           void Function(ffi.Pointer<struct_waybright_window>,
               ffi.Pointer<struct_waybright_keyboard>)>();
 
+  int waybright_window_has_pointer_focus(
+    ffi.Pointer<struct_waybright_window> wb_window,
+  ) {
+    return _waybright_window_has_pointer_focus(
+      wb_window,
+    );
+  }
+
+  late final _waybright_window_has_pointer_focusPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Int Function(ffi.Pointer<struct_waybright_window>)>>(
+      'waybright_window_has_pointer_focus');
+  late final _waybright_window_has_pointer_focus =
+      _waybright_window_has_pointer_focusPtr
+          .asFunction<int Function(ffi.Pointer<struct_waybright_window>)>();
+
   void waybright_pointer_destroy(
     ffi.Pointer<struct_waybright_pointer> wb_pointer,
   ) {
