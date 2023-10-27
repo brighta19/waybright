@@ -19,6 +19,24 @@ enum WindowEdge {
   topLeft,
 }
 
+class _WindowData {
+  String? applicationId;
+  String? title;
+  int width = 0;
+  int height = 0;
+  int textureWidth = 0;
+  int textureHeight = 0;
+  num offsetX = 0;
+  num offsetY = 0;
+  num popupX = 0;
+  num popupY = 0;
+  bool hasTexture = false;
+  bool isMaximized = false;
+  bool isFullscreen = false;
+  bool isActive = false;
+  bool isResizing = false;
+}
+
 WindowEdge _getEdgeFromWlrResizeEvent(
     Pointer<struct_wlr_xdg_toplevel_resize_event> eventPtr) {
   switch (eventPtr.ref.edges) {
@@ -89,11 +107,13 @@ void _wbWindowDestroyEvent(
 
 void _wbWindowMapEvent(
     Pointer<struct_waybright_window_event> eventPtr, Window window) {
+  window._updateData();
   window.onTextureSet?.call(WindowTextureSetEvent(window));
 }
 
 void _wbWindowUnmapEvent(
     Pointer<struct_waybright_window_event> eventPtr, Window window) {
+  window._updateData();
   window.onTextureUnsetting?.call(WindowTextureUnsettingEvent(window));
 }
 
@@ -106,10 +126,18 @@ void _wbWindowNewPopupEvent(
 
 void _wbWindowCommitEvent(
     Pointer<struct_waybright_window_event> eventPtr, Window window) {
-  if (window._wasActive && !window.isActive) {
+  var wasActive = window._data.isActive;
+  var wasMaximized = window._data.isMaximized;
+  var wasFullscreen = window._data.isFullscreen;
+  var previousTextureWidth = window._data.textureWidth;
+  var previousTextureHeight = window._data.textureHeight;
+
+  window._updateData();
+
+  if (wasActive && !window.isActive) {
     window.onDeactivate?.call(WindowDeactivateEvent(window));
     _completeAndClearCompleters(window._deactivateCompleters);
-  } else if (!window._wasActive && window.isActive) {
+  } else if (!wasActive && window.isActive) {
     window.onActivate?.call(WindowActivateEvent(window));
     _completeAndClearCompleters(window._activateCompleters);
   } else {
@@ -117,10 +145,10 @@ void _wbWindowCommitEvent(
     _completeAndClearCompleters(window._activateCompleters);
   }
 
-  if (window._wasMaximized && !window.isMaximized) {
+  if (wasMaximized && !window.isMaximized) {
     window.onUnmaximize?.call(WindowUnmaximizeEvent(window));
     _completeAndClearCompleters(window._unmaximizeCompleters);
-  } else if (!window._wasMaximized && window.isMaximized) {
+  } else if (!wasMaximized && window.isMaximized) {
     window.onMaximize?.call(WindowMaximizeEvent(window));
     _completeAndClearCompleters(window._maximizeCompleters);
   } else {
@@ -128,10 +156,10 @@ void _wbWindowCommitEvent(
     _completeAndClearCompleters(window._maximizeCompleters);
   }
 
-  if (window._wasFullscreen && !window.isFullscreen) {
+  if (wasFullscreen && !window.isFullscreen) {
     window.onUnfullscreen?.call(WindowUnfullscreenEvent(window));
     _completeAndClearCompleters(window._unfullscreenCompleters);
-  } else if (!window._wasFullscreen && window.isFullscreen) {
+  } else if (!wasFullscreen && window.isFullscreen) {
     window.onFullscreen?.call(WindowFullscreenEvent(window));
     _completeAndClearCompleters(window._fullscreenCompleters);
   } else {
@@ -140,8 +168,8 @@ void _wbWindowCommitEvent(
   }
 
   if (window._resizeCompleters.isNotEmpty) {
-    window.onResize?.call(WindowResizeEvent(
-        window, window._previousWidth, window._previousHeight));
+    window.onResize?.call(
+        WindowResizeEvent(window, previousTextureWidth, previousTextureHeight));
     _completeAndClearCompleters(window._resizeCompleters);
   }
 
@@ -152,12 +180,6 @@ void _wbWindowCommitEvent(
     window.onTextureDamagedRegions
         ?.call(WindowTextureDamagedRegionsEvent(window, damagedRegions));
   });
-
-  window._previousWidth = window.textureWidth;
-  window._previousHeight = window.textureHeight;
-  window._wasActive = window.isActive;
-  window._wasMaximized = window.isMaximized;
-  window._wasFullscreen = window.isFullscreen;
 }
 
 void _wbWindowRequestMoveEvent(
@@ -286,11 +308,7 @@ class Window {
   bool get _hasBuffer =>
       _wlrXdgSurfacePtr.ref.surface.ref.buffer.ref.source != nullptr;
 
-  var _previousWidth = 0;
-  var _previousHeight = 0;
-  var _wasActive = false;
-  var _wasMaximized = false;
-  var _wasFullscreen = false;
+  final _data = _WindowData();
 
   final _activateCompleters = <Completer<void>>[];
   final _deactivateCompleters = <Completer<void>>[];
@@ -305,6 +323,30 @@ class Window {
   ) : isPopup = _windowPtr.ref.wlr_xdg_popup != nullptr {
     _windowInstances[_windowPtr] = this;
     _windowPtr.ref.handle_event = Pointer.fromFunction(_onEvent);
+
+    _updateData();
+  }
+
+  _updateData() {
+    _data.applicationId =
+        isPopup ? null : _toDartString(_wlrXdgToplevelPtr.ref.app_id);
+    _data.title = isPopup ? null : _toDartString(_wlrXdgToplevelPtr.ref.title);
+    _data.width = _wlrXdgSurfacePtr.ref.current.geometry.width;
+    _data.height = _wlrXdgSurfacePtr.ref.current.geometry.height;
+    _data.textureWidth = _wlrXdgSurfacePtr.ref.surface.ref.current.width;
+    _data.textureHeight = _wlrXdgSurfacePtr.ref.surface.ref.current.height;
+    _data.offsetX = _wlrXdgSurfacePtr.ref.current.geometry.x;
+    _data.offsetY = _wlrXdgSurfacePtr.ref.current.geometry.y;
+    _data.popupX = isPopup ? _wlrXdgPopupPtr.ref.current.geometry.x : 0;
+    _data.popupY = isPopup ? _wlrXdgPopupPtr.ref.current.geometry.y : 0;
+    _data.hasTexture = _wlrXdgSurfacePtr.ref.mapped;
+    _data.isMaximized =
+        isPopup ? false : _wlrXdgToplevelPtr.ref.current.maximized;
+    _data.isFullscreen =
+        isPopup ? false : _wlrXdgToplevelPtr.ref.current.fullscreen;
+    _data.isActive = isPopup ? false : _wlrXdgToplevelPtr.ref.current.activated;
+    _data.isResizing =
+        isPopup ? false : _wlrXdgToplevelPtr.ref.current.resizing;
   }
 
   void _ensureKeyboardFocus(KeyboardDevice keyboard) {
@@ -547,59 +589,55 @@ class Window {
   /// This may be set later using the [onAppIdChange] handler.
   ///
   /// Popups do not have an application id set and will return an empty string.
-  String? get applicationId =>
-      isPopup ? null : _toDartString(_wlrXdgToplevelPtr.ref.app_id);
+  String? get applicationId => _data.applicationId;
 
   /// The title of this window.
   ///
   /// This may be set later using the [onTitleChange] handler.
   ///
   /// Popups do not have a title set and will return an empty string.
-  String? get title =>
-      isPopup ? null : _toDartString(_wlrXdgToplevelPtr.ref.title);
+  String? get title => _data.title;
 
   /// The horizontal size of this window's content.
-  int get width => _wlrXdgSurfacePtr.ref.current.geometry.width;
+  int get width => _data.width;
 
   /// The vertical size of this window's content.
-  int get height => _wlrXdgSurfacePtr.ref.current.geometry.height;
+  int get height => _data.height;
 
   /// The horizontal size of this window's texture.
-  int get textureWidth => _wlrXdgSurfacePtr.ref.surface.ref.current.width;
+  int get textureWidth => _data.textureWidth;
 
   /// The vertical size of this window's texture.
-  int get textureHeight => _wlrXdgSurfacePtr.ref.surface.ref.current.height;
+  int get textureHeight => _data.textureHeight;
 
   /// The horizontal offset of this window's content.
-  num get offsetX => _wlrXdgSurfacePtr.ref.current.geometry.x;
+  num get offsetX => _data.offsetX;
 
   /// The vertical offset of this window's content.
-  num get offsetY => _wlrXdgSurfacePtr.ref.current.geometry.y;
+  num get offsetY => _data.offsetY;
 
   /// The horizontal position of this popup window relative to its parent.
   ///
   /// This will always be `0` if not a popup window.
-  num get popupX => isPopup ? _wlrXdgPopupPtr.ref.current.geometry.x : 0;
+  num get popupX => _data.popupX;
 
   /// The vertical position of this popup window relative to its parent.
   ///
   /// This will always be `0` if not a popup window.
-  num get popupY => isPopup ? _wlrXdgPopupPtr.ref.current.geometry.y : 0;
+  num get popupY => _data.popupY;
 
   /// Whether this window has a texture.
-  bool get hasTexture => _wlrXdgSurfacePtr.ref.mapped;
+  bool get hasTexture => _data.hasTexture;
 
   /// Whether this window is considered maximized.
   ///
   /// This will always be `false` if this is a popup window.
-  bool get isMaximized =>
-      isPopup ? false : _wlrXdgToplevelPtr.ref.current.maximized;
+  bool get isMaximized => _data.isMaximized;
 
   /// Whether this window is considered fullscreen.
   ///
   /// This will always be `false` if this is a popup window.
-  bool get isFullscreen =>
-      isPopup ? false : _wlrXdgToplevelPtr.ref.current.fullscreen;
+  bool get isFullscreen => _data.isFullscreen;
 
   /// Whether this window is considered active.
   ///
@@ -607,8 +645,7 @@ class Window {
   /// if input devices are focused on it.
   ///
   /// This will always be false if  this is a popup window.
-  bool get isActive =>
-      isPopup ? false : _wlrXdgToplevelPtr.ref.current.activated;
+  bool get isActive => _data.isActive;
 
   /// Whether this window is considered resizing.
   ///
@@ -616,8 +653,7 @@ class Window {
   /// may draw itself accordingly.
   ///
   /// This will always be `false` if this is a popup window.
-  bool get isResizing =>
-      isPopup ? false : _wlrXdgToplevelPtr.ref.current.resizing;
+  bool get isResizing => _data.isResizing;
 
   /// Tells this window to maximize.
   ///
