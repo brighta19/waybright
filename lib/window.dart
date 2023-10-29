@@ -775,7 +775,7 @@ class Window {
     return deactivateCompleter.future;
   }
 
-  /// Notifies this window about whether is being resized or not.
+  /// Notifies this window about whether it is being resized or not.
   ///
   /// The resize functionality is handled by the compositor, but the application
   /// may want to draw itself differently while resizing.
@@ -840,103 +840,93 @@ class Window {
     return resizeCompleter.future;
   }
 
-  /// Submits pointer movement updates to this window.
-  void submitPointerMoveUpdate(PointerUpdate<PointerMoveEvent> update) {
-    var cursorX = update.windowCursorX.toInt();
-    var cursorY = update.windowCursorY.toInt();
+  /// Dispatch a pointer event to this window.
+  void dispatchPointerEvent(
+      PointerEvent event, num windowCursorX, num windowCursorY) {
+    _ensurePointerFocus(event.pointer, windowCursorX, windowCursorY);
 
-    _ensurePointerFocus(update.pointer, cursorX, cursorY);
+    if (event is PointerMoveEvent) {
+      _wblib.waybright_window_submit_pointer_move_event(
+        _windowPtr,
+        event.elapsedTime.inMilliseconds,
+        windowCursorX.toInt(),
+        windowCursorY.toInt(),
+      );
+    } else if (event is PointerButtonEvent) {
+      // BUG: Crashes from a null pointer dereference if the window is closed
+      // TODO: ~~either remove the pointer device focus from the window or ensure
+      // that the window pointer is not null before submitting the event~~ check
+      // if this still happens
+      _wblib.waybright_window_submit_pointer_button_event(
+        _windowPtr,
+        event.elapsedTime.inMilliseconds,
+        event.code,
+        event.isPressed ? 1 : 0,
+      );
+    } else if (event is PointerAxisEvent) {
+      int source;
+      switch (event.source) {
+        case PointerAxisSource.wheel:
+          source = enum_wlr_axis_source.WLR_AXIS_SOURCE_WHEEL;
+          break;
+        case PointerAxisSource.finger:
+          source = enum_wlr_axis_source.WLR_AXIS_SOURCE_FINGER;
+          break;
+        case PointerAxisSource.continuous:
+          source = enum_wlr_axis_source.WLR_AXIS_SOURCE_CONTINUOUS;
+          break;
+        case PointerAxisSource.wheelTilt:
+          source = enum_wlr_axis_source.WLR_AXIS_SOURCE_WHEEL_TILT;
+          break;
+      }
 
-    _wblib.waybright_window_submit_pointer_move_event(
-      _windowPtr,
-      update.event.elapsedTime.inMilliseconds,
-      cursorX,
-      cursorY,
-    );
-  }
+      int orientation;
+      switch (event.orientation) {
+        case PointerAxisOrientation.vertical:
+          orientation = enum_wlr_axis_orientation.WLR_AXIS_ORIENTATION_VERTICAL;
+          break;
+        case PointerAxisOrientation.horizontal:
+          orientation =
+              enum_wlr_axis_orientation.WLR_AXIS_ORIENTATION_HORIZONTAL;
+          break;
+      }
 
-  /// Submits pointer button updates to this window.
-  void submitPointerButtonUpdate(PointerUpdate<PointerButtonEvent> update) {
-    _ensurePointerFocus(
-        update.pointer, update.windowCursorX, update.windowCursorY);
-
-    // BUG: Crashes from a null pointer dereference if the window is closed
-    // TODO: either remove the pointer device focus from the window or ensure
-    // that the window pointer is not null before submitting the event
-    _wblib.waybright_window_submit_pointer_button_event(
-      _windowPtr,
-      update.event.elapsedTime.inMilliseconds,
-      update.event.code,
-      update.event.isPressed ? 1 : 0,
-    );
-  }
-
-  /// Submits pointer axis updates to this window.
-  void submitPointerAxisUpdate(PointerUpdate<PointerAxisEvent> update) {
-    _ensurePointerFocus(
-        update.pointer, update.windowCursorX, update.windowCursorY);
-
-    int source;
-    switch (update.event.source) {
-      case PointerAxisSource.wheel:
-        source = enum_wlr_axis_source.WLR_AXIS_SOURCE_WHEEL;
-        break;
-      case PointerAxisSource.finger:
-        source = enum_wlr_axis_source.WLR_AXIS_SOURCE_FINGER;
-        break;
-      case PointerAxisSource.continuous:
-        source = enum_wlr_axis_source.WLR_AXIS_SOURCE_CONTINUOUS;
-        break;
-      case PointerAxisSource.wheelTilt:
-        source = enum_wlr_axis_source.WLR_AXIS_SOURCE_WHEEL_TILT;
-        break;
+      _wblib.waybright_window_submit_pointer_axis_event(
+        _windowPtr,
+        event.elapsedTime.inMilliseconds,
+        orientation,
+        event.delta,
+        event.notches,
+        source,
+      );
+    } else {
+      throw ArgumentError("Invalid pointer event $event");
     }
-
-    int orientation;
-    switch (update.event.orientation) {
-      case PointerAxisOrientation.vertical:
-        orientation = enum_wlr_axis_orientation.WLR_AXIS_ORIENTATION_VERTICAL;
-        break;
-      case PointerAxisOrientation.horizontal:
-        orientation = enum_wlr_axis_orientation.WLR_AXIS_ORIENTATION_HORIZONTAL;
-        break;
-    }
-
-    _wblib.waybright_window_submit_pointer_axis_event(
-      _windowPtr,
-      update.event.elapsedTime.inMilliseconds,
-      orientation,
-      update.event.delta,
-      update.event.notches,
-      source,
-    );
   }
 
-  /// Submits keyboard key updates to this window.
-  void submitKeyboardKeyUpdate(KeyboardUpdate<KeyboardKeyEvent> update) {
-    _ensureKeyboardFocus(update.keyboard);
+  /// Dispatch a keyboard event to this window.
+  void dispatchKeyboardEvent(KeyboardEvent event) {
+    _ensureKeyboardFocus(event.keyboard);
 
-    _wblib.waybright_window_submit_keyboard_key_event(
-      _windowPtr,
-      update.event.elapsedTime.inMilliseconds,
-      update.event.code,
-      update.event.isPressed ? 1 : 0,
-    );
-  }
+    if (event is KeyboardKeyEvent) {
+      _wblib.waybright_window_submit_keyboard_key_event(
+        _windowPtr,
+        event.elapsedTime.inMilliseconds,
+        event.code,
+        event.isPressed ? 1 : 0,
+      );
+    } else if (event is KeyboardModifiersEvent) {
+      var keyboardPtr = event.keyboard._keyboardPtr;
+      if (keyboardPtr == null) {
+        throw StateError("Internal error: keyboardPtr is null");
+      }
 
-  /// Submits keyboard modifiers updates to this window.
-  void submitKeyboardModifiersUpdate(
-      KeyboardUpdate<KeyboardModifiersEvent> update) {
-    var keyboardPtr = update.keyboard._keyboardPtr;
-    if (keyboardPtr == null) {
-      throw StateError("Internal error: keyboardPtr is null");
+      _wblib.waybright_window_submit_keyboard_modifiers_event(
+        _windowPtr,
+        keyboardPtr,
+      );
+    } else {
+      throw ArgumentError("Invalid keyboard event $event");
     }
-
-    _ensureKeyboardFocus(update.keyboard);
-
-    _wblib.waybright_window_submit_keyboard_modifiers_event(
-      _windowPtr,
-      keyboardPtr,
-    );
   }
 }

@@ -23,7 +23,7 @@ class Renderer {
     }
   }
 
-  /// Draws a rectangle filled with the current [fillStyle].
+  /// Draws a rectangle filled with the current [fillColor].
   void fillRect(num x, num y, int width, int height) {
     var rendererPtr = _rendererPtr;
     if (rendererPtr != null) {

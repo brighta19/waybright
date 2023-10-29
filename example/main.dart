@@ -223,12 +223,7 @@ void onNewPointer(PointerDevice pointer) {
     var windowCursorX = cursorX - hoveredWindow.textureX;
     var windowCursorY = cursorY - hoveredWindow.textureY;
 
-    hoveredWindow.w.submitPointerMoveUpdate(PointerUpdate(
-      pointer,
-      event,
-      windowCursorX,
-      windowCursorY,
-    ));
+    hoveredWindow.w.dispatchPointerEvent(event, windowCursorX, windowCursorY);
   }
 
   pointer.onRelativeMove = (event) {
@@ -271,12 +266,7 @@ void onNewPointer(PointerDevice pointer) {
     var windowCursorX = cursorX - hoveredWindow.textureX;
     var windowCursorY = cursorY - hoveredWindow.textureY;
 
-    hoveredWindow.w.submitPointerButtonUpdate(PointerUpdate(
-      pointer,
-      event,
-      windowCursorX,
-      windowCursorY,
-    ));
+    hoveredWindow.w.dispatchPointerEvent(event, windowCursorX, windowCursorY);
   };
 
   pointer.onAxis = (event) {
@@ -286,12 +276,7 @@ void onNewPointer(PointerDevice pointer) {
     var windowCursorX = cursorX - hoveredWindow.textureX;
     var windowCursorY = cursorY - hoveredWindow.textureY;
 
-    hoveredWindow.w.submitPointerAxisUpdate(PointerUpdate(
-      pointer,
-      event,
-      windowCursorX,
-      windowCursorY,
-    ));
+    hoveredWindow.w.dispatchPointerEvent(event, windowCursorX, windowCursorY);
   };
 }
 
@@ -299,10 +284,7 @@ void onNewKeyboard(KeyboardDevice keyboard) {
   keyboard.onModifiers = (event) {
     currentKeyboard = event.keyboard;
 
-    focusedWindow?.w.submitKeyboardModifiersUpdate(KeyboardUpdate(
-      keyboard,
-      event,
-    ));
+    focusedWindow?.w.dispatchKeyboardEvent(event);
   };
 
   keyboard.onKey = (event) {
@@ -346,10 +328,7 @@ void onNewKeyboard(KeyboardDevice keyboard) {
     }
 
     if (!isSwitchingWindows) {
-      focusedWindow?.w.submitKeyboardKeyUpdate(KeyboardUpdate(
-        keyboard,
-        event,
-      ));
+      focusedWindow?.w.dispatchKeyboardEvent(event);
     }
   };
 }
