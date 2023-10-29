@@ -241,7 +241,7 @@ void _wbWindowSetAppIdEvent(
 
 void _wbWindowSetParentEvent(
     Pointer<struct_waybright_window_event> eventPtr, Window window) {
-  window.parent = _getParentOfPopup(window);
+  window._parent = _getParentOfPopup(window);
   window.onParentChange?.call(WindowParentChangeEvent(window));
 }
 
@@ -304,6 +304,8 @@ class Window {
       _windowPtr.ref.wlr_xdg_toplevel;
   Pointer<struct_wlr_xdg_popup> get _wlrXdgPopupPtr =>
       _windowPtr.ref.wlr_xdg_popup;
+
+  Window? _parent;
 
   bool get _hasBuffer =>
       _wlrXdgSurfacePtr.ref.surface.ref.buffer.ref.source != nullptr;
@@ -582,7 +584,7 @@ class Window {
   /// The parent window of this popup window, if applicable.
   ///
   /// The parent itself may be a popup window.
-  Window? parent;
+  Window? get parent => _parent;
 
   /// The id of the application that owns this window.
   ///
