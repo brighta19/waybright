@@ -1,5 +1,7 @@
 part of '../waybright.dart';
 
+// TODO: create custom keyboards
+
 class RemoveKeyboardEvent {}
 
 /// A keyboard device.

@@ -1,5 +1,7 @@
 part of '../waybright.dart';
 
+// TODO: create custom pointers
+
 enum PointerAxisSource {
   wheel,
   finger,

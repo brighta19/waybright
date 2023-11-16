@@ -23,6 +23,18 @@ class Renderer {
     }
   }
 
+  /// Sets the scissor region.
+  ///
+  /// Drawing operations will only affect pixels within the scissor region. By
+  /// default, the scissor region covers the entire monitor.
+  void scissor(num x, num y, int width, int height) {
+    var rendererPtr = _rendererPtr;
+    if (rendererPtr != null) {
+      _wblib.waybright_renderer_scissor(
+          rendererPtr, x.toInt(), y.toInt(), width, height);
+    }
+  }
+
   /// Draws a rectangle filled with the current [fillColor].
   void fillRect(num x, num y, int width, int height) {
     var rendererPtr = _rendererPtr;
@@ -66,6 +78,7 @@ class Renderer {
     }
   }
 
+  /// Captures a frame from a given [window].
   Image? captureWindowFrame(Window window) {
     var rendererPtr = _rendererPtr;
     if (rendererPtr != null && window._hasBuffer) {
@@ -76,6 +89,7 @@ class Renderer {
     return null;
   }
 
+  /// Prepares a new frame for rendering.
   void begin() {
     var rendererPtr = _rendererPtr;
     if (rendererPtr != null) {
@@ -83,6 +97,7 @@ class Renderer {
     }
   }
 
+  /// Finishes preparing a new frame for rendering.
   void end() {
     var rendererPtr = _rendererPtr;
     if (rendererPtr != null) {
@@ -90,6 +105,7 @@ class Renderer {
     }
   }
 
+  /// Renders the current frame.
   void render() {
     var rendererPtr = _rendererPtr;
     var monitor = _monitor;
@@ -99,14 +115,6 @@ class Renderer {
       if (monitor.isDamaged) {
         monitor._updateDamagedRegions();
       }
-    }
-  }
-
-  void scissor(num x, num y, int width, int height) {
-    var rendererPtr = _rendererPtr;
-    if (rendererPtr != null) {
-      _wblib.waybright_renderer_scissor(
-          rendererPtr, x.toInt(), y.toInt(), width, height);
     }
   }
 }

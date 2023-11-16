@@ -44,8 +44,12 @@ Pointer<Char> _toCString(String? string) {
   return string.toNativeUtf8() as Pointer<Char>;
 }
 
+/// A new input event.
 class NewInputEvent {
+  /// The pointer device.
   PointerDevice? pointer;
+
+  /// The keyboard device.
   KeyboardDevice? keyboard;
 
   NewInputEvent({this.pointer, this.keyboard});
@@ -182,15 +186,32 @@ class Waybright {
     _wblib.waybright_close_socket(_wbPtr);
   }
 
+  /// The name of the socket.
   String? socketName;
 
+  /// A handler that is called when a new monitor is added.
+  ///
+  /// This may occur before the socket opens.
   void Function(MonitorAddEvent event)? onMonitorAdd;
+
+  /// A handler that is called when a new window is created.
+  ///
+  /// This may occur before the socket opens.
   void Function(WindowCreateEvent event)? onWindowCreate;
+
+  /// A handler that is called when a new input device is added.
+  ///
+  /// This may occur before the socket opens.
   void Function(NewInputEvent event)? onNewInput;
+
+  /// A handler that is called when the cursor image changes.
+  ///
+  /// This may occur before the socket opens.
   // TODO: move handler to window?
   void Function(CursorImageEvent event)? onCursorImage;
 
-  get isRunning => _isRunning;
+  /// Whether the socket is open.
+  get isSocketOpen => _isRunning;
 
   /// Creates a [Waybright] instance.
   ///
@@ -199,7 +220,24 @@ class Waybright {
     _initialize();
   }
 
+  /// Loads an image from a file.
+  ///
+  /// Throws an [Exception] if the image could not be loaded.
   Future<Image> loadImage(String path) async => _loadImage(path);
+
+  /// Opens a socket to listen to wayland events.
+  ///
+  /// This prevents the program from closing as it listens for events.
+  ///
+  /// If a [socketName] is supplied, attempts to open a socket using that name.
+  /// If no [socketName] is supplied, automatically chooses a name to open the
+  /// socket with.
+  /// The socket name in use is returned.
+  ///
+  /// Throws an [Exception] if a [socketName] was supplied but the socket failed
+  /// to open using that name.
   String openSocket([String? socketName]) => _openSocket(socketName);
+
+  /// Closes the socket.
   void closeSocket() => _closeSocket();
 }

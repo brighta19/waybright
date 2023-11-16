@@ -285,7 +285,7 @@ enum InputDeviceType {
   keyboard,
 }
 
-/// An input device
+/// An input device.
 class InputDevice {
   InputDeviceType type;
 
