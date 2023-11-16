@@ -14,7 +14,7 @@ RUN apt-get update && \
         libjpeg-dev liblcms2-dev libseat-dev libsystemd-dev libva-dev libwebp-dev \
         libxcb-composite0-dev libxcb-dri3-dev libxcb-icccm4-dev libxcb-present-dev \
         libxcb-res0-dev libxcb-render-util0-dev libxcb-xinput-dev libxkbcommon-dev libxcursor-dev \
-        libxml++2.6-dev
+        libxml++2.6-dev libvulkan-dev glslang-tools
 
 # install dart. not included with above `apt-get install` since `gpg` (from gnupg package) wasn't installed
 RUN wget -O- https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/dart.gpg && \
@@ -67,3 +67,11 @@ USER user
 RUN echo export CPATH="$(gcc --print-file-name=include):$CPATH" >> ~/.bashrc
 
 CMD bash
+
+# if running on raspberry pi, enable the DRM VC4 V3D driver in /boot/firmware/config.txt by adding the following line:
+# dtoverlay=vc4-kms-v3d
+# then reboot
+# more info: https://www.raspberrypi.org/documentation/configuration/config-txt/video.md
+#
+# these may also be needed:
+# sudo usermod -aG video user
