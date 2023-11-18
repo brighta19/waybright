@@ -35,6 +35,7 @@ class _WindowData {
   bool isFullscreen = false;
   bool isActive = false;
   bool isResizing = false;
+  Rect inputRegion = Rect(0, 0, double.infinity, double.infinity);
 }
 
 WindowEdge _getEdgeFromWlrResizeEvent(
@@ -88,6 +89,21 @@ List<Rect> _getDamagedRegions(Window window) {
   return damagedRegions;
 }
 
+Rect _getInputRegion(Window window) {
+  var inputRegionBoxPtr = calloc<struct_wlr_box>();
+  _wblib.waybright_window_get_input_region(
+      window._windowPtr, inputRegionBoxPtr);
+  var inputRegionBox = inputRegionBoxPtr.ref;
+  var inputRegion = Rect(
+    inputRegionBox.x,
+    inputRegionBox.y,
+    inputRegionBox.width,
+    inputRegionBox.height,
+  );
+  calloc.free(inputRegionBoxPtr);
+  return inputRegion;
+}
+
 void _completeAndClearCompleters(List<Completer> completers) {
   for (var completer in completers) {
     completer.complete();
@@ -131,8 +147,13 @@ void _wbWindowCommitEvent(
   var wasFullscreen = window._data.isFullscreen;
   var previousTextureWidth = window._data.textureWidth;
   var previousTextureHeight = window._data.textureHeight;
+  var inputRegion = window._data.inputRegion;
 
   window._updateData();
+
+  if (inputRegion != window._data.inputRegion) {
+    window.onInputRegionChange?.call(WindowInputRegionChangeEvent(window));
+  }
 
   if (wasActive && !window.isActive) {
     window.onDeactivate?.call(WindowDeactivateEvent(window));
@@ -349,6 +370,7 @@ class Window {
     _data.isActive = isPopup ? false : _wlrXdgToplevelPtr.ref.current.activated;
     _data.isResizing =
         isPopup ? false : _wlrXdgToplevelPtr.ref.current.resizing;
+    _data.inputRegion = _getInputRegion(this);
   }
 
   void _ensureKeyboardFocus(KeyboardDevice keyboard) {
@@ -575,6 +597,9 @@ class Window {
   void Function(WindowTextureDamagedRegionsEvent event)?
       onTextureDamagedRegions;
 
+  /// A handler that is called when this window's input region changes.
+  void Function(WindowInputRegionChangeEvent event)? onInputRegionChange;
+
   /// Whether this window is a popup window.
   ///
   /// Popups are short-lived windows that are usually used for context menus,
@@ -601,9 +626,15 @@ class Window {
   String? get title => _data.title;
 
   /// The horizontal size of this window's content.
+  ///
+  /// Use [inputRegion] instead if you want the input region for detecting
+  /// if a pointer is over this window.
   int get width => _data.width;
 
   /// The vertical size of this window's content.
+  ///
+  /// Use [inputRegion] instead if you want the input region for detecting
+  /// if a pointer is over this window.
   int get height => _data.height;
 
   /// The horizontal size of this window's texture.
@@ -656,6 +687,12 @@ class Window {
   ///
   /// This will always be `false` if this is a popup window.
   bool get isResizing => _data.isResizing;
+
+  /// The input region of this window.
+  ///
+  /// The input region is the area of the window that can receive input events.
+  /// This is commonly set to the correct values during the texture set event.
+  Rect get inputRegion => _data.inputRegion;
 
   /// Tells this window to maximize.
   ///

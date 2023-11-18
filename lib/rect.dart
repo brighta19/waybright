@@ -3,8 +3,8 @@ part of 'waybright.dart';
 class Rect {
   num x;
   num y;
-  int width;
-  int height;
+  num width;
+  num height;
 
   Rect(this.x, this.y, this.width, this.height);
 

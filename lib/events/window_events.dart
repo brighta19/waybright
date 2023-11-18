@@ -145,3 +145,8 @@ class WindowTextureDamagedRegionsEvent extends WindowEvent {
 
   WindowTextureDamagedRegionsEvent(super.window, this.damagedRegions);
 }
+
+/// A window input region change event.
+class WindowInputRegionChangeEvent extends WindowEvent {
+  WindowInputRegionChangeEvent(super.window);
+}

@@ -60,10 +60,10 @@ MyWindow? getHoveredWindowFromList(Queue<MyWindow> windows) {
       if (popup != null) return popup;
     }
 
-    var windowX = window.x;
-    var windowY = window.y;
-    var windowWidth = window.width;
-    var windowHeight = window.height;
+    var windowX = window.x + window.w.inputRegion.x;
+    var windowY = window.y + window.w.inputRegion.y;
+    var windowWidth = window.w.inputRegion.width;
+    var windowHeight = window.w.inputRegion.height;
 
     if (cursorX >= windowX &&
         cursorX < windowX + windowWidth &&

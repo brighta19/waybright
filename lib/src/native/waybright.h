@@ -275,6 +275,7 @@ void waybright_monitor_disable(struct waybright_monitor* wb_monitor);
 
 struct waybright_window* waybright_window_create(struct waybright* wb, struct wlr_xdg_surface* wlr_xdg_surface);
 void waybright_window_destroy(struct waybright_window* wb_window);
+void waybright_window_get_input_region(struct waybright_window* wb_window, struct wlr_box* wlr_box);
 void waybright_window_submit_pointer_move_event(struct waybright_window* wb_window, int time, int sx, int sy);
 void waybright_window_submit_pointer_button_event(struct waybright_window* wb_window, int time, int button, int pressed);
 void waybright_window_submit_pointer_axis_event(struct waybright_window* wb_window, int time, int orientation, double delta, int delta_discrete, int source);

@@ -5222,6 +5222,26 @@ class WaybrightLibrary {
   late final _waybright_window_destroy = _waybright_window_destroyPtr
       .asFunction<void Function(ffi.Pointer<struct_waybright_window>)>();
 
+  void waybright_window_get_input_region(
+    ffi.Pointer<struct_waybright_window> wb_window,
+    ffi.Pointer<struct_wlr_box> wlr_box,
+  ) {
+    return _waybright_window_get_input_region(
+      wb_window,
+      wlr_box,
+    );
+  }
+
+  late final _waybright_window_get_input_regionPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<struct_waybright_window>,
+                  ffi.Pointer<struct_wlr_box>)>>(
+      'waybright_window_get_input_region');
+  late final _waybright_window_get_input_region =
+      _waybright_window_get_input_regionPtr.asFunction<
+          void Function(ffi.Pointer<struct_waybright_window>,
+              ffi.Pointer<struct_wlr_box>)>();
+
   void waybright_window_submit_pointer_move_event(
     ffi.Pointer<struct_waybright_window> wb_window,
     int time,

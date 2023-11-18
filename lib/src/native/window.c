@@ -36,6 +36,24 @@ void waybright_window_destroy(struct waybright_window* wb_window) {
     free(wb_window);
 }
 
+void waybright_window_get_input_region(struct waybright_window* wb_window, struct wlr_box* wlr_box) {
+    int n_rects;
+    pixman_box32_t* rects = pixman_region32_rectangles(&wb_window->wlr_xdg_surface->surface->input_region, &n_rects);
+
+    if (n_rects == 0) {
+        wlr_box->x = 0;
+        wlr_box->y = 0;
+        wlr_box->width = 0;
+        wlr_box->height = 0;
+    } else {
+        pixman_box32_t* rect = &rects[0];
+        wlr_box->x = rect->x1;
+        wlr_box->y = rect->y1;
+        wlr_box->width = rect->x2 - rect->x1;
+        wlr_box->height = rect->y2 - rect->y1;
+    }
+}
+
 void waybright_window_submit_pointer_move_event(struct waybright_window* wb_window, int time, int sx, int sy) {
     struct wlr_seat* wlr_seat = wb_window->wb->wlr_seat;
 
