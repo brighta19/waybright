@@ -107,7 +107,7 @@ int waybright_init(struct waybright* wb) {
     return 0;
 }
 
-int waybright_open_socket(struct waybright* wb, const char* socket_name) {
+int waybright_open_socket(struct waybright* wb, const char* socket_name, int set_env) {
     if (socket_name) {
         if (wl_display_add_socket(wb->wl_display, socket_name) != 0) {
             wlr_backend_destroy(wb->wlr_backend);
@@ -125,6 +125,11 @@ int waybright_open_socket(struct waybright* wb, const char* socket_name) {
         }
     }
 
+    char* xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
+    char* socket_path = malloc(strlen(xdg_runtime_dir) + strlen(wb->socket_name) + 2);
+    sprintf(socket_path, "%s/%s", xdg_runtime_dir, wb->socket_name);
+    wb->socket_path = socket_path;
+
     if (!wlr_backend_start(wb->wlr_backend)) {
         wlr_backend_destroy(wb->wlr_backend);
         wl_display_destroy(wb->wl_display);
@@ -133,7 +138,10 @@ int waybright_open_socket(struct waybright* wb, const char* socket_name) {
 
     wb->wl_event_loop = wl_display_get_event_loop(wb->wl_display);
 
-    setenv("WAYLAND_DISPLAY", wb->socket_name, 1);
+    if (set_env) {
+        setenv("WAYLAND_DISPLAY", wb->socket_name, 1);
+    }
+
     return 0;
 }
 

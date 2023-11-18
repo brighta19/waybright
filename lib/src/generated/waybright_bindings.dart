@@ -4838,19 +4838,22 @@ class WaybrightLibrary {
   int waybright_open_socket(
     ffi.Pointer<struct_waybright> wb,
     ffi.Pointer<ffi.Char> socket_name,
+    int set_env,
   ) {
     return _waybright_open_socket(
       wb,
       socket_name,
+      set_env,
     );
   }
 
   late final _waybright_open_socketPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Int Function(ffi.Pointer<struct_waybright>,
-              ffi.Pointer<ffi.Char>)>>('waybright_open_socket');
+          ffi.Int Function(ffi.Pointer<struct_waybright>, ffi.Pointer<ffi.Char>,
+              ffi.Int)>>('waybright_open_socket');
   late final _waybright_open_socket = _waybright_open_socketPtr.asFunction<
-      int Function(ffi.Pointer<struct_waybright>, ffi.Pointer<ffi.Char>)>();
+      int Function(
+          ffi.Pointer<struct_waybright>, ffi.Pointer<ffi.Char>, int)>();
 
   void waybright_check_events(
     ffi.Pointer<struct_waybright> wb,
@@ -8466,6 +8469,8 @@ class struct_waybright extends ffi.Struct {
   external int last_pointer_button_serial;
 
   external ffi.Pointer<ffi.Char> socket_name;
+
+  external ffi.Pointer<ffi.Char> socket_path;
 
   external UnnamedStruct34 listeners;
 

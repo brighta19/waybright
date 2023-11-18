@@ -169,14 +169,15 @@ class Waybright {
     _checkEvents();
   }
 
-  String _openSocket([String? socketName]) {
+  String _openSocket({String? socketName, bool setEnv = true}) {
     var namePtr = _toCString(socketName);
 
-    if (_wblib.waybright_open_socket(_wbPtr, namePtr) != 0) {
+    if (_wblib.waybright_open_socket(_wbPtr, namePtr, setEnv ? 1 : 0) != 0) {
       throw Exception("Opening wayland socket failed unexpectedly.");
     }
 
     this.socketName = _toDartString(_wbPtr.ref.socket_name);
+    socketPath = _toDartString(_wbPtr.ref.socket_path);
     _runEventLoop();
     return this.socketName!;
   }
@@ -188,6 +189,9 @@ class Waybright {
 
   /// The name of the socket.
   String? socketName;
+
+  /// The path of the socket.
+  String? socketPath;
 
   /// A handler that is called when a new monitor is added.
   ///
@@ -234,9 +238,13 @@ class Waybright {
   /// socket with.
   /// The socket name in use is returned.
   ///
+  /// If [setEnv] is true, sets the WAYLAND_DISPLAY environment variable to the
+  /// socket name.
+  ///
   /// Throws an [Exception] if a [socketName] was supplied but the socket failed
   /// to open using that name.
-  String openSocket([String? socketName]) => _openSocket(socketName);
+  String openSocket({String? socketName, bool setEnv = true}) =>
+      _openSocket(socketName: socketName, setEnv: setEnv);
 
   /// Closes the socket.
   void closeSocket() => _closeSocket();

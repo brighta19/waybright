@@ -74,7 +74,9 @@ struct waybright {
     struct wl_event_loop* wl_event_loop;
 
     uint32_t last_pointer_button_serial;
+
     const char* socket_name;
+    const char* socket_path;
 
     struct {
         struct wl_listener monitor_new;
@@ -253,7 +255,7 @@ void waybright_destroy(struct waybright* wb);
 int waybright_init(struct waybright*);
 
 /// @param socket_name can be NULL to auto-select a name
-int waybright_open_socket(struct waybright* wb, const char* socket_name);
+int waybright_open_socket(struct waybright* wb, const char* socket_name, int set_env);
 void waybright_check_events(struct waybright* wb);
 void waybright_close_socket(struct waybright* wb);
 struct waybright_image* waybright_load_image(struct waybright* wb, const char* path, int* error);
